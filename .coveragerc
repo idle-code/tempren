@@ -1,0 +1,10 @@
+[run]
+branch = True
+
+[report]
+exclude_lines =
+	NOCOVER
+	raise NotImplementedError
+	assert
+	if __name__ == .__main__.:
+	def __repr__
