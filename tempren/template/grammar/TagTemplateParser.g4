@@ -3,11 +3,20 @@ parser grammar TagTemplateParser;
 options { tokenVocab=TagTemplateLexer; }
 
 pattern
-    : (rawText | tag)* EOF
+    : (rawText | tag)*
     ;
 
 tag
-    : TAG_START TAG_ID '(' ')'
+    //: TAG_START TAG_ID argumentList tagContext?
+    : TAG_START TAG_ID argumentList ('{' context=pattern '}')?
+    ;
+
+argumentList
+    : '(' ')'
+    ;
+
+tagContext
+    : '{' pattern '}'
     ;
 
 rawText

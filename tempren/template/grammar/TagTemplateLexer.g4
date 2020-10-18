@@ -1,19 +1,28 @@
 lexer grammar TagTemplateLexer;
 
+// TODO: make INVALID_WHITESPACE work in all modes
+INVALID_WHITESPACE
+    : [\t\n\r] -> skip
+    ;
+
 TAG_START
     : '%' -> pushMode(TAG_MODE)
     ;
+
+CONTEXT_START
+    : '{'
+    ;
+
+CONTEXT_END
+    : '}'
+    ;
+
 TEXT
-    : ~('%')+
+    : ~[%{}\t\n\r]+
     ;
 
-fragment INVALID_WHITESPACE_CHAR
-    : [\t\n\r]
-    ;
-
-// CHECK: will INVALID_WHITESPACE work in other modes too?
-INVALID_WHITESPACE
-    : INVALID_WHITESPACE_CHAR -> skip
+ANY
+    : .
     ;
 
 mode TAG_MODE;
@@ -22,16 +31,8 @@ ARG_START
     : '('
     ;
 
-ARG_END_CONTEXT_START
-    : '){' -> popMode
-    ;
-
 ARG_END
     : ')' -> popMode
-    ;
-
-CONTEXT_END
-    : '}'
     ;
 
 TAG_ID

@@ -26,6 +26,24 @@ class TagTemplateParserListener(ParseTreeListener):
         pass
 
 
+    # Enter a parse tree produced by TagTemplateParser#argumentList.
+    def enterArgumentList(self, ctx:TagTemplateParser.ArgumentListContext):
+        pass
+
+    # Exit a parse tree produced by TagTemplateParser#argumentList.
+    def exitArgumentList(self, ctx:TagTemplateParser.ArgumentListContext):
+        pass
+
+
+    # Enter a parse tree produced by TagTemplateParser#tagContext.
+    def enterTagContext(self, ctx:TagTemplateParser.TagContextContext):
+        pass
+
+    # Exit a parse tree produced by TagTemplateParser#tagContext.
+    def exitTagContext(self, ctx:TagTemplateParser.TagContextContext):
+        pass
+
+
     # Enter a parse tree produced by TagTemplateParser#rawText.
     def enterRawText(self, ctx:TagTemplateParser.RawTextContext):
         pass

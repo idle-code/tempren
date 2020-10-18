@@ -19,6 +19,16 @@ class TagTemplateParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by TagTemplateParser#argumentList.
+    def visitArgumentList(self, ctx:TagTemplateParser.ArgumentListContext):
+        return self.visitChildren(ctx)
+
+
+    # Visit a parse tree produced by TagTemplateParser#tagContext.
+    def visitTagContext(self, ctx:TagTemplateParser.TagContextContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by TagTemplateParser#rawText.
     def visitRawText(self, ctx:TagTemplateParser.RawTextContext):
         return self.visitChildren(ctx)
