@@ -5,5 +5,5 @@ function antlr4() {
 }
 
 antlr4 -Dlanguage=Python3 TagTemplateLexer.g4
-antlr4 -Dlanguage=Python3 TagTemplateParser.g4
+antlr4 -Dlanguage=Python3 -visitor TagTemplateParser.g4
 

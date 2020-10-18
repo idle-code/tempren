@@ -96,6 +96,12 @@ class TagTemplateParser ( Parser ):
             if hasattr( listener, "exitPattern" ):
                 listener.exitPattern(self)
 
+        def accept(self, visitor:ParseTreeVisitor):
+            if hasattr( visitor, "visitPattern" ):
+                return visitor.visitPattern(self)
+            else:
+                return visitor.visitChildren(self)
+
 
 
 
@@ -168,6 +174,12 @@ class TagTemplateParser ( Parser ):
             if hasattr( listener, "exitTag" ):
                 listener.exitTag(self)
 
+        def accept(self, visitor:ParseTreeVisitor):
+            if hasattr( visitor, "visitTag" ):
+                return visitor.visitTag(self)
+            else:
+                return visitor.visitChildren(self)
+
 
 
 
@@ -213,6 +225,12 @@ class TagTemplateParser ( Parser ):
         def exitRule(self, listener:ParseTreeListener):
             if hasattr( listener, "exitRawText" ):
                 listener.exitRawText(self)
+
+        def accept(self, visitor:ParseTreeVisitor):
+            if hasattr( visitor, "visitRawText" ):
+                return visitor.visitRawText(self)
+            else:
+                return visitor.visitChildren(self)
 
 
 

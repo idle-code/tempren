@@ -22,8 +22,16 @@ ARG_START
     : '('
     ;
 
+ARG_END_CONTEXT_START
+    : '){' -> popMode
+    ;
+
 ARG_END
     : ')' -> popMode
+    ;
+
+CONTEXT_END
+    : '}'
     ;
 
 TAG_ID
