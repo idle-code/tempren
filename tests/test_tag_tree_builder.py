@@ -27,8 +27,21 @@ class TestTagTreeBuilder:
 
         assert pattern == Pattern([RawText("Text with a "), Tag("TAG")])
 
-    def test_tag_with_context(self):
+    def test_tag_with_text_context(self):
         pattern = parse("%TAG(){Context text}")
 
         tag_context = Pattern([RawText("Context text")])
         assert pattern == Pattern([Tag("TAG", context=tag_context)])
+
+    def test_tag_with_tag_context(self):
+        pattern = parse("%TAG(){Context %SUB_TAG()}")
+
+        tag_context = Pattern([RawText("Context "), Tag("SUB_TAG")])
+        assert pattern == Pattern([Tag("TAG", context=tag_context)])
+
+    # TODO: test argument lists
+    # TODO: test escape sequences
+
+
+class TestTagTreeBuilderErrors:
+    pass

@@ -2,6 +2,10 @@ parser grammar TagTemplateParser;
 
 options { tokenVocab=TagTemplateLexer; }
 
+rootPattern
+    : pattern EOF
+    ;
+
 pattern
     : (rawText | tag)*
     ;
