@@ -12,6 +12,10 @@ def parse(text: str) -> TagExpression:
     stream = CommonTokenStream(lexer)
     parser = TagExpressionParser(stream)
     pattern = parser.pattern()
+
+    # TODO: create error listener
+    # TODO: create listener for creating expression tree?
+
     return pattern_to_expression(pattern)
 
 
