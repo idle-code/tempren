@@ -1,7 +1,7 @@
 lexer grammar TagTemplateLexer;
 
-// TODO: make INVALID_WHITESPACE work in all modes
-INVALID_WHITESPACE
+// TODO: make WHITESPACE work in all modes
+GLOBAL_WHITESPACE
     : [\t\n\r] -> skip
     ;
 
@@ -27,6 +27,10 @@ ANY
 
 mode TAG_MODE;
 
+TAG_WHITESPACE
+    : [ \t\n\r] -> skip
+    ;
+
 ARG_START
     : '('
     ;
@@ -35,19 +39,27 @@ ARG_END
     : ')' -> popMode
     ;
 
+ARG_SEPARATOR
+    : ','
+    ;
+
 TAG_ID
     : ID
     ;
 
+NUMERIC_ARGUMENT
+    : NUMBER_CHAR+
+    ;
+
 fragment ID
-    : (LETTER | '_') (LETTER | NUMBER | '_')*
+    : (LETTER | '_') (LETTER | NUMBER_CHAR | '_')*
     ;
 
 fragment LETTER
     : [a-zA-Z]
     ;
 
-fragment NUMBER
+fragment NUMBER_CHAR
     : [0-9]
     ;
 

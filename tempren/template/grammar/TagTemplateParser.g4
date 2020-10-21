@@ -12,15 +12,16 @@ pattern
 
 tag
     //: TAG_START TAG_ID argumentList tagContext?
-    : TAG_START TAG_ID argumentList ('{' context=pattern '}')?
+    : TAG_START TAG_ID '(' argumentList ')' ('{' context=pattern '}')?
     ;
 
 argumentList
-    : '(' ')'
+    : argument (',' argument)*
+    |
     ;
 
-tagContext
-    : '{' pattern '}'
+argument
+    : NUMERIC_ARGUMENT
     ;
 
 rawText

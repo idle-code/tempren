@@ -1,6 +1,6 @@
 from abc import abstractmethod, ABC
 from dataclasses import field, dataclass
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Any, Mapping
 
 from antlr4 import InputStream, CommonTokenStream
 
@@ -35,9 +35,11 @@ class RawText(PatternElement):
 class Tag(PatternElement):
     tag_name: str
     context: Optional[Pattern] = None
+    args: List[Any] = field(default_factory=list)
+    kwargs: Mapping[str, Any] = field(default_factory=dict)
 
     def __str__(self) -> str:
-        return f"%{self.tag_name}()"
+        return f"%{self.tag_name}({self.args})"
 
 
 class _TreeVisitor(TagTemplateParserVisitor):
@@ -51,7 +53,7 @@ class _TreeVisitor(TagTemplateParserVisitor):
         return pattern + [element]
 
     def visitRootPattern(self, ctx: TagTemplateParser.RootPatternContext):
-        return self.visitPattern(ctx)
+        return self.visitPattern(ctx.pattern())
 
     def visitPattern(self, ctx: TagTemplateParser.PatternContext):
         print("Visiting pattern: ", ctx.getText())
@@ -59,14 +61,22 @@ class _TreeVisitor(TagTemplateParserVisitor):
         return Pattern(pattern_elements)
 
     def visitTag(self, ctx: TagTemplateParser.TagContext):
-        context: List[Pattern] = self.visitChildren(ctx)
         tag_name = ctx.TAG_ID().getText()
-        if context:
-            assert len(context) == 1
-            tag = Tag(tag_name, context=context[0])
-        else:
-            tag = Tag(tag_name)
+        # TODO: Parse args
+        ctx.argumentList()
+        context: Optional[Pattern] = None
+        if ctx.context:
+            context = self.visitPattern(ctx.context)
+        tag = Tag(tag_name, context=context)
         return tag
+
+    # def visitArgumentList(self, ctx: TagTemplateParser.ArgumentListContext):
+    #     return super().visitArgumentList(ctx)
+
+    def visitArgument(self, ctx: TagTemplateParser.ArgumentContext):
+        if ctx.NUMERIC_ARGUMENT():
+            return int(ctx.NUMERIC_ARGUMENT().getText())
+        return super().visitArgument(ctx)
 
     def visitRawText(self, ctx: TagTemplateParser.RawTextContext):
         raw_text = RawText(ctx.TEXT().getText())
@@ -81,5 +91,5 @@ class TagTreeBuilder:
         parser = TagTemplateParser(token_stream)
 
         visitor = _TreeVisitor()
-        root_pattern = visitor.visitRootPattern(parser.pattern())
+        root_pattern = visitor.visitRootPattern(parser.rootPattern())
         return root_pattern
