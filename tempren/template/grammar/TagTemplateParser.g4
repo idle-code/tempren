@@ -11,7 +11,6 @@ pattern
     ;
 
 tag
-    //: TAG_START TAG_ID argumentList tagContext?
     : TAG_START TAG_ID '(' argumentList ')' ('{' context=pattern '}')?
     ;
 
@@ -21,8 +20,13 @@ argumentList
     ;
 
 argument
-    : BOOLEAN_ARGUMENT
-    | NUMERIC_ARGUMENT
+    : BOOLEAN_VALUE
+    | NUMERIC_VALUE
+    | stringLiteral
+    ;
+
+stringLiteral
+    : STRING_START STRING_VALUE? STRING_END
     ;
 
 rawText

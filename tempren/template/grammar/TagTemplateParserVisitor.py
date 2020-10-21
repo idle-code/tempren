@@ -34,6 +34,11 @@ class TagTemplateParserVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
+    # Visit a parse tree produced by TagTemplateParser#stringLiteral.
+    def visitStringLiteral(self, ctx:TagTemplateParser.StringLiteralContext):
+        return self.visitChildren(ctx)
+
+
     # Visit a parse tree produced by TagTemplateParser#rawText.
     def visitRawText(self, ctx:TagTemplateParser.RawTextContext):
         return self.visitChildren(ctx)

@@ -51,10 +51,27 @@ class TestTagTreeBuilder:
         assert true_pattern == Pattern([Tag("TAG", args=[True])])
         assert false_pattern == Pattern([Tag("TAG", args=[False])])
 
-    def test_multiple_integer_arguments(self):
-        pattern = parse("%TAG(123, 321, 397)")
+    def test_string_argument(self):
+        pattern = parse("%TAG('text value')")
 
-        assert pattern == Pattern([Tag("TAG", args=[123, 321, 397])])
+        assert pattern == Pattern([Tag("TAG", args=["text value"])])
+
+    def test_empty_string_argument(self):
+        pattern = parse("%TAG('')")
+
+        assert pattern == Pattern([Tag("TAG", args=[""])])
+
+    def test_escape_sequence_in_string_argument(self):
+        quote_pattern = parse("%TAG('Don\\'t')")
+        backslash_pattern = parse("%TAG('C:\\\\Windows')")
+
+        assert quote_pattern == Pattern([Tag("TAG", args=["Don't"])])
+        assert backslash_pattern == Pattern([Tag("TAG", args=["C:\\Windows"])])
+
+    def test_multiple_positional_arguments(self):
+        pattern = parse("%TAG(123, true)")
+
+        assert pattern == Pattern([Tag("TAG", args=[123, True])])
 
     # TODO: test named argument lists
     # TODO: test escape sequences

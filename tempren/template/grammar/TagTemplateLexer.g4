@@ -43,13 +43,17 @@ ARG_SEPARATOR
     : ','
     ;
 
-NUMERIC_ARGUMENT
+NUMERIC_VALUE
     : NUMBER_CHAR+
     ;
 
-BOOLEAN_ARGUMENT
+BOOLEAN_VALUE
     : 'true'
     | 'false'
+    ;
+
+STRING_START
+    : '\'' -> pushMode(STRING_MODE)
     ;
 
 TAG_ID
@@ -68,5 +72,14 @@ fragment NUMBER_CHAR
     : [0-9]
     ;
 
-// TOOD: create mode for argument list handling?
+mode STRING_MODE;
+
+STRING_VALUE
+    : (~('\'' | '\\') | '\\' ('\'' | '\\'))+
+    ;
+
+STRING_END
+    : '\'' -> popMode
+    ;
+
 // TOOD: create mode for string handling strings in argument list

@@ -74,15 +74,27 @@ class _TreeVisitor(TagTemplateParserVisitor):
     #     return super().visitArgumentList(ctx)
 
     def visitArgument(self, ctx: TagTemplateParser.ArgumentContext):
-        if ctx.BOOLEAN_ARGUMENT():
-            return ctx.BOOLEAN_ARGUMENT().getText() == "true"
-        elif ctx.NUMERIC_ARGUMENT():
-            return int(ctx.NUMERIC_ARGUMENT().getText())
+        if ctx.BOOLEAN_VALUE():
+            return ctx.BOOLEAN_VALUE().getText() == "true"
+        elif ctx.NUMERIC_VALUE():
+            return int(ctx.NUMERIC_VALUE().getText())
+        elif ctx.stringLiteral():
+            return self._unescape(self.visitStringLiteral(ctx.stringLiteral()))
+        # CHECK: throw exception here?
         return super().visitArgument(ctx)
+
+    def _unescape(self, text: str) -> str:
+        return text.replace("\\'", "'").replace("\\\\", "\\")
 
     def visitRawText(self, ctx: TagTemplateParser.RawTextContext):
         raw_text = RawText(ctx.TEXT().getText())
         return raw_text
+
+    def visitStringLiteral(self, ctx: TagTemplateParser.StringLiteralContext):
+        if ctx.STRING_VALUE():
+            return ctx.STRING_VALUE().getText()
+        else:
+            return ""
 
 
 class TagTreeBuilder:

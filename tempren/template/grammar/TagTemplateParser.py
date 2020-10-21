@@ -11,23 +11,27 @@ else:
 
 def serializedATN():
     with StringIO() as buf:
-        buf.write("\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\17")
-        buf.write("\63\4\2\t\2\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\3")
-        buf.write("\2\3\2\3\2\3\3\3\3\7\3\24\n\3\f\3\16\3\27\13\3\3\4\3\4")
-        buf.write("\3\4\3\4\3\4\3\4\3\4\3\4\3\4\5\4\"\n\4\3\5\3\5\3\5\7\5")
-        buf.write("\'\n\5\f\5\16\5*\13\5\3\5\5\5-\n\5\3\6\3\6\3\7\3\7\3\7")
-        buf.write("\2\2\b\2\4\6\b\n\f\2\3\3\2\r\16\2\61\2\16\3\2\2\2\4\25")
-        buf.write("\3\2\2\2\6\30\3\2\2\2\b,\3\2\2\2\n.\3\2\2\2\f\60\3\2\2")
-        buf.write("\2\16\17\5\4\3\2\17\20\7\2\2\3\20\3\3\2\2\2\21\24\5\f")
-        buf.write("\7\2\22\24\5\6\4\2\23\21\3\2\2\2\23\22\3\2\2\2\24\27\3")
-        buf.write("\2\2\2\25\23\3\2\2\2\25\26\3\2\2\2\26\5\3\2\2\2\27\25")
-        buf.write("\3\2\2\2\30\31\7\4\2\2\31\32\7\17\2\2\32\33\7\n\2\2\33")
-        buf.write("\34\5\b\5\2\34!\7\13\2\2\35\36\7\5\2\2\36\37\5\4\3\2\37")
-        buf.write(" \7\6\2\2 \"\3\2\2\2!\35\3\2\2\2!\"\3\2\2\2\"\7\3\2\2")
-        buf.write("\2#(\5\n\6\2$%\7\f\2\2%\'\5\n\6\2&$\3\2\2\2\'*\3\2\2\2")
-        buf.write("(&\3\2\2\2()\3\2\2\2)-\3\2\2\2*(\3\2\2\2+-\3\2\2\2,#\3")
-        buf.write("\2\2\2,+\3\2\2\2-\t\3\2\2\2./\t\2\2\2/\13\3\2\2\2\60\61")
-        buf.write("\7\7\2\2\61\r\3\2\2\2\7\23\25!(,")
+        buf.write("\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\22")
+        buf.write(">\4\2\t\2\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b")
+        buf.write("\t\b\3\2\3\2\3\2\3\3\3\3\7\3\26\n\3\f\3\16\3\31\13\3\3")
+        buf.write("\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\5\4$\n\4\3\5\3\5\3")
+        buf.write("\5\7\5)\n\5\f\5\16\5,\13\5\3\5\5\5/\n\5\3\6\3\6\3\6\5")
+        buf.write("\6\64\n\6\3\7\3\7\5\78\n\7\3\7\3\7\3\b\3\b\3\b\2\2\t\2")
+        buf.write("\4\6\b\n\f\16\2\2\2>\2\20\3\2\2\2\4\27\3\2\2\2\6\32\3")
+        buf.write("\2\2\2\b.\3\2\2\2\n\63\3\2\2\2\f\65\3\2\2\2\16;\3\2\2")
+        buf.write("\2\20\21\5\4\3\2\21\22\7\2\2\3\22\3\3\2\2\2\23\26\5\16")
+        buf.write("\b\2\24\26\5\6\4\2\25\23\3\2\2\2\25\24\3\2\2\2\26\31\3")
+        buf.write("\2\2\2\27\25\3\2\2\2\27\30\3\2\2\2\30\5\3\2\2\2\31\27")
+        buf.write("\3\2\2\2\32\33\7\4\2\2\33\34\7\20\2\2\34\35\7\n\2\2\35")
+        buf.write("\36\5\b\5\2\36#\7\13\2\2\37 \7\5\2\2 !\5\4\3\2!\"\7\6")
+        buf.write("\2\2\"$\3\2\2\2#\37\3\2\2\2#$\3\2\2\2$\7\3\2\2\2%*\5\n")
+        buf.write("\6\2&\'\7\f\2\2\')\5\n\6\2(&\3\2\2\2),\3\2\2\2*(\3\2\2")
+        buf.write("\2*+\3\2\2\2+/\3\2\2\2,*\3\2\2\2-/\3\2\2\2.%\3\2\2\2.")
+        buf.write("-\3\2\2\2/\t\3\2\2\2\60\64\7\16\2\2\61\64\7\r\2\2\62\64")
+        buf.write("\5\f\7\2\63\60\3\2\2\2\63\61\3\2\2\2\63\62\3\2\2\2\64")
+        buf.write("\13\3\2\2\2\65\67\7\17\2\2\668\7\21\2\2\67\66\3\2\2\2")
+        buf.write("\678\3\2\2\289\3\2\2\29:\7\22\2\2:\r\3\2\2\2;<\7\7\2\2")
+        buf.write("<\17\3\2\2\2\t\25\27#*.\63\67")
         return buf.getvalue()
 
 
@@ -46,18 +50,19 @@ class TagTemplateParser ( Parser ):
 
     symbolicNames = [ "<INVALID>", "GLOBAL_WHITESPACE", "TAG_START", "CONTEXT_START", 
                       "CONTEXT_END", "TEXT", "ANY", "TAG_WHITESPACE", "ARG_START", 
-                      "ARG_END", "ARG_SEPARATOR", "NUMERIC_ARGUMENT", "BOOLEAN_ARGUMENT", 
-                      "TAG_ID" ]
+                      "ARG_END", "ARG_SEPARATOR", "NUMERIC_VALUE", "BOOLEAN_VALUE", 
+                      "STRING_START", "TAG_ID", "STRING_VALUE", "STRING_END" ]
 
     RULE_rootPattern = 0
     RULE_pattern = 1
     RULE_tag = 2
     RULE_argumentList = 3
     RULE_argument = 4
-    RULE_rawText = 5
+    RULE_stringLiteral = 5
+    RULE_rawText = 6
 
     ruleNames =  [ "rootPattern", "pattern", "tag", "argumentList", "argument", 
-                   "rawText" ]
+                   "stringLiteral", "rawText" ]
 
     EOF = Token.EOF
     GLOBAL_WHITESPACE=1
@@ -70,9 +75,12 @@ class TagTemplateParser ( Parser ):
     ARG_START=8
     ARG_END=9
     ARG_SEPARATOR=10
-    NUMERIC_ARGUMENT=11
-    BOOLEAN_ARGUMENT=12
-    TAG_ID=13
+    NUMERIC_VALUE=11
+    BOOLEAN_VALUE=12
+    STRING_START=13
+    TAG_ID=14
+    STRING_VALUE=15
+    STRING_END=16
 
     def __init__(self, input:TokenStream, output:TextIO = sys.stdout):
         super().__init__(input, output)
@@ -114,9 +122,9 @@ class TagTemplateParser ( Parser ):
         self.enterRule(localctx, 0, self.RULE_rootPattern)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 12
+            self.state = 14
             self.pattern()
-            self.state = 13
+            self.state = 15
             self.match(TagTemplateParser.EOF)
         except RecognitionException as re:
             localctx.exception = re
@@ -166,25 +174,25 @@ class TagTemplateParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 19
+            self.state = 21
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while _la==TagTemplateParser.TAG_START or _la==TagTemplateParser.TEXT:
-                self.state = 17
+                self.state = 19
                 self._errHandler.sync(self)
                 token = self._input.LA(1)
                 if token in [TagTemplateParser.TEXT]:
-                    self.state = 15
+                    self.state = 17
                     self.rawText()
                     pass
                 elif token in [TagTemplateParser.TAG_START]:
-                    self.state = 16
+                    self.state = 18
                     self.tag()
                     pass
                 else:
                     raise NoViableAltException(self)
 
-                self.state = 21
+                self.state = 23
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
@@ -249,25 +257,25 @@ class TagTemplateParser ( Parser ):
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 22
-            self.match(TagTemplateParser.TAG_START)
-            self.state = 23
-            self.match(TagTemplateParser.TAG_ID)
             self.state = 24
-            self.match(TagTemplateParser.ARG_START)
+            self.match(TagTemplateParser.TAG_START)
             self.state = 25
-            self.argumentList()
+            self.match(TagTemplateParser.TAG_ID)
             self.state = 26
+            self.match(TagTemplateParser.ARG_START)
+            self.state = 27
+            self.argumentList()
+            self.state = 28
             self.match(TagTemplateParser.ARG_END)
-            self.state = 31
+            self.state = 33
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             if _la==TagTemplateParser.CONTEXT_START:
-                self.state = 27
-                self.match(TagTemplateParser.CONTEXT_START)
-                self.state = 28
-                localctx.context = self.pattern()
                 self.state = 29
+                self.match(TagTemplateParser.CONTEXT_START)
+                self.state = 30
+                localctx.context = self.pattern()
+                self.state = 31
                 self.match(TagTemplateParser.CONTEXT_END)
 
 
@@ -317,22 +325,22 @@ class TagTemplateParser ( Parser ):
         self.enterRule(localctx, 6, self.RULE_argumentList)
         self._la = 0 # Token type
         try:
-            self.state = 42
+            self.state = 44
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [TagTemplateParser.NUMERIC_ARGUMENT, TagTemplateParser.BOOLEAN_ARGUMENT]:
+            if token in [TagTemplateParser.NUMERIC_VALUE, TagTemplateParser.BOOLEAN_VALUE, TagTemplateParser.STRING_START]:
                 self.enterOuterAlt(localctx, 1)
-                self.state = 33
+                self.state = 35
                 self.argument()
-                self.state = 38
+                self.state = 40
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
                 while _la==TagTemplateParser.ARG_SEPARATOR:
-                    self.state = 34
+                    self.state = 36
                     self.match(TagTemplateParser.ARG_SEPARATOR)
-                    self.state = 35
+                    self.state = 37
                     self.argument()
-                    self.state = 40
+                    self.state = 42
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
 
@@ -359,11 +367,15 @@ class TagTemplateParser ( Parser ):
             super().__init__(parent, invokingState)
             self.parser = parser
 
-        def BOOLEAN_ARGUMENT(self):
-            return self.getToken(TagTemplateParser.BOOLEAN_ARGUMENT, 0)
+        def BOOLEAN_VALUE(self):
+            return self.getToken(TagTemplateParser.BOOLEAN_VALUE, 0)
 
-        def NUMERIC_ARGUMENT(self):
-            return self.getToken(TagTemplateParser.NUMERIC_ARGUMENT, 0)
+        def NUMERIC_VALUE(self):
+            return self.getToken(TagTemplateParser.NUMERIC_VALUE, 0)
+
+        def stringLiteral(self):
+            return self.getTypedRuleContext(TagTemplateParser.StringLiteralContext,0)
+
 
         def getRuleIndex(self):
             return TagTemplateParser.RULE_argument
@@ -381,16 +393,83 @@ class TagTemplateParser ( Parser ):
 
         localctx = TagTemplateParser.ArgumentContext(self, self._ctx, self.state)
         self.enterRule(localctx, 8, self.RULE_argument)
+        try:
+            self.state = 49
+            self._errHandler.sync(self)
+            token = self._input.LA(1)
+            if token in [TagTemplateParser.BOOLEAN_VALUE]:
+                self.enterOuterAlt(localctx, 1)
+                self.state = 46
+                self.match(TagTemplateParser.BOOLEAN_VALUE)
+                pass
+            elif token in [TagTemplateParser.NUMERIC_VALUE]:
+                self.enterOuterAlt(localctx, 2)
+                self.state = 47
+                self.match(TagTemplateParser.NUMERIC_VALUE)
+                pass
+            elif token in [TagTemplateParser.STRING_START]:
+                self.enterOuterAlt(localctx, 3)
+                self.state = 48
+                self.stringLiteral()
+                pass
+            else:
+                raise NoViableAltException(self)
+
+        except RecognitionException as re:
+            localctx.exception = re
+            self._errHandler.reportError(self, re)
+            self._errHandler.recover(self, re)
+        finally:
+            self.exitRule()
+        return localctx
+
+
+    class StringLiteralContext(ParserRuleContext):
+
+        def __init__(self, parser, parent:ParserRuleContext=None, invokingState:int=-1):
+            super().__init__(parent, invokingState)
+            self.parser = parser
+
+        def STRING_START(self):
+            return self.getToken(TagTemplateParser.STRING_START, 0)
+
+        def STRING_END(self):
+            return self.getToken(TagTemplateParser.STRING_END, 0)
+
+        def STRING_VALUE(self):
+            return self.getToken(TagTemplateParser.STRING_VALUE, 0)
+
+        def getRuleIndex(self):
+            return TagTemplateParser.RULE_stringLiteral
+
+        def accept(self, visitor:ParseTreeVisitor):
+            if hasattr( visitor, "visitStringLiteral" ):
+                return visitor.visitStringLiteral(self)
+            else:
+                return visitor.visitChildren(self)
+
+
+
+
+    def stringLiteral(self):
+
+        localctx = TagTemplateParser.StringLiteralContext(self, self._ctx, self.state)
+        self.enterRule(localctx, 10, self.RULE_stringLiteral)
         self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 44
+            self.state = 51
+            self.match(TagTemplateParser.STRING_START)
+            self.state = 53
+            self._errHandler.sync(self)
             _la = self._input.LA(1)
-            if not(_la==TagTemplateParser.NUMERIC_ARGUMENT or _la==TagTemplateParser.BOOLEAN_ARGUMENT):
-                self._errHandler.recoverInline(self)
-            else:
-                self._errHandler.reportMatch(self)
-                self.consume()
+            if _la==TagTemplateParser.STRING_VALUE:
+                self.state = 52
+                self.match(TagTemplateParser.STRING_VALUE)
+
+
+            self.state = 55
+            self.match(TagTemplateParser.STRING_END)
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -424,10 +503,10 @@ class TagTemplateParser ( Parser ):
     def rawText(self):
 
         localctx = TagTemplateParser.RawTextContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 10, self.RULE_rawText)
+        self.enterRule(localctx, 12, self.RULE_rawText)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 46
+            self.state = 57
             self.match(TagTemplateParser.TEXT)
         except RecognitionException as re:
             localctx.exception = re
