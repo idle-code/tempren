@@ -62,19 +62,21 @@ class _TreeVisitor(TagTemplateParserVisitor):
 
     def visitTag(self, ctx: TagTemplateParser.TagContext):
         tag_name = ctx.TAG_ID().getText()
-        # TODO: Parse args
+        args = self.visitArgumentList(ctx.argumentList())
         ctx.argumentList()
         context: Optional[Pattern] = None
         if ctx.context:
             context = self.visitPattern(ctx.context)
-        tag = Tag(tag_name, context=context)
+        tag = Tag(tag_name, args=args, context=context)
         return tag
 
     # def visitArgumentList(self, ctx: TagTemplateParser.ArgumentListContext):
     #     return super().visitArgumentList(ctx)
 
     def visitArgument(self, ctx: TagTemplateParser.ArgumentContext):
-        if ctx.NUMERIC_ARGUMENT():
+        if ctx.BOOLEAN_ARGUMENT():
+            return ctx.BOOLEAN_ARGUMENT().getText() == "true"
+        elif ctx.NUMERIC_ARGUMENT():
             return int(ctx.NUMERIC_ARGUMENT().getText())
         return super().visitArgument(ctx)
 

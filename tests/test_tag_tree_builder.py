@@ -39,12 +39,24 @@ class TestTagTreeBuilder:
         tag_context = Pattern([RawText("Context "), Tag("SUB_TAG")])
         assert pattern == Pattern([Tag("TAG", context=tag_context)])
 
-    # def test_integer_tag_argument(self):
-    #     pattern = parse("%TAG(123)")
-    #
-    #     assert pattern == Pattern([Tag("TAG", args=[123])])
+    def test_integer_argument(self):
+        pattern = parse("%TAG(123)")
 
-    # TODO: test argument lists
+        assert pattern == Pattern([Tag("TAG", args=[123])])
+
+    def test_boolean_arguments(self):
+        true_pattern = parse("%TAG(true)")
+        false_pattern = parse("%TAG(false)")
+
+        assert true_pattern == Pattern([Tag("TAG", args=[True])])
+        assert false_pattern == Pattern([Tag("TAG", args=[False])])
+
+    def test_multiple_integer_arguments(self):
+        pattern = parse("%TAG(123, 321, 397)")
+
+        assert pattern == Pattern([Tag("TAG", args=[123, 321, 397])])
+
+    # TODO: test named argument lists
     # TODO: test escape sequences
 
 

@@ -11,23 +11,23 @@ else:
 
 def serializedATN():
     with StringIO() as buf:
-        buf.write("\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\16")
+        buf.write("\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\17")
         buf.write("\63\4\2\t\2\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\3")
         buf.write("\2\3\2\3\2\3\3\3\3\7\3\24\n\3\f\3\16\3\27\13\3\3\4\3\4")
         buf.write("\3\4\3\4\3\4\3\4\3\4\3\4\3\4\5\4\"\n\4\3\5\3\5\3\5\7\5")
         buf.write("\'\n\5\f\5\16\5*\13\5\3\5\5\5-\n\5\3\6\3\6\3\7\3\7\3\7")
-        buf.write("\2\2\b\2\4\6\b\n\f\2\2\2\61\2\16\3\2\2\2\4\25\3\2\2\2")
-        buf.write("\6\30\3\2\2\2\b,\3\2\2\2\n.\3\2\2\2\f\60\3\2\2\2\16\17")
-        buf.write("\5\4\3\2\17\20\7\2\2\3\20\3\3\2\2\2\21\24\5\f\7\2\22\24")
-        buf.write("\5\6\4\2\23\21\3\2\2\2\23\22\3\2\2\2\24\27\3\2\2\2\25")
-        buf.write("\23\3\2\2\2\25\26\3\2\2\2\26\5\3\2\2\2\27\25\3\2\2\2\30")
-        buf.write("\31\7\4\2\2\31\32\7\r\2\2\32\33\7\n\2\2\33\34\5\b\5\2")
-        buf.write("\34!\7\13\2\2\35\36\7\5\2\2\36\37\5\4\3\2\37 \7\6\2\2")
-        buf.write(" \"\3\2\2\2!\35\3\2\2\2!\"\3\2\2\2\"\7\3\2\2\2#(\5\n\6")
-        buf.write("\2$%\7\f\2\2%\'\5\n\6\2&$\3\2\2\2\'*\3\2\2\2(&\3\2\2\2")
-        buf.write("()\3\2\2\2)-\3\2\2\2*(\3\2\2\2+-\3\2\2\2,#\3\2\2\2,+\3")
-        buf.write("\2\2\2-\t\3\2\2\2./\7\16\2\2/\13\3\2\2\2\60\61\7\7\2\2")
-        buf.write("\61\r\3\2\2\2\7\23\25!(,")
+        buf.write("\2\2\b\2\4\6\b\n\f\2\3\3\2\r\16\2\61\2\16\3\2\2\2\4\25")
+        buf.write("\3\2\2\2\6\30\3\2\2\2\b,\3\2\2\2\n.\3\2\2\2\f\60\3\2\2")
+        buf.write("\2\16\17\5\4\3\2\17\20\7\2\2\3\20\3\3\2\2\2\21\24\5\f")
+        buf.write("\7\2\22\24\5\6\4\2\23\21\3\2\2\2\23\22\3\2\2\2\24\27\3")
+        buf.write("\2\2\2\25\23\3\2\2\2\25\26\3\2\2\2\26\5\3\2\2\2\27\25")
+        buf.write("\3\2\2\2\30\31\7\4\2\2\31\32\7\17\2\2\32\33\7\n\2\2\33")
+        buf.write("\34\5\b\5\2\34!\7\13\2\2\35\36\7\5\2\2\36\37\5\4\3\2\37")
+        buf.write(" \7\6\2\2 \"\3\2\2\2!\35\3\2\2\2!\"\3\2\2\2\"\7\3\2\2")
+        buf.write("\2#(\5\n\6\2$%\7\f\2\2%\'\5\n\6\2&$\3\2\2\2\'*\3\2\2\2")
+        buf.write("(&\3\2\2\2()\3\2\2\2)-\3\2\2\2*(\3\2\2\2+-\3\2\2\2,#\3")
+        buf.write("\2\2\2,+\3\2\2\2-\t\3\2\2\2./\t\2\2\2/\13\3\2\2\2\60\61")
+        buf.write("\7\7\2\2\61\r\3\2\2\2\7\23\25!(,")
         return buf.getvalue()
 
 
@@ -46,7 +46,8 @@ class TagTemplateParser ( Parser ):
 
     symbolicNames = [ "<INVALID>", "GLOBAL_WHITESPACE", "TAG_START", "CONTEXT_START", 
                       "CONTEXT_END", "TEXT", "ANY", "TAG_WHITESPACE", "ARG_START", 
-                      "ARG_END", "ARG_SEPARATOR", "TAG_ID", "NUMERIC_ARGUMENT" ]
+                      "ARG_END", "ARG_SEPARATOR", "NUMERIC_ARGUMENT", "BOOLEAN_ARGUMENT", 
+                      "TAG_ID" ]
 
     RULE_rootPattern = 0
     RULE_pattern = 1
@@ -69,8 +70,9 @@ class TagTemplateParser ( Parser ):
     ARG_START=8
     ARG_END=9
     ARG_SEPARATOR=10
-    TAG_ID=11
-    NUMERIC_ARGUMENT=12
+    NUMERIC_ARGUMENT=11
+    BOOLEAN_ARGUMENT=12
+    TAG_ID=13
 
     def __init__(self, input:TokenStream, output:TextIO = sys.stdout):
         super().__init__(input, output)
@@ -318,7 +320,7 @@ class TagTemplateParser ( Parser ):
             self.state = 42
             self._errHandler.sync(self)
             token = self._input.LA(1)
-            if token in [TagTemplateParser.NUMERIC_ARGUMENT]:
+            if token in [TagTemplateParser.NUMERIC_ARGUMENT, TagTemplateParser.BOOLEAN_ARGUMENT]:
                 self.enterOuterAlt(localctx, 1)
                 self.state = 33
                 self.argument()
@@ -357,6 +359,9 @@ class TagTemplateParser ( Parser ):
             super().__init__(parent, invokingState)
             self.parser = parser
 
+        def BOOLEAN_ARGUMENT(self):
+            return self.getToken(TagTemplateParser.BOOLEAN_ARGUMENT, 0)
+
         def NUMERIC_ARGUMENT(self):
             return self.getToken(TagTemplateParser.NUMERIC_ARGUMENT, 0)
 
@@ -376,10 +381,16 @@ class TagTemplateParser ( Parser ):
 
         localctx = TagTemplateParser.ArgumentContext(self, self._ctx, self.state)
         self.enterRule(localctx, 8, self.RULE_argument)
+        self._la = 0 # Token type
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 44
-            self.match(TagTemplateParser.NUMERIC_ARGUMENT)
+            _la = self._input.LA(1)
+            if not(_la==TagTemplateParser.NUMERIC_ARGUMENT or _la==TagTemplateParser.BOOLEAN_ARGUMENT):
+                self._errHandler.recoverInline(self)
+            else:
+                self._errHandler.reportMatch(self)
+                self.consume()
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)

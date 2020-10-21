@@ -43,12 +43,17 @@ ARG_SEPARATOR
     : ','
     ;
 
-TAG_ID
-    : ID
-    ;
-
 NUMERIC_ARGUMENT
     : NUMBER_CHAR+
+    ;
+
+BOOLEAN_ARGUMENT
+    : 'true'
+    | 'false'
+    ;
+
+TAG_ID
+    : ID
     ;
 
 fragment ID

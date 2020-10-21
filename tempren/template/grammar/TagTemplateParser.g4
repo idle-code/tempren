@@ -21,7 +21,8 @@ argumentList
     ;
 
 argument
-    : NUMERIC_ARGUMENT
+    : BOOLEAN_ARGUMENT
+    | NUMERIC_ARGUMENT
     ;
 
 rawText
