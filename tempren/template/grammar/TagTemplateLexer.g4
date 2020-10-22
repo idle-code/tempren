@@ -1,6 +1,5 @@
 lexer grammar TagTemplateLexer;
 
-// TODO: make WHITESPACE work in all modes
 GLOBAL_WHITESPACE
     : [\t\n\r] -> skip
     ;
@@ -81,5 +80,3 @@ STRING_VALUE
 STRING_END
     : '\'' -> popMode
     ;
-
-// TOOD: create mode for string handling strings in argument list

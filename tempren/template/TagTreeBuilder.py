@@ -1,8 +1,8 @@
-from abc import abstractmethod, ABC
-from dataclasses import field, dataclass
-from typing import List, Optional, Union, Any, Mapping
+from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
+from typing import Any, List, Mapping, Optional, Union
 
-from antlr4 import InputStream, CommonTokenStream
+from antlr4 import CommonTokenStream, InputStream
 
 from .grammar.TagTemplateLexer import TagTemplateLexer
 from .grammar.TagTemplateParser import TagTemplateParser
@@ -46,7 +46,9 @@ class _TreeVisitor(TagTemplateParserVisitor):
     def defaultResult(self) -> List[PatternElement]:
         return list()
 
-    def aggregateResult(self, pattern: List[PatternElement], element: Union[PatternElement, List]):
+    def aggregateResult(
+        self, pattern: List[PatternElement], element: Union[PatternElement, List]
+    ):
         print("Aggregating", repr(pattern), repr(element))
         if isinstance(element, list):
             return pattern

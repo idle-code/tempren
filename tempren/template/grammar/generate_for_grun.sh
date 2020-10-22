@@ -8,4 +8,3 @@ antlr4 TagTemplateLexer.g4
 javac TagTemplateLexer.java
 antlr4 -visitor TagTemplateParser.g4
 javac TagTemplateParser.java
-

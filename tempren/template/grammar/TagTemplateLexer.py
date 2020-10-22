@@ -1,9 +1,9 @@
 # Generated from TagTemplateLexer.g4 by ANTLR 4.8
-from antlr4 import *
+import sys
 from io import StringIO
 from typing.io import TextIO
-import sys
 
+from antlr4 import *
 
 
 def serializedATN():
@@ -20,18 +20,18 @@ def serializedATN():
         buf.write("\3\20\3\20\3\20\7\20h\n\20\f\20\16\20k\13\20\3\21\3\21")
         buf.write("\3\22\3\22\3\23\3\23\3\23\6\23t\n\23\r\23\16\23u\3\24")
         buf.write("\3\24\3\24\3\24\2\2\25\5\3\7\4\t\5\13\6\r\7\17\b\21\t")
-        buf.write("\23\n\25\13\27\f\31\r\33\16\35\17\37\20!\2#\2%\2\'\21")
-        buf.write(")\22\5\2\3\4\b\4\2\13\f\17\17\7\2\13\f\17\17\'\'}}\177")
-        buf.write("\177\5\2\13\f\17\17\"\"\4\2C\\c|\3\2\62;\4\2))^^\2~\2")
+        buf.write("\23\n\25\13\27\f\31\r\33\16\35\17\37\20!\2#\2%\2'\21")
+        buf.write(")\22\5\2\3\4\b\4\2\13\f\17\17\7\2\13\f\17\17''}}\177")
+        buf.write('\177\5\2\13\f\17\17""\4\2C\\c|\3\2\62;\4\2))^^\2~\2')
         buf.write("\5\3\2\2\2\2\7\3\2\2\2\2\t\3\2\2\2\2\13\3\2\2\2\2\r\3")
         buf.write("\2\2\2\2\17\3\2\2\2\3\21\3\2\2\2\3\23\3\2\2\2\3\25\3\2")
         buf.write("\2\2\3\27\3\2\2\2\3\31\3\2\2\2\3\33\3\2\2\2\3\35\3\2\2")
-        buf.write("\2\3\37\3\2\2\2\4\'\3\2\2\2\4)\3\2\2\2\5+\3\2\2\2\7/\3")
+        buf.write("\2\3\37\3\2\2\2\4'\3\2\2\2\4)\3\2\2\2\5+\3\2\2\2\7/\3")
         buf.write("\2\2\2\t\63\3\2\2\2\13\65\3\2\2\2\r8\3\2\2\2\17<\3\2\2")
         buf.write("\2\21>\3\2\2\2\23B\3\2\2\2\25D\3\2\2\2\27H\3\2\2\2\31")
         buf.write("K\3\2\2\2\33X\3\2\2\2\35Z\3\2\2\2\37^\3\2\2\2!b\3\2\2")
-        buf.write("\2#l\3\2\2\2%n\3\2\2\2\'s\3\2\2\2)w\3\2\2\2+,\t\2\2\2")
-        buf.write(",-\3\2\2\2-.\b\2\2\2.\6\3\2\2\2/\60\7\'\2\2\60\61\3\2")
+        buf.write("\2#l\3\2\2\2%n\3\2\2\2's\3\2\2\2)w\3\2\2\2+,\t\2\2\2")
+        buf.write(",-\3\2\2\2-.\b\2\2\2.\6\3\2\2\2/\60\7'\2\2\60\61\3\2")
         buf.write("\2\2\61\62\b\3\3\2\62\b\3\2\2\2\63\64\7}\2\2\64\n\3\2")
         buf.write("\2\2\65\66\7\177\2\2\66\f\3\2\2\2\679\n\3\2\28\67\3\2")
         buf.write("\2\29:\3\2\2\2:8\3\2\2\2:;\3\2\2\2;\16\3\2\2\2<=\13\2")
@@ -44,7 +44,7 @@ def serializedATN():
         buf.write(")\2\2[\\\3\2\2\2\\]\b\16\5\2]\36\3\2\2\2^_\5!\20\2_ \3")
         buf.write("\2\2\2`c\5#\21\2ac\7a\2\2b`\3\2\2\2ba\3\2\2\2ci\3\2\2")
         buf.write("\2dh\5#\21\2eh\5%\22\2fh\7a\2\2gd\3\2\2\2ge\3\2\2\2gf")
-        buf.write("\3\2\2\2hk\3\2\2\2ig\3\2\2\2ij\3\2\2\2j\"\3\2\2\2ki\3")
+        buf.write('\3\2\2\2hk\3\2\2\2ig\3\2\2\2ij\3\2\2\2j"\3\2\2\2ki\3')
         buf.write("\2\2\2lm\t\5\2\2m$\3\2\2\2no\t\6\2\2o&\3\2\2\2pt\n\7\2")
         buf.write("\2qr\7^\2\2rt\t\7\2\2sp\3\2\2\2sq\3\2\2\2tu\3\2\2\2us")
         buf.write("\3\2\2\2uv\3\2\2\2v(\3\2\2\2wx\7)\2\2xy\3\2\2\2yz\b\24")
@@ -57,7 +57,7 @@ class TagTemplateLexer(Lexer):
 
     atn = ATNDeserializer().deserialize(serializedATN())
 
-    decisionsToDFA = [ DFA(ds, i) for i, ds in enumerate(atn.decisionToState) ]
+    decisionsToDFA = [DFA(ds, i) for i, ds in enumerate(atn.decisionToState)]
 
     TAG_MODE = 1
     STRING_MODE = 2
@@ -79,32 +79,61 @@ class TagTemplateLexer(Lexer):
     STRING_VALUE = 15
     STRING_END = 16
 
-    channelNames = [ u"DEFAULT_TOKEN_CHANNEL", u"HIDDEN" ]
+    channelNames = [u"DEFAULT_TOKEN_CHANNEL", u"HIDDEN"]
 
-    modeNames = [ "DEFAULT_MODE", "TAG_MODE", "STRING_MODE" ]
+    modeNames = ["DEFAULT_MODE", "TAG_MODE", "STRING_MODE"]
 
-    literalNames = [ "<INVALID>",
-            "'%'", "'{'", "'}'", "'('", "')'", "','" ]
+    literalNames = ["<INVALID>", "'%'", "'{'", "'}'", "'('", "')'", "','"]
 
-    symbolicNames = [ "<INVALID>",
-            "GLOBAL_WHITESPACE", "TAG_START", "CONTEXT_START", "CONTEXT_END", 
-            "TEXT", "ANY", "TAG_WHITESPACE", "ARG_START", "ARG_END", "ARG_SEPARATOR", 
-            "NUMERIC_VALUE", "BOOLEAN_VALUE", "STRING_START", "TAG_ID", 
-            "STRING_VALUE", "STRING_END" ]
+    symbolicNames = [
+        "<INVALID>",
+        "GLOBAL_WHITESPACE",
+        "TAG_START",
+        "CONTEXT_START",
+        "CONTEXT_END",
+        "TEXT",
+        "ANY",
+        "TAG_WHITESPACE",
+        "ARG_START",
+        "ARG_END",
+        "ARG_SEPARATOR",
+        "NUMERIC_VALUE",
+        "BOOLEAN_VALUE",
+        "STRING_START",
+        "TAG_ID",
+        "STRING_VALUE",
+        "STRING_END",
+    ]
 
-    ruleNames = [ "GLOBAL_WHITESPACE", "TAG_START", "CONTEXT_START", "CONTEXT_END", 
-                  "TEXT", "ANY", "TAG_WHITESPACE", "ARG_START", "ARG_END", 
-                  "ARG_SEPARATOR", "NUMERIC_VALUE", "BOOLEAN_VALUE", "STRING_START", 
-                  "TAG_ID", "ID", "LETTER", "NUMBER_CHAR", "STRING_VALUE", 
-                  "STRING_END" ]
+    ruleNames = [
+        "GLOBAL_WHITESPACE",
+        "TAG_START",
+        "CONTEXT_START",
+        "CONTEXT_END",
+        "TEXT",
+        "ANY",
+        "TAG_WHITESPACE",
+        "ARG_START",
+        "ARG_END",
+        "ARG_SEPARATOR",
+        "NUMERIC_VALUE",
+        "BOOLEAN_VALUE",
+        "STRING_START",
+        "TAG_ID",
+        "ID",
+        "LETTER",
+        "NUMBER_CHAR",
+        "STRING_VALUE",
+        "STRING_END",
+    ]
 
     grammarFileName = "TagTemplateLexer.g4"
 
-    def __init__(self, input=None, output:TextIO = sys.stdout):
+    def __init__(self, input=None, output: TextIO = sys.stdout):
         super().__init__(input, output)
         self.checkVersion("4.8")
-        self._interp = LexerATNSimulator(self, self.atn, self.decisionsToDFA, PredictionContextCache())
+        self._interp = LexerATNSimulator(
+            self, self.atn, self.decisionsToDFA, PredictionContextCache()
+        )
         self._actions = None
         self._predicates = None
-
-
