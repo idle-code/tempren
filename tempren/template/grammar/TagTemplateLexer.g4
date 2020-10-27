@@ -70,8 +70,8 @@ NUMERIC_VALUE
     ;
 
 BOOLEAN_VALUE
-    : 'true'
-    | 'false'
+    : [Tt] 'rue'
+    | [Ff] 'alse'
     ;
 
 EMPTY_STRING

@@ -45,11 +45,15 @@ class TestTagTreeBuilder:
         assert pattern == Pattern([Tag("TAG", args=[123])])
 
     def test_boolean_arguments(self):
-        true_pattern = parse("%TAG(true)")
-        false_pattern = parse("%TAG(false)")
+        true_pattern = parse("%trueTag(true)")
+        capital_true_pattern = parse("%TrueTag(True)")
+        false_pattern = parse("%falseTag(false)")
+        capital_false_pattern = parse("%FalseTag(False)")
 
-        assert true_pattern == Pattern([Tag("TAG", args=[True])])
-        assert false_pattern == Pattern([Tag("TAG", args=[False])])
+        assert true_pattern == Pattern([Tag("trueTag", args=[True])])
+        assert capital_true_pattern == Pattern([Tag("TrueTag", args=[True])])
+        assert false_pattern == Pattern([Tag("falseTag", args=[False])])
+        assert capital_false_pattern == Pattern([Tag("FalseTag", args=[False])])
 
     def test_string_argument(self):
         pattern = parse("%TAG('text value')")
@@ -80,7 +84,13 @@ class TestTagTreeBuilder:
             [Tag("TAG", kwargs={"foo": 123, "bar": "spam", "baz": True})]
         )
 
-    # TODO: test named argument lists
+    def test_mixed_argument_types(self):
+        pattern = parse("%TAG(123, bar='spam', true)")
+
+        assert pattern == Pattern(
+            [Tag("TAG", args=[123, True], kwargs={"bar": "spam"})]
+        )
+
     # TODO: test '{' and '}' escaping
 
 

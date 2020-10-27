@@ -91,7 +91,7 @@ class _TreeVisitor(TagTemplateParserVisitor):
         self, ctx: TagTemplateParser.ArgumentValueContext
     ) -> ArgValue:
         if ctx.BOOLEAN_VALUE():
-            return ctx.BOOLEAN_VALUE().getText() == "true"
+            return ctx.BOOLEAN_VALUE().getText().lower() == "true"
         elif ctx.NUMERIC_VALUE():
             return int(ctx.NUMERIC_VALUE().getText())
         elif ctx.STRING_VALUE():
