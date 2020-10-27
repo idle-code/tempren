@@ -17,7 +17,7 @@ GLOBAL_WHITESPACE
     ;
 
 TAG_START
-    : '%' -> skip, pushMode(TAG_MODE)
+    : '%' -> skip, mode(TAG_MODE)
     ;
 
 TEXT
@@ -43,7 +43,7 @@ TAG_WHITESPACE
     ;
 
 ARGS_START
-    : '(' -> skip, pushMode(ARGS_MODE)
+    : '(' -> skip, mode(ARGS_MODE)
     ;
 
 TAG_ID
@@ -74,12 +74,9 @@ BOOLEAN_VALUE
     | [Ff] 'alse'
     ;
 
-EMPTY_STRING
-    : '\'\'' -> type(STRING_VALUE)
-    ;
-
-STRING_START
-    : '\'' -> skip, pushMode(STRING_MODE)
+STRING_VALUE
+    : '\'' ('\\\'' | ~['])* '\''
+    | '"' ('\\"' | ~["])* '"'
     ;
 
 ARG_NAME
@@ -88,14 +85,4 @@ ARG_NAME
 
 ARG_EQUALS
     : '='
-    ;
-
-mode STRING_MODE;
-
-STRING_VALUE
-    : (~('\'' | '\\') | '\\' ('\'' | '\\'))+
-    ;
-
-STRING_END
-    : '\'' -> skip, popMode
     ;

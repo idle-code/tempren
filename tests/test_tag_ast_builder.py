@@ -67,6 +67,11 @@ class TestAstBuilder:
 
         assert pattern == Pattern([Tag("TAG", args=["text value"])])
 
+    def test_double_quoted_string_argument(self):
+        pattern = parse('%TAG("quoted value")')
+
+        assert pattern == Pattern([Tag("TAG", args=["quoted value"])])
+
     def test_empty_string_argument(self):
         pattern = parse("%TAG('')")
 
@@ -78,6 +83,13 @@ class TestAstBuilder:
 
         assert quote_pattern == Pattern([Tag("TAG", args=["Don't"])])
         assert backslash_pattern == Pattern([Tag("TAG", args=["C:\\Windows"])])
+
+    def test_invalid_escape_sequence_in_string_argument(self):
+        quote_pattern = parse("%TAG('Quote: \"')")
+        escaped_quote_pattern = parse("%TAG('Quote: \\\"')")
+
+        assert quote_pattern == Pattern([Tag("TAG", args=['Quote: "'])])
+        assert escaped_quote_pattern == Pattern([Tag("TAG", args=['Quote: \\"'])])
 
     def test_multiple_positional_arguments(self):
         pattern = parse("%TAG(123, true)")

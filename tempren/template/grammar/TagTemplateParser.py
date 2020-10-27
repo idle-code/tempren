@@ -13,24 +13,24 @@ else:
 
 def serializedATN():
     with StringIO() as buf:
-        buf.write("\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\26")
+        buf.write("\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\23")
         buf.write("\65\4\2\t\2\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4")
         buf.write("\b\t\b\3\2\3\2\3\2\3\3\3\3\7\3\26\n\3\f\3\16\3\31\13\3")
         buf.write("\3\4\3\4\3\4\3\4\3\4\3\4\5\4!\n\4\3\5\6\5$\n\5\r\5\16")
         buf.write("\5%\3\5\5\5)\n\5\3\6\3\6\5\6-\n\6\3\6\3\6\3\7\3\7\3\b")
-        buf.write("\3\b\3\b\2\2\t\2\4\6\b\n\f\16\2\3\4\2\17\20\24\24\2\63")
-        buf.write("\2\20\3\2\2\2\4\27\3\2\2\2\6\32\3\2\2\2\b(\3\2\2\2\n,")
-        buf.write("\3\2\2\2\f\60\3\2\2\2\16\62\3\2\2\2\20\21\5\4\3\2\21\22")
-        buf.write("\7\2\2\3\22\3\3\2\2\2\23\26\5\16\b\2\24\26\5\6\4\2\25")
-        buf.write("\23\3\2\2\2\25\24\3\2\2\2\26\31\3\2\2\2\27\25\3\2\2\2")
-        buf.write("\27\30\3\2\2\2\30\5\3\2\2\2\31\27\3\2\2\2\32\33\7\13\2")
-        buf.write("\2\33 \5\b\5\2\34\35\7\6\2\2\35\36\5\4\3\2\36\37\7\7\2")
-        buf.write('\2\37!\3\2\2\2 \34\3\2\2\2 !\3\2\2\2!\7\3\2\2\2"$\5\n')
-        buf.write('\6\2#"\3\2\2\2$%\3\2\2\2%#\3\2\2\2%&\3\2\2\2&)\3\2\2')
-        buf.write("\2')\3\2\2\2(#\3\2\2\2('\3\2\2\2)\t\3\2\2\2*+\7\22\2")
-        buf.write("\2+-\7\23\2\2,*\3\2\2\2,-\3\2\2\2-.\3\2\2\2./\5\f\7\2")
-        buf.write("/\13\3\2\2\2\60\61\t\2\2\2\61\r\3\2\2\2\62\63\7\5\2\2")
-        buf.write("\63\17\3\2\2\2\b\25\27 %(,")
+        buf.write("\3\b\3\b\2\2\t\2\4\6\b\n\f\16\2\3\3\2\17\21\2\63\2\20")
+        buf.write("\3\2\2\2\4\27\3\2\2\2\6\32\3\2\2\2\b(\3\2\2\2\n,\3\2\2")
+        buf.write("\2\f\60\3\2\2\2\16\62\3\2\2\2\20\21\5\4\3\2\21\22\7\2")
+        buf.write("\2\3\22\3\3\2\2\2\23\26\5\16\b\2\24\26\5\6\4\2\25\23\3")
+        buf.write("\2\2\2\25\24\3\2\2\2\26\31\3\2\2\2\27\25\3\2\2\2\27\30")
+        buf.write("\3\2\2\2\30\5\3\2\2\2\31\27\3\2\2\2\32\33\7\13\2\2\33")
+        buf.write(" \5\b\5\2\34\35\7\6\2\2\35\36\5\4\3\2\36\37\7\7\2\2\37")
+        buf.write('!\3\2\2\2 \34\3\2\2\2 !\3\2\2\2!\7\3\2\2\2"$\5\n\6\2')
+        buf.write("#\"\3\2\2\2$%\3\2\2\2%#\3\2\2\2%&\3\2\2\2&)\3\2\2\2'")
+        buf.write(")\3\2\2\2(#\3\2\2\2('\3\2\2\2)\t\3\2\2\2*+\7\22\2\2+")
+        buf.write("-\7\23\2\2,*\3\2\2\2,-\3\2\2\2-.\3\2\2\2./\5\f\7\2/\13")
+        buf.write("\3\2\2\2\60\61\t\2\2\2\61\r\3\2\2\2\62\63\7\5\2\2\63\17")
+        buf.write("\3\2\2\2\b\25\27 %(,")
         return buf.getvalue()
 
 
@@ -63,9 +63,6 @@ class TagTemplateParser(Parser):
         "<INVALID>",
         "<INVALID>",
         "'='",
-        "<INVALID>",
-        "<INVALID>",
-        "''''",
     ]
 
     symbolicNames = [
@@ -84,12 +81,9 @@ class TagTemplateParser(Parser):
         "ARG_SEPARATOR",
         "NUMERIC_VALUE",
         "BOOLEAN_VALUE",
-        "STRING_START",
+        "STRING_VALUE",
         "ARG_NAME",
         "ARG_EQUALS",
-        "STRING_VALUE",
-        "STRING_END",
-        "EMPTY_STRING",
     ]
 
     RULE_rootPattern = 0
@@ -125,12 +119,9 @@ class TagTemplateParser(Parser):
     ARG_SEPARATOR = 12
     NUMERIC_VALUE = 13
     BOOLEAN_VALUE = 14
-    STRING_START = 15
+    STRING_VALUE = 15
     ARG_NAME = 16
     ARG_EQUALS = 17
-    STRING_VALUE = 18
-    STRING_END = 19
-    EMPTY_STRING = 20
 
     def __init__(self, input: TokenStream, output: TextIO = sys.stdout):
         super().__init__(input, output)
@@ -341,8 +332,8 @@ class TagTemplateParser(Parser):
             if token in [
                 TagTemplateParser.NUMERIC_VALUE,
                 TagTemplateParser.BOOLEAN_VALUE,
-                TagTemplateParser.ARG_NAME,
                 TagTemplateParser.STRING_VALUE,
+                TagTemplateParser.ARG_NAME,
             ]:
                 self.enterOuterAlt(localctx, 1)
                 self.state = 33
@@ -362,8 +353,8 @@ class TagTemplateParser(Parser):
                                 & (
                                     (1 << TagTemplateParser.NUMERIC_VALUE)
                                     | (1 << TagTemplateParser.BOOLEAN_VALUE)
-                                    | (1 << TagTemplateParser.ARG_NAME)
                                     | (1 << TagTemplateParser.STRING_VALUE)
+                                    | (1 << TagTemplateParser.ARG_NAME)
                                 )
                             )
                             != 0

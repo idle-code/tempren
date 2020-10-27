@@ -13,7 +13,7 @@ from .grammar.TagTemplateParserVisitor import TagTemplateParserVisitor
 class PatternElement(ABC):
     @abstractmethod
     def __str__(self) -> str:
-        pass
+        raise NotImplementedError()
 
 
 @dataclass
@@ -40,7 +40,7 @@ class Tag(PatternElement):
     kwargs: Mapping[str, Any] = field(default_factory=dict)
 
     def __str__(self) -> str:
-        return f"%{self.tag_name}({self.args})"
+        return f"%{self.tag_name}({self.args}, {self.kwargs})"
 
 
 ArgValue = Union[str, int, bool]
@@ -64,6 +64,9 @@ class _TreeVisitor(TagTemplateParserVisitor):
         self, pattern: List[PatternElement], element: Union[PatternElement, List]
     ):
         if isinstance(element, list):
+            # Our visitor methods return concrete types or tuples at most - if we get a list here
+            # it means that it was produced from defaultResult method for some intermediate tokens
+            # and isn't valuable.
             return pattern
         return pattern + [element]
 
@@ -107,8 +110,8 @@ class _TreeVisitor(TagTemplateParserVisitor):
             return int(ctx.NUMERIC_VALUE().getText())
         elif ctx.STRING_VALUE():
             str_val = ctx.STRING_VALUE().getText()
-            if str_val == "''":
-                return ""
+            assert len(str_val) >= 2
+            str_val = str_val[1:-1]
             return unescape(str_val)
         raise NotImplementedError("Unknown argument value token: " + ctx.getText())
 
@@ -116,9 +119,7 @@ class _TreeVisitor(TagTemplateParserVisitor):
         self, ctx: TagTemplateParser.ArgumentContext
     ) -> Tuple[Optional[str], ArgValue]:
         arg_value = self.visitArgumentValue(ctx.argumentValue())
-        arg_name = None
-        if ctx.ARG_NAME():
-            arg_name = ctx.ARG_NAME().getText()
+        arg_name = ctx.ARG_NAME().getText() if ctx.ARG_NAME() else None
         return arg_name, arg_value
 
     def visitRawText(self, ctx: TagTemplateParser.RawTextContext) -> RawText:
