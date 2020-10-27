@@ -20,16 +20,16 @@ TAG_START
     : '%' -> skip, pushMode(TAG_MODE)
     ;
 
+TEXT
+    : ('\\{' | '\\}' | ~[%{}\t\n\r])+
+    ;
+
 CONTEXT_START
     : '{'
     ;
 
 CONTEXT_END
     : '}'
-    ;
-
-TEXT
-    : ~[%{}\t\n\r]+
     ;
 
 ANY

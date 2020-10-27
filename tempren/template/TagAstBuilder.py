@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+from functools import reduce
 from typing import Any, List, Mapping, Optional, Tuple, Union
 
 from antlr4 import CommonTokenStream, InputStream
@@ -43,6 +44,16 @@ class Tag(PatternElement):
 
 
 ArgValue = Union[str, int, bool]
+
+
+escaped_characters = ("'", "\\", "{", "}")
+replacements = list(("\\" + ec, ec) for ec in escaped_characters)
+
+
+def unescape(text: str) -> str:
+    return reduce(
+        lambda acc, replacement: acc.replace(*replacement), replacements, text
+    )
 
 
 class _TreeVisitor(TagTemplateParserVisitor):
@@ -98,11 +109,8 @@ class _TreeVisitor(TagTemplateParserVisitor):
             str_val = ctx.STRING_VALUE().getText()
             if str_val == "''":
                 return ""
-            return self._unescape(str_val)
+            return unescape(str_val)
         raise NotImplementedError("Unknown argument value token: " + ctx.getText())
-
-    def _unescape(self, text: str) -> str:
-        return text.replace("\\'", "'").replace("\\\\", "\\")
 
     def visitArgument(
         self, ctx: TagTemplateParser.ArgumentContext
@@ -114,11 +122,11 @@ class _TreeVisitor(TagTemplateParserVisitor):
         return arg_name, arg_value
 
     def visitRawText(self, ctx: TagTemplateParser.RawTextContext) -> RawText:
-        raw_text = RawText(ctx.TEXT().getText())
+        raw_text = RawText(unescape(ctx.TEXT().getText()))
         return raw_text
 
 
-class TagTreeBuilder:
+class TagAstBuilder:
     def parse(self, text: str) -> Pattern:
         lexer = TagTemplateLexer(InputStream(text))
         token_stream = CommonTokenStream(lexer)

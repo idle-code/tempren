@@ -24,12 +24,12 @@ def serializedATN():
         buf.write("\7\2\2\3\22\3\3\2\2\2\23\26\5\16\b\2\24\26\5\6\4\2\25")
         buf.write("\23\3\2\2\2\25\24\3\2\2\2\26\31\3\2\2\2\27\25\3\2\2\2")
         buf.write("\27\30\3\2\2\2\30\5\3\2\2\2\31\27\3\2\2\2\32\33\7\13\2")
-        buf.write("\2\33 \5\b\5\2\34\35\7\5\2\2\35\36\5\4\3\2\36\37\7\6\2")
+        buf.write("\2\33 \5\b\5\2\34\35\7\6\2\2\35\36\5\4\3\2\36\37\7\7\2")
         buf.write('\2\37!\3\2\2\2 \34\3\2\2\2 !\3\2\2\2!\7\3\2\2\2"$\5\n')
         buf.write('\6\2#"\3\2\2\2$%\3\2\2\2%#\3\2\2\2%&\3\2\2\2&)\3\2\2')
         buf.write("\2')\3\2\2\2(#\3\2\2\2('\3\2\2\2)\t\3\2\2\2*+\7\22\2")
         buf.write("\2+-\7\23\2\2,*\3\2\2\2,-\3\2\2\2-.\3\2\2\2./\5\f\7\2")
-        buf.write("/\13\3\2\2\2\60\61\t\2\2\2\61\r\3\2\2\2\62\63\7\7\2\2")
+        buf.write("/\13\3\2\2\2\60\61\t\2\2\2\61\r\3\2\2\2\62\63\7\5\2\2")
         buf.write("\63\17\3\2\2\2\b\25\27 %(,")
         return buf.getvalue()
 
@@ -48,9 +48,9 @@ class TagTemplateParser(Parser):
         "<INVALID>",
         "<INVALID>",
         "'%'",
+        "<INVALID>",
         "'{'",
         "'}'",
-        "<INVALID>",
         "<INVALID>",
         "<INVALID>",
         "'('",
@@ -72,9 +72,9 @@ class TagTemplateParser(Parser):
         "<INVALID>",
         "GLOBAL_WHITESPACE",
         "TAG_START",
+        "TEXT",
         "CONTEXT_START",
         "CONTEXT_END",
-        "TEXT",
         "ANY",
         "TAG_WHITESPACE",
         "ARGS_START",
@@ -113,9 +113,9 @@ class TagTemplateParser(Parser):
     EOF = Token.EOF
     GLOBAL_WHITESPACE = 1
     TAG_START = 2
-    CONTEXT_START = 3
-    CONTEXT_END = 4
-    TEXT = 5
+    TEXT = 3
+    CONTEXT_START = 4
+    CONTEXT_END = 5
     ANY = 6
     TAG_WHITESPACE = 7
     ARGS_START = 8
@@ -374,9 +374,9 @@ class TagTemplateParser(Parser):
                 pass
             elif token in [
                 TagTemplateParser.EOF,
+                TagTemplateParser.TEXT,
                 TagTemplateParser.CONTEXT_START,
                 TagTemplateParser.CONTEXT_END,
-                TagTemplateParser.TEXT,
                 TagTemplateParser.TAG_ID,
             ]:
                 self.enterOuterAlt(localctx, 2)
