@@ -11,22 +11,22 @@ pattern
     ;
 
 tag
-    : TAG_START TAG_ID '(' argumentList ')' ('{' context=pattern '}')?
+    : TAG_ID argumentList ('{' context=pattern '}')?
     ;
 
 argumentList
-    : argument (',' argument)*
+    : argument+
     |
     ;
 
 argument
-    : BOOLEAN_VALUE
-    | NUMERIC_VALUE
-    | stringLiteral
+    : (ARG_NAME '=')? argumentValue
     ;
 
-stringLiteral
-    : STRING_START STRING_VALUE? STRING_END
+argumentValue
+    : BOOLEAN_VALUE
+    | NUMERIC_VALUE
+    | STRING_VALUE
     ;
 
 rawText

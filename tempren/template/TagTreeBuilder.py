@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, List, Mapping, Optional, Union
+from typing import Any, List, Mapping, Optional, Tuple, Union
 
 from antlr4 import CommonTokenStream, InputStream
 
@@ -42,6 +42,9 @@ class Tag(PatternElement):
         return f"%{self.tag_name}({self.args})"
 
 
+ArgValue = Union[str, int, bool]
+
+
 class _TreeVisitor(TagTemplateParserVisitor):
     def defaultResult(self) -> List[PatternElement]:
         return list()
@@ -49,7 +52,6 @@ class _TreeVisitor(TagTemplateParserVisitor):
     def aggregateResult(
         self, pattern: List[PatternElement], element: Union[PatternElement, List]
     ):
-        print("Aggregating", repr(pattern), repr(element))
         if isinstance(element, list):
             return pattern
         return pattern + [element]
@@ -58,45 +60,62 @@ class _TreeVisitor(TagTemplateParserVisitor):
         return self.visitPattern(ctx.pattern())
 
     def visitPattern(self, ctx: TagTemplateParser.PatternContext):
-        print("Visiting pattern: ", ctx.getText())
         pattern_elements = self.visitChildren(ctx)
         return Pattern(pattern_elements)
 
     def visitTag(self, ctx: TagTemplateParser.TagContext):
         tag_name = ctx.TAG_ID().getText()
-        args = self.visitArgumentList(ctx.argumentList())
+        args, kwargs = self.visitArgumentList(ctx.argumentList())
         ctx.argumentList()
         context: Optional[Pattern] = None
         if ctx.context:
             context = self.visitPattern(ctx.context)
-        tag = Tag(tag_name, args=args, context=context)
+        tag = Tag(tag_name, args=args, kwargs=kwargs, context=context)
         return tag
 
-    # def visitArgumentList(self, ctx: TagTemplateParser.ArgumentListContext):
-    #     return super().visitArgumentList(ctx)
+    def visitArgumentList(
+        self, ctx: TagTemplateParser.ArgumentListContext
+    ) -> Tuple[List[ArgValue], Mapping[str, ArgValue]]:
+        collected_arguments = super().visitArgumentList(ctx)
+        args = [
+            arg_val for arg_name, arg_val in collected_arguments if arg_name is None
+        ]
+        kwargs = {
+            arg_name: arg_val
+            for arg_name, arg_val in collected_arguments
+            if arg_name is not None
+        }
+        return args, kwargs
 
-    def visitArgument(self, ctx: TagTemplateParser.ArgumentContext):
+    def visitArgumentValue(
+        self, ctx: TagTemplateParser.ArgumentValueContext
+    ) -> ArgValue:
         if ctx.BOOLEAN_VALUE():
             return ctx.BOOLEAN_VALUE().getText() == "true"
         elif ctx.NUMERIC_VALUE():
             return int(ctx.NUMERIC_VALUE().getText())
-        elif ctx.stringLiteral():
-            return self._unescape(self.visitStringLiteral(ctx.stringLiteral()))
-        # CHECK: throw exception here?
-        return super().visitArgument(ctx)
+        elif ctx.STRING_VALUE():
+            str_val = ctx.STRING_VALUE().getText()
+            if str_val == "''":
+                return ""
+            return self._unescape(str_val)
+        raise NotImplementedError("Unknown argument value token: " + ctx.getText())
 
     def _unescape(self, text: str) -> str:
         return text.replace("\\'", "'").replace("\\\\", "\\")
 
-    def visitRawText(self, ctx: TagTemplateParser.RawTextContext):
+    def visitArgument(
+        self, ctx: TagTemplateParser.ArgumentContext
+    ) -> Tuple[Optional[str], ArgValue]:
+        arg_value = self.visitArgumentValue(ctx.argumentValue())
+        arg_name = None
+        if ctx.ARG_NAME():
+            arg_name = ctx.ARG_NAME().getText()
+        return arg_name, arg_value
+
+    def visitRawText(self, ctx: TagTemplateParser.RawTextContext) -> RawText:
         raw_text = RawText(ctx.TEXT().getText())
         return raw_text
-
-    def visitStringLiteral(self, ctx: TagTemplateParser.StringLiteralContext):
-        if ctx.STRING_VALUE():
-            return ctx.STRING_VALUE().getText()
-        else:
-            return ""
 
 
 class TagTreeBuilder:

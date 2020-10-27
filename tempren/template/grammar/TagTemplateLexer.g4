@@ -1,11 +1,23 @@
 lexer grammar TagTemplateLexer;
 
+fragment ID
+    : (LETTER | '_') (LETTER | NUMBER_CHAR | '_')*
+    ;
+
+fragment LETTER
+    : [a-zA-Z]
+    ;
+
+fragment NUMBER_CHAR
+    : [0-9]
+    ;
+
 GLOBAL_WHITESPACE
     : [\t\n\r] -> skip
     ;
 
 TAG_START
-    : '%' -> pushMode(TAG_MODE)
+    : '%' -> skip, pushMode(TAG_MODE)
     ;
 
 CONTEXT_START
@@ -27,19 +39,30 @@ ANY
 mode TAG_MODE;
 
 TAG_WHITESPACE
+    : [\t\n\r] -> skip
+    ;
+
+ARGS_START
+    : '(' -> skip, pushMode(ARGS_MODE)
+    ;
+
+TAG_ID
+    : ID
+    ;
+
+
+mode ARGS_MODE;
+
+ARGS_WHITESPACE
     : [ \t\n\r] -> skip
     ;
 
-ARG_START
-    : '('
-    ;
-
 ARG_END
-    : ')' -> popMode
+    : ')' -> skip, mode(DEFAULT_MODE)
     ;
 
 ARG_SEPARATOR
-    : ','
+    : ',' -> skip
     ;
 
 NUMERIC_VALUE
@@ -51,24 +74,20 @@ BOOLEAN_VALUE
     | 'false'
     ;
 
-STRING_START
-    : '\'' -> pushMode(STRING_MODE)
+EMPTY_STRING
+    : '\'\'' -> type(STRING_VALUE)
     ;
 
-TAG_ID
+STRING_START
+    : '\'' -> skip, pushMode(STRING_MODE)
+    ;
+
+ARG_NAME
     : ID
     ;
 
-fragment ID
-    : (LETTER | '_') (LETTER | NUMBER_CHAR | '_')*
-    ;
-
-fragment LETTER
-    : [a-zA-Z]
-    ;
-
-fragment NUMBER_CHAR
-    : [0-9]
+ARG_EQUALS
+    : '='
     ;
 
 mode STRING_MODE;
@@ -78,5 +97,5 @@ STRING_VALUE
     ;
 
 STRING_END
-    : '\'' -> popMode
+    : '\'' -> skip, popMode
     ;

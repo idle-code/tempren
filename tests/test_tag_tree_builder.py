@@ -73,8 +73,15 @@ class TestTagTreeBuilder:
 
         assert pattern == Pattern([Tag("TAG", args=[123, True])])
 
+    def test_named_arguments(self):
+        pattern = parse("%TAG(foo=123, bar='spam', baz=true)")
+
+        assert pattern == Pattern(
+            [Tag("TAG", kwargs={"foo": 123, "bar": "spam", "baz": True})]
+        )
+
     # TODO: test named argument lists
-    # TODO: test escape sequences
+    # TODO: test '{' and '}' escaping
 
 
 class TestTagTreeBuilderErrors:
