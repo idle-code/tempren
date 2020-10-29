@@ -1,47 +1,12 @@
-from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
 from functools import reduce
-from typing import Any, List, Mapping, Optional, Tuple, Union
+from typing import List, Mapping, Optional, Tuple, Union
 
 from antlr4 import CommonTokenStream, InputStream
 
 from .grammar.TagTemplateLexer import TagTemplateLexer
 from .grammar.TagTemplateParser import TagTemplateParser
 from .grammar.TagTemplateParserVisitor import TagTemplateParserVisitor
-
-
-class PatternElement(ABC):
-    @abstractmethod
-    def __str__(self) -> str:
-        raise NotImplementedError()
-
-
-@dataclass
-class Pattern(PatternElement):
-    sub_elements: List[PatternElement] = field(default_factory=list)
-
-    def __str__(self) -> str:
-        return "".join(map(str, self.sub_elements))
-
-
-@dataclass
-class RawText(PatternElement):
-    text: str
-
-    def __str__(self) -> str:
-        return self.text
-
-
-@dataclass
-class Tag(PatternElement):
-    tag_name: str
-    context: Optional[Pattern] = None
-    args: List[Any] = field(default_factory=list)
-    kwargs: Mapping[str, Any] = field(default_factory=dict)
-
-    def __str__(self) -> str:
-        return f"%{self.tag_name}({self.args}, {self.kwargs})"
-
+from .tree_elements import Pattern, PatternElement, RawText, TagPlaceholder
 
 ArgValue = Union[str, int, bool]
 
@@ -84,7 +49,7 @@ class _TreeVisitor(TagTemplateParserVisitor):
         context: Optional[Pattern] = None
         if ctx.context:
             context = self.visitPattern(ctx.context)
-        tag = Tag(tag_name, args=args, kwargs=kwargs, context=context)
+        tag = TagPlaceholder(tag_name, args=args, kwargs=kwargs, context=context)
         return tag
 
     def visitArgumentList(
@@ -127,7 +92,7 @@ class _TreeVisitor(TagTemplateParserVisitor):
         return raw_text
 
 
-class TagAstBuilder:
+class TagTreeBuilder:
     def parse(self, text: str) -> Pattern:
         lexer = TagTemplateLexer(InputStream(text))
         token_stream = CommonTokenStream(lexer)
