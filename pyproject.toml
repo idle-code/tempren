@@ -5,7 +5,7 @@ description = "Template-based Renaming utility"
 authors = ["Pawel Zukowski <p.z.idlecode@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.7"
 antlr4-python3-runtime = "^4.8"
 
 [tool.poetry.dev-dependencies]

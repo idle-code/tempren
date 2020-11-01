@@ -1,0 +1,15 @@
+language: python
+python:
+  - "3.7"
+  - "3.8"
+  - "3.9"
+git:
+  depth: false  # Disable clone depth - it is not needed yet
+install:
+  - pip install poetry
+  - poetry install --no-interaction --verbose
+script:
+  - poetry run pytest
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
+
