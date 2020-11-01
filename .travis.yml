@@ -8,6 +8,6 @@ git:
   depth: false  # Disable clone depth - it is not needed yet
 install:
   - pip install poetry
-  - poetry install --no-interactions --verbose
+  - poetry install --no-interaction --verbose
 script:
   - poetry run pytest
