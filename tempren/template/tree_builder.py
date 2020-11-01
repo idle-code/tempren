@@ -28,11 +28,6 @@ class _TreeVisitor(TagTemplateParserVisitor):
     def aggregateResult(
         self, pattern: List[PatternElement], element: Union[PatternElement, List]
     ):
-        if isinstance(element, list):
-            # Our visitor methods return concrete types or tuples at most - if we get a list here
-            # it means that it was produced from defaultResult method for some intermediate tokens
-            # and isn't valuable.
-            return pattern
         return pattern + [element]
 
     def visitRootPattern(self, ctx: TagTemplateParser.RootPatternContext):
@@ -83,8 +78,8 @@ class _TreeVisitor(TagTemplateParserVisitor):
     def visitArgument(
         self, ctx: TagTemplateParser.ArgumentContext
     ) -> Tuple[Optional[str], ArgValue]:
-        arg_value = self.visitArgumentValue(ctx.argumentValue())
         arg_name = ctx.ARG_NAME().getText() if ctx.ARG_NAME() else None
+        arg_value = self.visitArgumentValue(ctx.argumentValue())
         return arg_name, arg_value
 
     def visitRawText(self, ctx: TagTemplateParser.RawTextContext) -> RawText:

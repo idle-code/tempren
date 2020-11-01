@@ -66,7 +66,7 @@ ARG_SEPARATOR
     ;
 
 NUMERIC_VALUE
-    : NUMBER_CHAR+
+    : '-'? NUMBER_CHAR+
     ;
 
 BOOLEAN_VALUE

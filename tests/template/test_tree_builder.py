@@ -45,10 +45,15 @@ class TestTreeBuilderCorrect:
 
         assert pattern == Pattern([RawText("Text with { braces }")])
 
-    def test_integer_argument(self):
+    def test_numeric_argument(self):
         pattern = parse("%TAG(123)")
 
         assert pattern == Pattern([TagPlaceholder("TAG", args=[123])])
+
+    def test_negative_numeric_argument(self):
+        pattern = parse("%TAG(-123)")
+
+        assert pattern == Pattern([TagPlaceholder("TAG", args=[-123])])
 
     def test_boolean_arguments(self):
         true_pattern = parse("%TRUE(true)")
