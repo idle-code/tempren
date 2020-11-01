@@ -1,7 +1,7 @@
 from functools import reduce
 from typing import List, Mapping, Optional, Tuple, Union
 
-from antlr4 import CommonTokenStream, InputStream
+from antlr4 import CommonTokenStream, InputStream  # type: ignore
 
 from .grammar.TagTemplateLexer import TagTemplateLexer
 from .grammar.TagTemplateParser import TagTemplateParser
