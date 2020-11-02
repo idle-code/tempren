@@ -26,18 +26,18 @@ class _TreeVisitor(TagTemplateParserVisitor):
         return list()
 
     def aggregateResult(
-        self, pattern: List[PatternElement], element: Union[PatternElement, List]
-    ):
+        self, pattern: List[PatternElement], element: PatternElement
+    ) -> List[PatternElement]:
         return pattern + [element]
 
-    def visitRootPattern(self, ctx: TagTemplateParser.RootPatternContext):
+    def visitRootPattern(self, ctx: TagTemplateParser.RootPatternContext) -> Pattern:
         return self.visitPattern(ctx.pattern())
 
-    def visitPattern(self, ctx: TagTemplateParser.PatternContext):
+    def visitPattern(self, ctx: TagTemplateParser.PatternContext) -> Pattern:
         pattern_elements = self.visitChildren(ctx)
         return Pattern(pattern_elements)
 
-    def visitTag(self, ctx: TagTemplateParser.TagContext):
+    def visitTag(self, ctx: TagTemplateParser.TagContext) -> TagPlaceholder:
         tag_name = ctx.TAG_ID().getText()
         args, kwargs = self.visitArgumentList(ctx.argumentList())
         ctx.argumentList()
