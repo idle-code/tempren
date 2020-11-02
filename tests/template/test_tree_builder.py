@@ -135,55 +135,150 @@ class FakeTag(Tag):
         return "Fake output"
 
 
-class TagFactoryMock(TagFactory):
-    context_present: bool
-    args: Tuple[ArgValue]
-    kwargs: Dict[str, ArgValue]
-
-    def __init__(self, tag_class=FakeTag, tag_name=None):
-        super().__init__(tag_class, tag_name)
-
-    def create_instance(self, context_present: bool, *args: ArgValue, **kwargs) -> Tag:
-        self.context_present = context_present
+class MockTag(Tag):
+    def __init__(
+        self,
+        *args,
+        context_present: bool = False,
+        output: Optional[str] = None,
+        **kwargs
+    ):
         self.args = args
         self.kwargs = kwargs
-        return self.tag_class(context_present=context_present, *args, **kwargs)
+        self.context_present = context_present
+        self.output = output
+
+    def __str__(self) -> str:
+        return self.output
 
 
 class TestTagTreeBinder:
+    def test_use_provided_tag_name(self):
+        binder = TagTreeBinder()
+
+        binder.register_tag(FakeTag, "FooBar")
+
+        foobar_tag = binder.find_tag("FooBar")
+        assert foobar_tag
+
+    def test_generate_name_based_on_class(self):
+        binder = TagTreeBinder()
+
+        binder.register_tag(FakeTag)
+
+        fake_tag = binder.find_tag("Fake")
+        assert fake_tag
+
+    def test_invalid_tag_class_name(self):
+        class FakeExtractor(Tag):
+            def __str__(self) -> str:
+                pass
+
+        binder = TagTreeBinder()
+
+        with pytest.raises(ValueError):
+            binder.register_tag(FakeExtractor)
+
     def test_register_tag(self):
         binder = TagTreeBinder()
-        factory = TagFactory(FakeTag)
 
-        binder.register_tag(factory)
+        binder.register_tag(FakeTag)
         found_factory = binder.find_tag("Fake")
 
-        assert found_factory is factory
+        assert found_factory is FakeTag
 
     def test_register_existing_tag(self):
         binder = TagTreeBinder()
-        factory = TagFactory(FakeTag)
-        binder.register_tag(factory)
+        binder.register_tag(FakeTag)
 
         with pytest.raises(ValueError):
-            binder.register_tag(factory)
+            binder.register_tag(FakeTag)
 
     def test_missing_tag(self):
-        pattern = parse("%UNKNOWN_TAG()")
+        pattern = parse("%Nonexistent()")
         binder = TagTreeBinder()
 
         with pytest.raises(UnknownTagError) as exc:
             binder.bind(pattern)
 
-        exc.match("UNKNOWN_TAG")
+        exc.match("Nonexistent")
 
     def test_tag_factory_is_invoked(self):
-        pattern = parse("%TAG()")
+        pattern = parse("%Dummy()")
         binder = TagTreeBinder()
-        mock_factory = TagFactoryMock(FakeTag, "TAG")
-        binder.register_tag(mock_factory)
+        invoked = False
+
+        def DummyTag(*args, **kwargs):
+            nonlocal invoked
+            invoked = True
+            return MockTag(*args, **kwargs)
+
+        binder.register_tag(DummyTag)
 
         binder.bind(pattern)
 
-        assert mock_factory.args == ()
-        assert mock_factory.kwargs == {}
+        assert invoked
+
+    def test_placeholder_positional_arguments_are_passed(self):
+        pattern = parse("%Dummy(1, 'text', true)")
+        binder = TagTreeBinder()
+        positional_args = None
+
+        def DummyTag(*args, **kwargs):
+            nonlocal positional_args
+            positional_args = args
+            return MockTag(*args, **kwargs)
+
+        binder.register_tag(DummyTag)
+
+        binder.bind(pattern)
+
+        assert positional_args == (1, "text", True)
+
+    def test_placeholder_keyword_arguments_are_passed(self):
+        pattern = parse("%Dummy(a=1, b='text', c=true)")
+        binder = TagTreeBinder()
+        keyword_args = None
+
+        def DummyTag(*args, context_present: bool, **kwargs):
+            nonlocal keyword_args
+            keyword_args = kwargs
+            return MockTag(*args, **kwargs)
+
+        binder.register_tag(DummyTag)
+
+        binder.bind(pattern)
+
+        assert keyword_args == {"a": 1, "b": "text", "c": True}
+
+    def test_no_context_present_information_is_passed(self):
+        pattern = parse("%Dummy()")
+        binder = TagTreeBinder()
+        is_context_present = None
+
+        def DummyTag(*args, context_present: bool, **kwargs):
+            nonlocal is_context_present
+            is_context_present = context_present
+            return MockTag(*args, **kwargs)
+
+        binder.register_tag(DummyTag)
+
+        binder.bind(pattern)
+
+        assert not is_context_present
+
+    def test_context_present_information_is_passed(self):
+        pattern = parse("%Dummy(){test}")
+        binder = TagTreeBinder()
+        is_context_present = None
+
+        def DummyTag(*args, context_present: bool, **kwargs):
+            nonlocal is_context_present
+            is_context_present = context_present
+            return MockTag(*args, **kwargs)
+
+        binder.register_tag(DummyTag)
+
+        binder.bind(pattern)
+
+        assert is_context_present

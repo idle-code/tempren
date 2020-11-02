@@ -6,8 +6,14 @@ from antlr4 import CommonTokenStream, InputStream  # type: ignore
 from .grammar.TagTemplateLexer import TagTemplateLexer
 from .grammar.TagTemplateParser import TagTemplateParser
 from .grammar.TagTemplateParserVisitor import TagTemplateParserVisitor
-from .tags import TagFactory
-from .tree_elements import Pattern, PatternElement, RawText, Tag, TagPlaceholder
+from .tree_elements import (
+    Pattern,
+    PatternElement,
+    RawText,
+    Tag,
+    TagFactory,
+    TagPlaceholder,
+)
 
 ArgValue = Union[str, int, bool]
 
@@ -115,12 +121,18 @@ class TagTreeBinder:
     def __init__(self):
         self.tag_registry = {}
 
-    def register_tag(self, tag_factory: TagFactory):
-        if tag_factory.tag_name in self.tag_registry:
-            raise ValueError(
-                f"Factory for tag '{tag_factory.tag_name}' already registered"
-            )
-        self.tag_registry[tag_factory.tag_name] = tag_factory
+    def register_tag(self, tag_factory: TagFactory, tag_name: Optional[str] = None):
+        if not tag_name:
+            tag_class_name = tag_factory.__name__
+            if tag_class_name.endswith("Tag"):
+                tag_name = tag_class_name[: -len("Tag")]
+            else:
+                raise ValueError(
+                    f"Could not determine tag name from tag class: {tag_class_name}"
+                )
+        if tag_name in self.tag_registry:
+            raise ValueError(f"Factory for tag '{tag_name}' already registered")
+        self.tag_registry[tag_name] = tag_factory
 
     def find_tag(self, tag_name: str) -> Optional[TagFactory]:
         return self.tag_registry.get(tag_name, None)
@@ -142,12 +154,14 @@ class TagTreeBinder:
         if not tag_factory:
             raise UnknownTagError(tag_placeholder.tag_name)
 
+        assert "context_present" not in tag_placeholder.kwargs
+
         if tag_placeholder.context:
             context_pattern = self.rewrite_pattern(tag_placeholder.context)
-            return tag_factory.create_instance(
-                context_present=True, *tag_placeholder.args, **tag_placeholder.kwargs
+            return tag_factory(
+                *tag_placeholder.args, **tag_placeholder.kwargs, context_present=True
             )
         else:
-            return tag_factory.create_instance(
-                context_present=False, *tag_placeholder.args, **tag_placeholder.kwargs
+            return tag_factory(
+                *tag_placeholder.args, **tag_placeholder.kwargs, context_present=False
             )

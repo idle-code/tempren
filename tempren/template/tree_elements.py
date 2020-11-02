@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, List, Mapping, Optional
+from typing import Any, Callable, List, Mapping, Optional, Protocol
 
 
 class PatternElement(ABC):
@@ -25,8 +25,16 @@ class Pattern(PatternElement):
         return "".join(map(str, self.sub_elements))
 
 
+# class TagFactory(Protocol):
+#     def __call__(self, *args, context_present: bool = False, **kwargs) -> "Tag":
+#         ...
+
+
 class Tag(PatternElement, ABC):
     pass
+
+
+TagFactory = Callable[..., Tag]
 
 
 @dataclass(frozen=True)
