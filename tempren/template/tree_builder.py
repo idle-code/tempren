@@ -159,9 +159,9 @@ class TagTreeBinder:
         if tag_placeholder.context:
             context_pattern = self.rewrite_pattern(tag_placeholder.context)
             return tag_factory(
-                *tag_placeholder.args, **tag_placeholder.kwargs, context_present=True
+                *tag_placeholder.args, **tag_placeholder.kwargs, context=context_pattern
             )
         else:
             return tag_factory(
-                *tag_placeholder.args, **tag_placeholder.kwargs, context_present=False
+                *tag_placeholder.args, **tag_placeholder.kwargs, context=None
             )

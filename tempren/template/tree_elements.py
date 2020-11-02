@@ -30,8 +30,12 @@ class Pattern(PatternElement):
 #         ...
 
 
-class Tag(PatternElement, ABC):
-    pass
+@dataclass
+class Tag(PatternElement):
+    context: Optional[Pattern]
+
+    def __str__(self) -> str:
+        raise NotImplementedError()
 
 
 TagFactory = Callable[..., Tag]

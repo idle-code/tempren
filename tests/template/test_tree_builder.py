@@ -1,3 +1,5 @@
+from dataclasses import dataclass
+
 import pytest
 from tempren.template.tree_builder import *
 from tempren.template.tree_elements import Pattern, RawText, TagPlaceholder
@@ -135,21 +137,18 @@ class FakeTag(Tag):
         return "Fake output"
 
 
+@dataclass
 class MockTag(Tag):
-    def __init__(
-        self,
-        *args,
-        context_present: bool = False,
-        output: Optional[str] = None,
-        **kwargs
-    ):
+    args: Tuple[ArgValue, ...]
+    kwargs: Mapping[str, ArgValue]
+
+    def __init__(self, *args, context: Optional[Pattern] = None, **kwargs):
+        super().__init__(context=context)
         self.args = args
         self.kwargs = kwargs
-        self.context_present = context_present
-        self.output = output
 
     def __str__(self) -> str:
-        return self.output
+        return "Mock output"
 
 
 class TestTagTreeBinder:
@@ -240,7 +239,7 @@ class TestTagTreeBinder:
         binder = TagTreeBinder()
         keyword_args = None
 
-        def DummyTag(*args, context_present: bool, **kwargs):
+        def DummyTag(*args, context: Optional[Pattern], **kwargs):
             nonlocal keyword_args
             keyword_args = kwargs
             return MockTag(*args, **kwargs)
@@ -251,30 +250,14 @@ class TestTagTreeBinder:
 
         assert keyword_args == {"a": 1, "b": "text", "c": True}
 
-    def test_no_context_present_information_is_passed(self):
-        pattern = parse("%Dummy()")
-        binder = TagTreeBinder()
-        is_context_present = None
-
-        def DummyTag(*args, context_present: bool, **kwargs):
-            nonlocal is_context_present
-            is_context_present = context_present
-            return MockTag(*args, **kwargs)
-
-        binder.register_tag(DummyTag)
-
-        binder.bind(pattern)
-
-        assert not is_context_present
-
     def test_context_present_information_is_passed(self):
         pattern = parse("%Dummy(){test}")
         binder = TagTreeBinder()
         is_context_present = None
 
-        def DummyTag(*args, context_present: bool, **kwargs):
+        def DummyTag(*args, context: Optional[Pattern], **kwargs):
             nonlocal is_context_present
-            is_context_present = context_present
+            is_context_present = context is not None
             return MockTag(*args, **kwargs)
 
         binder.register_tag(DummyTag)
@@ -282,3 +265,24 @@ class TestTagTreeBinder:
         binder.bind(pattern)
 
         assert is_context_present
+
+    def test_context_pattern_is_rewritten(self):
+        pattern = parse("%Outer(name='outer'){%Inner(name='inner')}")
+        binder = TagTreeBinder()
+        binder.register_tag(MockTag, "Outer")
+        binder.register_tag(MockTag, "Inner")
+
+        bound_pattern = binder.bind(pattern)
+
+        inner_tag = MockTag(name="inner")
+        outer_tag = MockTag(name="outer")
+        outer_tag.context = Pattern([inner_tag])
+        assert bound_pattern == Pattern([outer_tag])
+
+    def test_raw_text_is_rewritten(self):
+        pattern = parse("Just text")
+        binder = TagTreeBinder()
+
+        bound_pattern = binder.bind(pattern)
+
+        assert bound_pattern == Pattern([RawText("Just text")])
