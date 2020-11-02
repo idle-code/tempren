@@ -25,14 +25,14 @@ class Pattern(PatternElement):
         return "".join(map(str, self.sub_elements))
 
 
-class Tag(PatternElement):
+class Tag(PatternElement, ABC):
     pass
 
 
-@dataclass
+@dataclass(frozen=True)
 class TagPlaceholder(PatternElement):
     tag_name: str
-    context: Optional[PatternElement] = None
+    context: Optional[Pattern] = None
     args: List[Any] = field(default_factory=list)
     kwargs: Mapping[str, Any] = field(default_factory=dict)
 

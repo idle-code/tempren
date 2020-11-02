@@ -1,3 +1,4 @@
+import pytest
 from tempren.template.tree_builder import *
 from tempren.template.tree_elements import Pattern, RawText, TagPlaceholder
 
@@ -7,7 +8,7 @@ def parse(text: str) -> Pattern:
     return ast_builder.parse(text)
 
 
-class TestTreeBuilderCorrect:
+class TestTreeBuilder:
     def test_empty(self):
         pattern = parse("")
 
@@ -124,3 +125,65 @@ class TestTreeBuilderCorrect:
 
 class TestTreeBuilderErrors:
     pass
+
+
+class FakeTag(Tag):
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def __str__(self) -> str:
+        return "Fake output"
+
+
+class TagFactoryMock(TagFactory):
+    context_present: bool
+    args: Tuple[ArgValue]
+    kwargs: Dict[str, ArgValue]
+
+    def __init__(self, tag_class=FakeTag, tag_name=None):
+        super().__init__(tag_class, tag_name)
+
+    def create_instance(self, context_present: bool, *args: ArgValue, **kwargs) -> Tag:
+        self.context_present = context_present
+        self.args = args
+        self.kwargs = kwargs
+        return self.tag_class(context_present=context_present, *args, **kwargs)
+
+
+class TestTagTreeBinder:
+    def test_register_tag(self):
+        binder = TagTreeBinder()
+        factory = TagFactory(FakeTag)
+
+        binder.register_tag(factory)
+        found_factory = binder.find_tag("Fake")
+
+        assert found_factory is factory
+
+    def test_register_existing_tag(self):
+        binder = TagTreeBinder()
+        factory = TagFactory(FakeTag)
+        binder.register_tag(factory)
+
+        with pytest.raises(ValueError):
+            binder.register_tag(factory)
+
+    def test_missing_tag(self):
+        pattern = parse("%UNKNOWN_TAG()")
+        binder = TagTreeBinder()
+
+        with pytest.raises(UnknownTagError) as exc:
+            binder.bind(pattern)
+
+        exc.match("UNKNOWN_TAG")
+
+    def test_tag_factory_is_invoked(self):
+        pattern = parse("%TAG()")
+        binder = TagTreeBinder()
+        mock_factory = TagFactoryMock(FakeTag, "TAG")
+        binder.register_tag(mock_factory)
+
+        binder.bind(pattern)
+
+        assert mock_factory.args == ()
+        assert mock_factory.kwargs == {}

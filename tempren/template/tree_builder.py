@@ -1,12 +1,13 @@
 from functools import reduce
-from typing import List, Mapping, Optional, Tuple, Union
+from typing import Dict, List, Mapping, Optional, Tuple, Union
 
 from antlr4 import CommonTokenStream, InputStream  # type: ignore
 
 from .grammar.TagTemplateLexer import TagTemplateLexer
 from .grammar.TagTemplateParser import TagTemplateParser
 from .grammar.TagTemplateParserVisitor import TagTemplateParserVisitor
-from .tree_elements import Pattern, PatternElement, RawText, TagPlaceholder
+from .tags import TagFactory
+from .tree_elements import Pattern, PatternElement, RawText, Tag, TagPlaceholder
 
 ArgValue = Union[str, int, bool]
 
@@ -97,3 +98,56 @@ class TagTreeBuilder:
         visitor = _TreeVisitor()
         root_pattern = visitor.visitRootPattern(parser.rootPattern())
         return root_pattern
+
+
+class UnknownTagError(Exception):
+    tag_name: str
+
+    def __init__(self, tag_name: str):
+        assert tag_name
+        self.tag_name = tag_name
+        super().__init__(f"Unknown tag: {self.tag_name}")
+
+
+class TagTreeBinder:
+    tag_registry: Dict[str, TagFactory]
+
+    def __init__(self):
+        self.tag_registry = {}
+
+    def register_tag(self, tag_factory: TagFactory):
+        if tag_factory.tag_name in self.tag_registry:
+            raise ValueError(
+                f"Factory for tag '{tag_factory.tag_name}' already registered"
+            )
+        self.tag_registry[tag_factory.tag_name] = tag_factory
+
+    def find_tag(self, tag_name: str) -> Optional[TagFactory]:
+        return self.tag_registry.get(tag_name, None)
+
+    def bind(self, pattern: Pattern) -> Pattern:
+        return self.rewrite_pattern(pattern)
+
+    def rewrite_pattern(self, pattern: Pattern) -> Pattern:
+        new_elements: List[PatternElement] = []
+        for element in pattern.sub_elements:
+            if isinstance(element, TagPlaceholder):
+                new_elements.append(self.rewrite_tag_placeholder(element))
+            else:
+                new_elements.append(element)
+        return Pattern(new_elements)
+
+    def rewrite_tag_placeholder(self, tag_placeholder: TagPlaceholder) -> Tag:
+        tag_factory: Optional[TagFactory] = self.find_tag(tag_placeholder.tag_name)
+        if not tag_factory:
+            raise UnknownTagError(tag_placeholder.tag_name)
+
+        if tag_placeholder.context:
+            context_pattern = self.rewrite_pattern(tag_placeholder.context)
+            return tag_factory.create_instance(
+                context_present=True, *tag_placeholder.args, **tag_placeholder.kwargs
+            )
+        else:
+            return tag_factory.create_instance(
+                context_present=False, *tag_placeholder.args, **tag_placeholder.kwargs
+            )
