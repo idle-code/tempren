@@ -1,5 +1,5 @@
 from functools import reduce
-from typing import Dict, List, Mapping, Optional, Tuple, Union
+from typing import Dict, List, Mapping, Optional, Tuple, Type, Union
 
 from antlr4 import CommonTokenStream, InputStream  # type: ignore
 
@@ -12,6 +12,7 @@ from .tree_elements import (
     RawText,
     Tag,
     TagFactory,
+    TagInstance,
     TagPlaceholder,
 )
 
@@ -106,13 +107,33 @@ class TagTreeBuilder:
         return root_pattern
 
 
-class UnknownTagError(Exception):
+class TagError(Exception):
     tag_name: str
 
-    def __init__(self, tag_name: str):
+    def __init__(self, tag_name: str, message: str):
         assert tag_name
         self.tag_name = tag_name
-        super().__init__(f"Unknown tag: {self.tag_name}")
+        super().__init__(f"Error in tag '{self.tag_name}': {message}")
+
+
+class UnknownTagError(TagError):
+    def __init__(self, tag_name: str):
+        super().__init__(tag_name, "Tag not recognized")
+
+
+class ContextMissingError(TagError):
+    def __init__(self, tag_name: str):
+        super().__init__(tag_name, f"Context is required for this tag")
+
+
+class ContextProvidedError(TagError):
+    def __init__(self, tag_name: str):
+        super().__init__(tag_name, f"This tag cannot be used with context")
+
+
+class ConfigurationError(TagError):
+    def __init__(self, tag_name: str, message: str):
+        super().__init__(tag_name, f"Configuration not valid: {message}")
 
 
 class TagTreeBinder:
@@ -121,20 +142,29 @@ class TagTreeBinder:
     def __init__(self):
         self.tag_registry = {}
 
-    def register_tag(self, tag_factory: TagFactory, tag_name: Optional[str] = None):
+    def register_tag(self, tag_class: Type[Tag], tag_name: Optional[str] = None):
         if not tag_name:
-            tag_class_name = tag_factory.__name__
+            tag_class_name = tag_class.__name__
             if tag_class_name.endswith("Tag"):
                 tag_name = tag_class_name[: -len("Tag")]
             else:
                 raise ValueError(
                     f"Could not determine tag name from tag class: {tag_class_name}"
                 )
+
+        def _simple_tag_factory(*args, **kwargs):
+            tag = tag_class()
+            tag.configure(*args, **kwargs)
+            return tag
+
+        self.register_tag_factory(_simple_tag_factory, tag_name)
+
+    def register_tag_factory(self, tag_factory: TagFactory, tag_name: str):
         if tag_name in self.tag_registry:
             raise ValueError(f"Factory for tag '{tag_name}' already registered")
         self.tag_registry[tag_name] = tag_factory
 
-    def find_tag(self, tag_name: str) -> Optional[TagFactory]:
+    def find_tag_factory(self, tag_name: str) -> Optional[TagFactory]:
         return self.tag_registry.get(tag_name, None)
 
     def bind(self, pattern: Pattern) -> Pattern:
@@ -149,19 +179,23 @@ class TagTreeBinder:
                 new_elements.append(element)
         return Pattern(new_elements)
 
-    def rewrite_tag_placeholder(self, tag_placeholder: TagPlaceholder) -> Tag:
-        tag_factory: Optional[TagFactory] = self.find_tag(tag_placeholder.tag_name)
+    def rewrite_tag_placeholder(self, tag_placeholder: TagPlaceholder) -> TagInstance:
+        tag_factory: Optional[TagFactory] = self.find_tag_factory(
+            tag_placeholder.tag_name
+        )
         if not tag_factory:
             raise UnknownTagError(tag_placeholder.tag_name)
 
-        assert "context_present" not in tag_placeholder.kwargs
+        tag = tag_factory(*tag_placeholder.args, **tag_placeholder.kwargs)
+        if tag.require_context is not None:
+            if tag_placeholder.context and not tag.require_context:
+                raise ContextProvidedError(tag_placeholder.tag_name)
+            elif tag_placeholder.context is None and tag.require_context:
+                raise ContextMissingError(tag_placeholder.tag_name)
 
-        if tag_placeholder.context:
-            context_pattern = self.rewrite_pattern(tag_placeholder.context)
-            return tag_factory(
-                *tag_placeholder.args, **tag_placeholder.kwargs, context=context_pattern
-            )
-        else:
-            return tag_factory(
-                *tag_placeholder.args, **tag_placeholder.kwargs, context=None
-            )
+        context_pattern = (
+            self.rewrite_pattern(tag_placeholder.context)
+            if tag_placeholder.context
+            else None
+        )
+        return TagInstance(tag, context=context_pattern)

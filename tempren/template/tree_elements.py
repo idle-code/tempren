@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Callable, List, Mapping, Optional
 
 
 class PatternElement(ABC):
     @abstractmethod
-    def __str__(self) -> str:
+    def process(self, path: Path) -> str:
         raise NotImplementedError()
 
 
@@ -13,7 +14,7 @@ class PatternElement(ABC):
 class RawText(PatternElement):
     text: str
 
-    def __str__(self) -> str:
+    def process(self, path: Path) -> str:
         return self.text
 
 
@@ -21,8 +22,8 @@ class RawText(PatternElement):
 class Pattern(PatternElement):
     sub_elements: List[PatternElement] = field(default_factory=list)
 
-    def __str__(self) -> str:
-        return "".join(map(str, self.sub_elements))
+    def process(self, path: Path) -> str:
+        return "".join(map(lambda se: se.process(path), self.sub_elements))
 
 
 # class TagFactory(Protocol):
@@ -30,12 +31,26 @@ class Pattern(PatternElement):
 #         ...
 
 
-@dataclass
-class Tag(PatternElement):
-    context: Optional[Pattern]
+class Tag(ABC):
+    require_context: Optional[bool] = None
 
-    def __str__(self) -> str:
+    @abstractmethod
+    def configure(self, *args, **kwargs):
         raise NotImplementedError()
+
+    @abstractmethod
+    def process(self, path: Path, context: Optional[str]) -> str:
+        raise NotImplementedError()
+
+
+@dataclass
+class TagInstance(PatternElement):
+    tag: Tag
+    context: Optional[Pattern] = None
+
+    def process(self, path: Path) -> str:
+        context_str = self.context.process(path) if self.context else None
+        return self.tag.process(path, context_str)
 
 
 TagFactory = Callable[..., Tag]
@@ -52,7 +67,7 @@ class TagPlaceholder(PatternElement):
         if len(self.tag_name) < 1:
             raise ValueError(f"Invalid tag name: ${repr(self.tag_name)}")
 
-    def __str__(self) -> str:
+    def process(self, path: Path) -> str:
         raise NotImplementedError(
             "TagInvocation shouldn't be present in concrete tag tree"
         )
