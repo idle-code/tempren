@@ -1,9 +1,10 @@
-from dataclasses import dataclass, field
 from pathlib import Path
 
 import pytest
 from tempren.template.tree_builder import *
 from tempren.template.tree_elements import Pattern, RawText, Tag, TagPlaceholder
+
+from .mocks import MockTag
 
 
 def parse(text: str) -> Pattern:
@@ -130,24 +131,6 @@ class TestTreeBuilderErrors:
     pass
 
 
-@dataclass
-class MockTag(Tag):
-    args: Tuple[ArgValue, ...] = ()
-    kwargs: Mapping[str, ArgValue] = field(default_factory=dict)
-    path: Optional[Path] = None
-    context: Optional[str] = None
-    process_output: str = "Mock output"
-
-    def configure(self, *args, **kwargs):
-        self.args = args
-        self.kwargs = kwargs
-
-    def process(self, path: Path, context: Optional[str]) -> str:
-        self.path = path
-        self.context = context
-        return self.process_output
-
-
 class TestTagTreeBinder:
     def test_register_tag__use_provided_name(self):
         binder = TagTreeBinder()
@@ -251,7 +234,7 @@ class TestTagTreeBinder:
 
         bound_pattern = binder.bind(pattern)
 
-        expected_tag = MockTag(args=(1,), kwargs={"b": "text"})
+        expected_tag = MockTag(args=(1,), kwargs={"b": "text"}, configure_invoked=True)
         assert bound_pattern == Pattern([TagInstance(tag=expected_tag)])
 
     def test_bind__context_pattern_is_rewritten(self):
@@ -262,8 +245,8 @@ class TestTagTreeBinder:
 
         bound_pattern = binder.bind(pattern)
 
-        inner_tag = MockTag(kwargs={"name": "inner"})
-        outer_tag = MockTag(kwargs={"name": "outer"})
+        inner_tag = MockTag(kwargs={"name": "inner"}, configure_invoked=True)
+        outer_tag = MockTag(kwargs={"name": "outer"}, configure_invoked=True)
         context_pattern = Pattern([TagInstance(tag=inner_tag)])
         assert bound_pattern == Pattern(
             [TagInstance(tag=outer_tag, context=context_pattern)]
