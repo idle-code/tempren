@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from pathlib import Path
 
 import pytest
@@ -259,3 +260,47 @@ class TestTagTreeBinder:
         bound_pattern = binder.bind(pattern)
 
         assert bound_pattern == Pattern([RawText("Just text")])
+
+    def test_bind__tag_requires_context_but_none_given(self):
+        pattern = parse("%ContextRequired()")
+        binder = TagTreeBinder()
+
+        def required_context_tag_factory(*args, **kwargs):
+            return MockTag(require_context=True)
+
+        binder.register_tag_factory(required_context_tag_factory, "ContextRequired")
+
+        with pytest.raises(ContextMissingError):
+            binder.bind(pattern)
+
+    def test_bind__tag_doesnt_accept_context_but_one_is_given(self):
+        pattern = parse("%ContextForbidden(){context}")
+        binder = TagTreeBinder()
+
+        def forbidden_context_tag_factory(*args, **kwargs):
+            return MockTag(require_context=False)
+
+        binder.register_tag_factory(forbidden_context_tag_factory, "ContextForbidden")
+
+        with pytest.raises(ContextForbiddenError):
+            binder.bind(pattern)
+
+    def test_bind__tag_requires_context_and_one_given(self):
+        pattern = parse("%ContextRequired(){context}")
+        binder = TagTreeBinder()
+
+        def required_context_tag_factory(*args, **kwargs):
+            return MockTag(require_context=True)
+
+        binder.register_tag_factory(required_context_tag_factory, "ContextRequired")
+
+        bound_pattern = binder.bind(pattern)
+
+        assert bound_pattern == Pattern(
+            [
+                TagInstance(
+                    tag=MockTag(require_context=True),
+                    context=Pattern([RawText("context")]),
+                )
+            ]
+        )

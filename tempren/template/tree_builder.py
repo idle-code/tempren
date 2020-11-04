@@ -126,7 +126,7 @@ class ContextMissingError(TagError):
         super().__init__(tag_name, f"Context is required for this tag")
 
 
-class ContextProvidedError(TagError):
+class ContextForbiddenError(TagError):
     def __init__(self, tag_name: str):
         super().__init__(tag_name, f"This tag cannot be used with context")
 
@@ -168,18 +168,18 @@ class TagTreeBinder:
         return self.tag_registry.get(tag_name, None)
 
     def bind(self, pattern: Pattern) -> Pattern:
-        return self.rewrite_pattern(pattern)
+        return self._rewrite_pattern(pattern)
 
-    def rewrite_pattern(self, pattern: Pattern) -> Pattern:
+    def _rewrite_pattern(self, pattern: Pattern) -> Pattern:
         new_elements: List[PatternElement] = []
         for element in pattern.sub_elements:
             if isinstance(element, TagPlaceholder):
-                new_elements.append(self.rewrite_tag_placeholder(element))
+                new_elements.append(self._rewrite_tag_placeholder(element))
             else:
                 new_elements.append(element)
         return Pattern(new_elements)
 
-    def rewrite_tag_placeholder(self, tag_placeholder: TagPlaceholder) -> TagInstance:
+    def _rewrite_tag_placeholder(self, tag_placeholder: TagPlaceholder) -> TagInstance:
         tag_factory: Optional[TagFactory] = self.find_tag_factory(
             tag_placeholder.tag_name
         )
@@ -189,13 +189,12 @@ class TagTreeBinder:
         tag = tag_factory(*tag_placeholder.args, **tag_placeholder.kwargs)
         if tag.require_context is not None:
             if tag_placeholder.context and not tag.require_context:
-                raise ContextProvidedError(tag_placeholder.tag_name)
+                raise ContextForbiddenError(tag_placeholder.tag_name)
             elif tag_placeholder.context is None and tag.require_context:
                 raise ContextMissingError(tag_placeholder.tag_name)
 
-        context_pattern = (
-            self.rewrite_pattern(tag_placeholder.context)
-            if tag_placeholder.context
-            else None
-        )
+        context_pattern: Optional[Pattern] = None
+        if tag_placeholder.context:
+            context_pattern = self._rewrite_pattern(tag_placeholder.context)
+
         return TagInstance(tag, context=context_pattern)

@@ -15,6 +15,7 @@ class MockTag(Tag):
     process_output: str = "Mock output"
     configure_invoked: bool = False
     process_invoked: bool = False
+    require_context: Optional[bool] = None
 
     def configure(self, *args, **kwargs):
         self.configure_invoked = True
