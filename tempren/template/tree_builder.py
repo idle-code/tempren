@@ -186,7 +186,11 @@ class TagTreeBinder:
         if not tag_factory:
             raise UnknownTagError(tag_placeholder.tag_name)
 
-        tag = tag_factory(*tag_placeholder.args, **tag_placeholder.kwargs)
+        try:
+            tag = tag_factory(*tag_placeholder.args, **tag_placeholder.kwargs)
+        except Exception as exc:
+            raise ConfigurationError(tag_placeholder.tag_name, str(exc)) from exc
+
         if tag.require_context is not None:
             if tag_placeholder.context and not tag.require_context:
                 raise ContextForbiddenError(tag_placeholder.tag_name)

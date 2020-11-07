@@ -3,6 +3,7 @@ from typing import Optional
 
 import pytest
 from tempren.template.tree_builder import (
+    ConfigurationError,
     ContextForbiddenError,
     ContextMissingError,
     TagTreeBinder,
@@ -119,6 +120,40 @@ class TestTagTreeBinder:
 
         expected_tag = MockTag(args=(1,), kwargs={"b": "text"}, configure_invoked=True)
         assert bound_pattern == Pattern([TagInstance(tag=expected_tag)])
+
+    def test_default_tag_factory__configure_throws_wrong_parameter_name(self):
+        pattern = parse("%Foo(bar='text')")
+        binder = TagTreeBinder()
+
+        class FooTag(Tag):
+            def configure(self, foo: str):
+                pytest.fail("This shouldn't execute")
+
+            def process(self, path: Path, context: Optional[str]) -> str:
+                pass
+
+        binder.register_tag(FooTag)
+
+        with pytest.raises(ConfigurationError):
+            binder.bind(pattern)
+
+    def test_default_tag_factory__configure_rethrows_error_with_cause(self):
+        pattern = parse("%Foo()")
+        binder = TagTreeBinder()
+
+        class FooTag(Tag):
+            def configure(self):
+                raise ValueError("Some configurations is not valid")
+
+            def process(self, path: Path, context: Optional[str]) -> str:
+                pass
+
+        binder.register_tag(FooTag)
+
+        with pytest.raises(ConfigurationError) as exc:
+            binder.bind(pattern)
+
+        assert isinstance(exc.value.__cause__, ValueError)
 
     def test_bind__context_pattern_is_rewritten(self):
         pattern = parse("%Outer(name='outer'){%Inner(name='inner')}")
