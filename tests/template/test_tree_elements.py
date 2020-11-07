@@ -1,15 +1,9 @@
 from pathlib import Path
 
-import pytest
 from pytest import raises
 from tempren.template.tree_elements import Pattern, RawText, TagInstance, TagPlaceholder
 
 from .mocks import MockTag
-
-
-@pytest.fixture
-def nonexistent_path() -> Path:
-    return Path("nonexistent", "path")
 
 
 class TestRawText:
