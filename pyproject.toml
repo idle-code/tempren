@@ -7,6 +7,7 @@ authors = ["Pawel Zukowski <p.z.idlecode@gmail.com>"]
 [tool.poetry.dependencies]
 python = "^3.7"
 antlr4-python3-runtime = "^4.8"
+ConfigArgParse = "^1.2.3"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.1"
