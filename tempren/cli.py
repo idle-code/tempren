@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import List, Optional
 
 import configargparse  # type: ignore
+from tempren.pipeline import Pipeline
 
 
 @dataclass
@@ -87,6 +88,8 @@ def parse_configuration(argv: List[str]) -> RuntimeConfiguration:
 def main(argv: List[str]) -> int:
     try:
         config = parse_configuration(argv)
+        # TODO: Create builder to generate pipeline from RuntimeConfiguration
+        # pipeline = CliPipelineBuilder.build_from_configuration(config)
         return 0
     except SystemExitError as exc:
         if exc.status != 0:
