@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 
@@ -22,4 +23,10 @@ class FileGatherer:
 
 class Renamer:
     def __call__(self, source_path: Path, destination_path: Path):
-        pass
+        if source_path == destination_path:
+            return
+        if destination_path.exists():
+            raise FileExistsError(
+                f"Destination file already exists: {destination_path}"
+            )
+        os.rename(source_path, destination_path)

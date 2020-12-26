@@ -57,8 +57,17 @@ class TestFileGatherer:
 
 
 class TestRenamer:
-    def test_rename_same_name(self, text_data_dir: Path):
+    def test_same_name(self, text_data_dir: Path):
         src = text_data_dir / "hello.txt"
+        renamer = Renamer()
+
+        renamer(src, src)
+
+        assert src.exists()
+
+    def test_simple_file(self, text_data_dir: Path):
+        src = text_data_dir / "hello.txt"
+        assert src.is_file()
         dst = text_data_dir / "hi.txt"
         assert not dst.exists()
         renamer = Renamer()
@@ -66,3 +75,44 @@ class TestRenamer:
         renamer(src, dst)
 
         assert dst.exists()
+
+    def test_simple_directory(self, nested_data_dir: Path):
+        src = nested_data_dir / "first"
+        assert src.is_dir()
+        dst = nested_data_dir / "fourth"
+        assert not dst.exists()
+        renamer = Renamer()
+
+        renamer(src, dst)
+
+        assert dst.exists()
+
+    def test_source_doesnt_exists(self, text_data_dir: Path):
+        src = text_data_dir / "goodbye.txt"
+        assert not src.exists()
+        dst = text_data_dir / "bye.md"
+        renamer = Renamer()
+
+        with pytest.raises(FileNotFoundError) as exc:
+            renamer(src, dst)
+        assert exc.match(str(src))
+
+    def test_destination_file_exists(self, text_data_dir: Path):
+        src = text_data_dir / "hello.txt"
+        dst = text_data_dir / "markdown.md"
+        assert dst.exists()
+        renamer = Renamer()
+
+        with pytest.raises(FileExistsError) as exc:
+            renamer(src, dst)
+        assert exc.match(str(dst))
+
+    def test_destination_is_directory(self, nested_data_dir: Path):
+        src = nested_data_dir / "level-1.file"
+        dst = nested_data_dir / "first"
+        assert dst.is_dir()
+        renamer = Renamer()
+
+        with pytest.raises(FileExistsError) as exc:
+            renamer(src, dst)
+        assert exc.match(str(dst))
