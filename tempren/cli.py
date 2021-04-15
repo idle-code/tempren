@@ -1,10 +1,19 @@
 #!/usr/bin/env python
+import argparse
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional
 
 import configargparse  # type: ignore
+
+from tempren.filesystem import FileGatherer, Renamer
 from tempren.pipeline import Pipeline
+from tempren.template.name_generators import TemplateNameGenerator
+from tempren.template.tree_builder import TagTreeBinder, TagTreeBuilder
+
+log = logging.getLogger("CLI")
+logging.basicConfig(level=logging.DEBUG)
 
 
 @dataclass
@@ -15,6 +24,10 @@ class RuntimeConfiguration:
     dry_run: bool = False
     save_config: Optional[str] = None
     config: Optional[str] = None
+
+
+class ConfigurationError(Exception):
+    pass
 
 
 def existing_directory(val: str) -> Path:
@@ -33,7 +46,10 @@ class SystemExitError(Exception):
 
 
 def parse_configuration(argv: List[str]) -> RuntimeConfiguration:
-    parser = configargparse.ArgumentParser(
+    # parser = configargparse.ArgumentParser(
+    #     prog="tempren", description="Template-based renaming utility."
+    # )
+    parser = argparse.ArgumentParser(
         prog="tempren", description="Template-based renaming utility."
     )
     operation_mode = parser.add_mutually_exclusive_group(required=True)
@@ -60,15 +76,15 @@ def parse_configuration(argv: List[str]) -> RuntimeConfiguration:
         type=existing_directory,
         help="Input directory where files to rename are stored",
     )
-    parser.add_argument(
-        "--save-config",
-        is_write_out_config_file_arg=True,
-        metavar="CONFIG",
-        help="Save command line options to configuration file",
-    )
-    parser.add_argument(
-        "-c", "--config", is_config_file_arg=True, help="Load configuration from file"
-    )
+    # parser.add_argument(
+    #     "--save-config",
+    #     is_write_out_config_file_arg=True,
+    #     metavar="CONFIG",
+    #     help="Save command line options to configuration file",
+    # )
+    # parser.add_argument(
+    #     "-c", "--config", is_config_file_arg=True, help="Load configuration from file"
+    # )
 
     # Upon parsing error, ArgumentParser tries to exit via calling `sys.exit()`.
     # We could catch resulting `SystemExit` exception but related error message still would be missing.
@@ -85,11 +101,39 @@ def parse_configuration(argv: List[str]) -> RuntimeConfiguration:
     return config
 
 
+def build_tag_registry() -> TagTreeBinder:
+    tag_binder = TagTreeBinder()
+    return tag_binder
+
+
+# TODO: Move to pipeline.py
+def build_pipeline(config: RuntimeConfiguration) -> Pipeline:
+    tag_binder = build_tag_registry()
+
+    pipeline = Pipeline()
+    pipeline.file_gatherer = FileGatherer(config.input_directory)
+    tree_builder = TagTreeBuilder()
+
+    if config.name_template:
+        bound_pattern = tag_binder.bind(tree_builder.parse(config.name_template))
+        pipeline.name_generator = TemplateNameGenerator(bound_pattern)
+    elif config.path_template:
+        raise ConfigurationError()  # pipeline.path_generator = TemplateNameGenerator(tag_binder, config.path_template)
+    else:
+        raise ConfigurationError()
+    pipeline.renamer = Renamer()
+    return pipeline
+
+
 def main(argv: List[str]) -> int:
     try:
+        log.debug("Parsing configuration")
         config = parse_configuration(argv)
-        # TODO: Create builder to generate pipeline from RuntimeConfiguration
-        # pipeline = CliPipelineBuilder.build_from_configuration(config)
+        log.debug("Building pipeline")
+        pipeline = build_pipeline(config)
+        log.debug("Executing pipeline")
+        pipeline.execute()
+        log.info("Done")
         return 0
     except SystemExitError as exc:
         if exc.status != 0:

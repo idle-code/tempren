@@ -17,8 +17,8 @@ repos:
 #    rev: master
 #    hooks:
 #    -   id: isort
--   repo: https://github.com/timothycrosley/isort
-    rev: 'master'
+-   repo: https://github.com/PyCQA/isort
+    rev: 'main'
     hooks:
     -    id: isort
          additional_dependencies:
@@ -27,7 +27,7 @@ repos:
     rev: 'master'
     hooks:
     -   id: stylelint
-        additional_dependencies: ['stylelint@13.0.0', 'stylelint-config-recommended']
+        additional_dependencies: ['stylelint', 'stylelint-config-standard']
 -   repo: https://github.com/psf/black
     rev: stable
     hooks:

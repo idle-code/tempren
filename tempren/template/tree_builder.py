@@ -136,7 +136,7 @@ class ConfigurationError(TagError):
         super().__init__(tag_name, f"Configuration not valid: {message}")
 
 
-class TagTreeBinder:
+class TagTreeBinder:  # TODO: rename to TagRegistry?
     tag_registry: Dict[str, TagFactory]
 
     def __init__(self):

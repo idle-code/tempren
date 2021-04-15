@@ -21,7 +21,8 @@ def test_data_dir(tmp_path_factory: TempPathFactory) -> Callable[[str], Path]:
         if not source_path.is_dir():
             raise ValueError(f"Test data directory '{source_path}' doesn't exists")
         directory_copy = tmp_path_factory.mktemp(data_type)
-        shutil.copytree(source_path, directory_copy, dirs_exist_ok=True)
+        shutil.rmtree(directory_copy, ignore_errors=True)
+        shutil.copytree(source_path, directory_copy)
 
         yield directory_copy
 
