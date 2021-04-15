@@ -2,11 +2,11 @@ import logging
 from abc import ABC
 from pathlib import Path
 
-from tempren.pipeline import File, NameGenerator
+from tempren.pipeline import File, PathGenerator
 from tempren.template.tree_elements import Pattern
 
 
-class TemplateGenerator(NameGenerator, ABC):
+class TemplateGenerator(PathGenerator, ABC):
     log: logging.Logger
     pattern: Pattern
 
@@ -25,10 +25,9 @@ class TemplateGenerator(NameGenerator, ABC):
 
 class TemplateNameGenerator(TemplateGenerator):
     def generate(self, file: File) -> Path:
-
-        return Path(self.generate_replacement(file))
+        return file.path.parent / self.generate_replacement(file)
 
 
 class TemplatePathGenerator(TemplateGenerator):
     def generate(self, file: File) -> Path:
-        pass
+        return Path(self.generate_replacement(file))

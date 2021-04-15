@@ -7,9 +7,12 @@ from typing import List, Optional
 
 import configargparse  # type: ignore
 
-from tempren.filesystem import FileGatherer, Renamer
+from tempren.filesystem import FileGatherer, PrintingOnlyRenamer, Renamer
 from tempren.pipeline import Pipeline
-from tempren.template.name_generators import TemplateNameGenerator
+from tempren.template.path_generators import (
+    TemplateNameGenerator,
+    TemplatePathGenerator,
+)
 from tempren.template.tree_builder import TagRegistry, TagTreeBuilder
 
 log = logging.getLogger("CLI")
@@ -102,7 +105,12 @@ def parse_configuration(argv: List[str]) -> RuntimeConfiguration:
 
 
 def build_tag_registry() -> TagRegistry:
+    import tempren.plugins.tags.core
+
     registry = TagRegistry()
+    registry.register_tag(tempren.plugins.tags.core.CountTag)
+    registry.register_tag(tempren.plugins.tags.core.ExtTag)
+    registry.register_tag(tempren.plugins.tags.core.DirnameTag)
     return registry
 
 
@@ -111,17 +119,23 @@ def build_pipeline(config: RuntimeConfiguration) -> Pipeline:
     registry = build_tag_registry()
 
     pipeline = Pipeline()
+    # TODO: specify base_path
     pipeline.file_gatherer = FileGatherer(config.input_directory)
     tree_builder = TagTreeBuilder()
 
     if config.name_template:
         bound_pattern = registry.bind(tree_builder.parse(config.name_template))
-        pipeline.name_generator = TemplateNameGenerator(bound_pattern)
+        pipeline.path_generator = TemplateNameGenerator(bound_pattern)
     elif config.path_template:
-        raise ConfigurationError()  # pipeline.path_generator = TemplateNameGenerator(registry, config.path_template)
+        bound_pattern = registry.bind(tree_builder.parse(config.path_template))
+        pipeline.path_generator = TemplatePathGenerator(bound_pattern)
     else:
         raise ConfigurationError()
-    pipeline.renamer = Renamer()
+
+    if config.dry_run:
+        pipeline.renamer = PrintingOnlyRenamer()
+    else:
+        pipeline.renamer = Renamer()
     return pipeline
 
 

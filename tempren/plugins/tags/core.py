@@ -25,3 +25,23 @@ class CountTag(Tag):
         value = self.counter
         self.counter += self.step
         return str(value).zfill(self.width)
+
+
+class ExtTag(Tag):
+    require_context = False
+
+    def configure(self):  # type: ignore
+        pass
+
+    def process(self, path: Path, context: Optional[str]) -> str:
+        return path.suffix.lstrip(".")
+
+
+class DirnameTag(Tag):
+    require_context = False
+
+    def configure(self):  # type: ignore
+        pass
+
+    def process(self, path: Path, context: Optional[str]) -> str:
+        return str(path.parent)

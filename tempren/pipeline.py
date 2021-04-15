@@ -15,7 +15,7 @@ class File:
         return f"File({repr(str(self.path))})"
 
 
-class NameGenerator(ABC):
+class PathGenerator(ABC):
     @abstractmethod
     def reset(self):
         raise NotImplementedError()
@@ -30,7 +30,7 @@ class Pipeline:
     file_gatherer: Iterator[Path] = None
     filter: Callable[[File], bool]
     sorter: Optional[Callable[[Iterable[File]], Iterable[File]]] = None
-    name_generator: NameGenerator = None
+    path_generator: PathGenerator = None
     renamer: Callable[[Path, Path], None] = None
 
     def __init__(self):
@@ -57,6 +57,6 @@ class Pipeline:
         self.log.info("Generating new names")
         for file in all_files:
             self.log.debug("Generating new name for %s", file)
-            new_path = self.name_generator.generate(file)
+            new_path = self.path_generator.generate(file)
             self.log.debug("Generated name: %s", new_path)
             self.renamer(file.path, new_path)

@@ -1,3 +1,4 @@
+import logging
 import os
 from pathlib import Path
 
@@ -30,3 +31,21 @@ class Renamer:
                 f"Destination file already exists: {destination_path}"
             )
         os.rename(source_path, destination_path)
+
+
+class PrintingOnlyRenamer:
+    log: logging.Logger
+
+    def __init__(self):
+        self.log = logging.getLogger(__name__)
+
+    def __call__(self, source_path: Path, destination_path: Path):
+        if source_path == destination_path:
+            self.log.debug("Skipping renaming: source and destination are the same")
+            return
+        if destination_path.exists():
+            self.log.debug("Skipping renaming: destination path exists")
+            raise FileExistsError(
+                f"Destination file already exists: {destination_path}"
+            )
+        self.log.info("Renaming '%s' -> '%s'", source_path, destination_path)
