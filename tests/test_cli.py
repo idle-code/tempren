@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytest
+
 from tempren.cli import RuntimeConfiguration, SystemExitError, parse_configuration
 
 
@@ -54,6 +55,7 @@ class TestCliParser:
 
         assert exc.match("not allowed with argument")
 
+    @pytest.mark.skip()
     def test_config_save(self, tmp_path: Path, text_data_dir: Path):
         config_path = tmp_path / "test_config.ini"
 
