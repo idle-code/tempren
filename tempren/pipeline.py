@@ -27,15 +27,14 @@ class PathGenerator(ABC):
 
 class Pipeline:
     log: logging.Logger
-    file_gatherer: Iterator[Path] = None
-    filter: Callable[[File], bool]
+    file_gatherer: Iterator[Path]
     sorter: Optional[Callable[[Iterable[File]], Iterable[File]]] = None
-    path_generator: PathGenerator = None
-    renamer: Callable[[Path, Path], None] = None
+    path_generator: PathGenerator
 
     def __init__(self):
         self.log = logging.getLogger(__name__)
-        self.filter = lambda f: True
+        self.filter: Callable[[File], bool] = lambda f: True
+        self.renamer: Callable[[Path, Path], None] = lambda src, dst: None
 
     def execute(self):
         all_files = []

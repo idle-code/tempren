@@ -1,6 +1,7 @@
 import logging
 import os
 from pathlib import Path
+from typing import Generator
 
 
 class FileGatherer:
@@ -12,7 +13,7 @@ class FileGatherer:
         self.start_directory = directory_path
         self.glob_pattern = glob_pattern
 
-    def __iter__(self) -> Path:
+    def __iter__(self) -> Generator[Path, None, None]:
         def is_hidden(path: Path) -> bool:
             return path.name.startswith(".")
 

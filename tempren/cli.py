@@ -3,7 +3,7 @@ import argparse
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional
+from typing import List, NoReturn, Optional
 
 import configargparse  # type: ignore
 
@@ -43,7 +43,7 @@ def existing_directory(val: str) -> Path:
 class SystemExitError(Exception):
     status: int
 
-    def __init__(self, status: int, message: str):
+    def __init__(self, status: int, message: Optional[str]):
         super().__init__(message)
         self.status = status
 
@@ -93,10 +93,10 @@ def parse_configuration(argv: List[str]) -> RuntimeConfiguration:
     # We could catch resulting `SystemExit` exception but related error message still would be missing.
     # This behaviour is not comfortable for testing so here we monkeypatch exit method to
     # throw more practical exception instead.
-    def throwing_exit(status: int = 0, message: str = ""):
+    def throwing_exit(status: int = 0, message: Optional[str] = "") -> NoReturn:
         raise SystemExitError(status, message)
 
-    parser.exit = throwing_exit
+    parser.exit = throwing_exit  # type: ignore
 
     args = parser.parse_args(argv)
     config = RuntimeConfiguration(**vars(args))
@@ -120,7 +120,7 @@ def build_pipeline(config: RuntimeConfiguration) -> Pipeline:
 
     pipeline = Pipeline()
     # TODO: specify base_path
-    pipeline.file_gatherer = FileGatherer(config.input_directory)
+    pipeline.file_gatherer = iter(FileGatherer(config.input_directory))
     tree_builder = TagTreeBuilder()
 
     if config.name_template:
