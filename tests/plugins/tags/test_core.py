@@ -1,7 +1,8 @@
 from pathlib import Path
 
 import pytest
-from tempren.plugins.tags.core import CountTag
+
+from tempren.plugins.tags.core import CountTag, DirnameTag, ExtTag
 
 
 class TestCountTag:
@@ -62,3 +63,49 @@ class TestCountTag:
 
         result = tag.process(nonexistent_path, None)
         assert result == "123"
+
+
+class TestExtTag:
+    def test_without_context_original_extension_is_used(self):
+        tag = ExtTag()
+
+        extension = tag.process(Path("test/file.foo"), None)
+
+        assert extension == "foo"
+
+    def test_no_extension_on_filename(self):
+        tag = ExtTag()
+
+        extension = tag.process(Path("test/file"), None)
+
+        assert extension == ""
+
+    def test_context_extension(self):
+        tag = ExtTag()
+
+        extension = tag.process(Path("test/file.foo"), "test/file.bar")
+
+        assert extension == "bar"
+
+
+class TestDirnameTag:
+    def test_no_context(self):
+        tag = DirnameTag()
+
+        dirname = tag.process(Path("test/file.name"), None)
+
+        assert dirname == "test"
+
+    def test_no_parent_dir(self):
+        tag = DirnameTag()
+
+        dirname = tag.process(Path("file"), None)
+
+        assert dirname == "."
+
+    def test_context_extension(self):
+        tag = DirnameTag()
+
+        dirname = tag.process(Path("foo/file"), "bar/file")
+
+        assert dirname == "bar"

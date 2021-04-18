@@ -5,7 +5,7 @@ from tempren.template.tree_elements import Tag
 
 
 class CountTag(Tag):
-    require_context = False
+    require_context = False  # TODO: use enum for values
     counter: int
     step: int
     width: int
@@ -28,20 +28,18 @@ class CountTag(Tag):
 
 
 class ExtTag(Tag):
-    require_context = False
-
-    def configure(self):  # type: ignore
-        pass
+    require_context = None
 
     def process(self, path: Path, context: Optional[str]) -> str:
+        if context:
+            path = Path(context)
         return path.suffix.lstrip(".")
 
 
 class DirnameTag(Tag):
-    require_context = False
-
-    def configure(self):  # type: ignore
-        pass
+    require_context = None
 
     def process(self, path: Path, context: Optional[str]) -> str:
+        if context:
+            path = Path(context)
         return str(path.parent)

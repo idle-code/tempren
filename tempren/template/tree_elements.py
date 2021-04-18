@@ -47,9 +47,8 @@ class Tag(ABC):
     require_context: Optional[bool] = None
     # TODO: works_on_directories: bool = False
 
-    @abstractmethod
     def configure(self, *args, **kwargs):
-        raise NotImplementedError()
+        pass
 
     @abstractmethod
     def process(self, path: Path, context: Optional[str]) -> str:
