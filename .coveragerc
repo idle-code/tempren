@@ -10,3 +10,4 @@ exclude_lines =
 	assert
 	if __name__ == .__main__.:
 	def __repr__
+  pass

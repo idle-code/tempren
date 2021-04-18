@@ -49,4 +49,6 @@ class PrintingOnlyRenamer:
             raise FileExistsError(
                 f"Destination file already exists: {destination_path}"
             )
+        if not source_path.exists():
+            raise FileNotFoundError(f"No such fiile or directory: {source_path}")
         self.log.info("Renaming '%s' -> '%s'", source_path, destination_path)
