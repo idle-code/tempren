@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 import argparse
+import dataclasses
+import json
 import logging
 from dataclasses import dataclass
 from pathlib import Path
 from typing import List, NoReturn, Optional
 
-import configargparse  # type: ignore
+from pydantic import BaseModel
 
 from tempren.filesystem import FileGatherer, PrintingOnlyRenamer, Renamer
 from tempren.pipeline import Pipeline
@@ -19,14 +21,13 @@ log = logging.getLogger("CLI")
 logging.basicConfig(level=logging.DEBUG)
 
 
-@dataclass
-class RuntimeConfiguration:
+class RuntimeConfiguration(BaseModel):
     input_directory: Path
     name_template: Optional[str] = None
     path_template: Optional[str] = None
     dry_run: bool = False
-    save_config: Optional[str] = None
-    config: Optional[str] = None
+    save_config: Optional[Path] = None
+    config: Optional[Path] = None
 
 
 class ConfigurationError(Exception):
@@ -36,8 +37,15 @@ class ConfigurationError(Exception):
 def existing_directory(val: str) -> Path:
     directory_path = Path(val)
     if not directory_path.is_dir():
-        raise configargparse.ArgumentTypeError(f"Directory '{val}' doesn't exists")
+        raise argparse.ArgumentTypeError(f"Directory '{val}' doesn't exists")
     return directory_path
+
+
+def existing_file(val: str) -> Path:
+    file_path = Path(val)
+    if not file_path.is_file():
+        raise argparse.ArgumentTypeError(f"File '{val}' doesn't exists")
+    return file_path
 
 
 class SystemExitError(Exception):
@@ -48,10 +56,8 @@ class SystemExitError(Exception):
         self.status = status
 
 
-def parse_configuration(argv: List[str]) -> RuntimeConfiguration:
-    # parser = configargparse.ArgumentParser(
-    #     prog="tempren", description="Template-based renaming utility."
-    # )
+# CHECK: use pydantic-cli for argument parsing
+def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
     parser = argparse.ArgumentParser(
         prog="tempren", description="Template-based renaming utility."
     )
@@ -79,15 +85,14 @@ def parse_configuration(argv: List[str]) -> RuntimeConfiguration:
         type=existing_directory,
         help="Input directory where files to rename are stored",
     )
-    # parser.add_argument(
-    #     "--save-config",
-    #     is_write_out_config_file_arg=True,
-    #     metavar="CONFIG",
-    #     help="Save command line options to configuration file",
-    # )
-    # parser.add_argument(
-    #     "-c", "--config", is_config_file_arg=True, help="Load configuration from file"
-    # )
+    parser.add_argument(
+        "--save-config",
+        metavar="CONFIG",
+        help="Save command line options to configuration file",
+    )
+    parser.add_argument(
+        "-c", "--config", type=existing_file, help="Load configuration from file"
+    )
 
     # Upon parsing error, ArgumentParser tries to exit via calling `sys.exit()`.
     # We could catch resulting `SystemExit` exception but related error message still would be missing.
@@ -99,8 +104,20 @@ def parse_configuration(argv: List[str]) -> RuntimeConfiguration:
     parser.exit = throwing_exit  # type: ignore
 
     args = parser.parse_args(argv)
-    config = RuntimeConfiguration(**vars(args))
 
+    config = RuntimeConfiguration(**vars(args))
+    if config.config:
+        log.info(f"Reading configuration from {config.config}")
+        config_from_file = RuntimeConfiguration.parse_file(config.config)
+        log.debug(f"Configuration read from file: {config_from_file.json()}")
+        config = RuntimeConfiguration(**config_from_file.dict(), **vars(args))
+
+    if config.save_config:
+        log.info(f"Saving configuration to {config.save_config}")
+        with open(config.save_config, "w") as config_file:
+            config_file.write(config.json(indent=4))
+        raise SystemExitError(0, f"Configuration was saved to: {config.save_config}")
+    # TODO: handle save configuration
     return config
 
 
@@ -142,7 +159,7 @@ def build_pipeline(config: RuntimeConfiguration) -> Pipeline:
 def main(argv: List[str]) -> int:
     try:
         log.debug("Parsing configuration")
-        config = parse_configuration(argv)
+        config = process_cli_configuration(argv)
         log.debug("Building pipeline")
         pipeline = build_pipeline(config)
         log.debug("Executing pipeline")
