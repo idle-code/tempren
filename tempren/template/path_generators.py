@@ -25,7 +25,7 @@ class TemplateGenerator(PathGenerator, ABC):
 
 class TemplateNameGenerator(TemplateGenerator):
     def generate(self, file: File) -> Path:
-        return file.path.parent / self.generate_replacement(file)
+        return file.path.with_name(self.generate_replacement(file))
 
 
 class TemplatePathGenerator(TemplateGenerator):
