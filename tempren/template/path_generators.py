@@ -10,7 +10,8 @@ class TemplateGenerator(PathGenerator, ABC):
     log: logging.Logger
     pattern: Pattern
 
-    def __init__(self, pattern: Pattern):
+    def __init__(self, start_directory: Path, pattern: Pattern):
+        super().__init__(start_directory)
         self.log = logging.getLogger(__name__)
         self.log.info("Creating template generator with template: %s", pattern)
         self.pattern = pattern
@@ -19,8 +20,9 @@ class TemplateGenerator(PathGenerator, ABC):
         pass
 
     def generate_replacement(self, file: File) -> str:
-        self.log.debug("Rendering template for %s", file)
-        return self.pattern.process(file.path)
+        relative_path = file.path.relative_to(self.start_directory)
+        self.log.debug("Rendering template for '%s'", relative_path)
+        return self.pattern.process(relative_path)
 
 
 class TemplateNameGenerator(TemplateGenerator):

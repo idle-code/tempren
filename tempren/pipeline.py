@@ -16,6 +16,12 @@ class File:
 
 
 class PathGenerator(ABC):
+    start_directory: Path
+
+    def __init__(self, start_directory: Path):
+        assert start_directory.is_dir()
+        self.start_directory = start_directory
+
     @abstractmethod
     def reset(self):
         raise NotImplementedError()
@@ -57,5 +63,5 @@ class Pipeline:
         for file in all_files:
             self.log.debug("Generating new name for %s", file)
             new_path = self.path_generator.generate(file)
-            self.log.debug("Generated name: %s", new_path)
+            self.log.debug("Generated path: %s", new_path)
             self.renamer(file.path, new_path)

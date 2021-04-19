@@ -142,10 +142,14 @@ def build_pipeline(config: RuntimeConfiguration) -> Pipeline:
 
     if config.name_template:
         bound_pattern = registry.bind(tree_builder.parse(config.name_template))
-        pipeline.path_generator = TemplateNameGenerator(bound_pattern)
+        pipeline.path_generator = TemplateNameGenerator(
+            config.input_directory, bound_pattern
+        )
     elif config.path_template:
         bound_pattern = registry.bind(tree_builder.parse(config.path_template))
-        pipeline.path_generator = TemplatePathGenerator(bound_pattern)
+        pipeline.path_generator = TemplatePathGenerator(
+            config.input_directory, bound_pattern
+        )
     else:
         raise ConfigurationError()
 
