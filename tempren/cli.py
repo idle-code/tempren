@@ -1,9 +1,6 @@
 #!/usr/bin/env python
 import argparse
-import dataclasses
-import json
 import logging
-from dataclasses import dataclass
 from pathlib import Path
 from typing import List, NoReturn, Optional
 
@@ -123,11 +120,14 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
 
 def build_tag_registry() -> TagRegistry:
     import tempren.plugins.tags.core
+    import tempren.plugins.tags.text
 
     registry = TagRegistry()
     registry.register_tag(tempren.plugins.tags.core.CountTag)
     registry.register_tag(tempren.plugins.tags.core.ExtTag)
     registry.register_tag(tempren.plugins.tags.core.DirnameTag)
+    registry.register_tag(tempren.plugins.tags.core.FilenameTag)
+    registry.register_tag(tempren.plugins.tags.text.UnidecodeTag)
     return registry
 
 

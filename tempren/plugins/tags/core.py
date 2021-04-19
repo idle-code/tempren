@@ -43,3 +43,12 @@ class DirnameTag(Tag):
         if context:
             path = Path(context)
         return str(path.parent)
+
+
+class FilenameTag(Tag):
+    require_context = None
+
+    def process(self, path: Path, context: Optional[str]) -> str:
+        if context:
+            path = Path(context)
+        return str(path.name)

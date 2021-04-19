@@ -8,6 +8,7 @@ authors = ["Pawel Zukowski <p.z.idlecode@gmail.com>"]
 python = "^3.7"
 antlr4-python3-runtime = "^4.8"
 pydantic = "^1.8.1"
+Unidecode = "^1.2.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.1"

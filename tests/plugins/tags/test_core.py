@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from tempren.plugins.tags.core import CountTag, DirnameTag, ExtTag
+from tempren.plugins.tags.core import *
 
 
 class TestCountTag:
@@ -80,10 +80,10 @@ class TestExtTag:
 
         assert extension == ""
 
-    def test_context_extension(self):
+    def test_context_extension(self, nonexistent_path: Path):
         tag = ExtTag()
 
-        extension = tag.process(Path("test/file.foo"), "test/file.bar")
+        extension = tag.process(nonexistent_path, "test/file.bar")
 
         assert extension == "bar"
 
@@ -103,9 +103,25 @@ class TestDirnameTag:
 
         assert dirname == "."
 
-    def test_context_extension(self):
+    def test_context_extension(self, nonexistent_path: Path):
         tag = DirnameTag()
 
-        dirname = tag.process(Path("foo/file"), "bar/file")
+        dirname = tag.process(nonexistent_path, "bar/file")
 
         assert dirname == "bar"
+
+
+class TestFilenameTag:
+    def test_no_context(self):
+        tag = FilenameTag()
+
+        filename = tag.process(Path("test/file.name"), None)
+
+        assert filename == "file.name"
+
+    def test_context_filename(self, nonexistent_path: Path):
+        tag = FilenameTag()
+
+        filename = tag.process(nonexistent_path, "test/file.name")
+
+        assert filename == "file.name"
