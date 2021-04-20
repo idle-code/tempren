@@ -26,3 +26,53 @@ class TestUnidecodeTag:
         result = tag.process(nonexistent_path, "Some|😴☯😸❓🆗🇨🇭🌌|emotes")
 
         assert result == "Some||emotes"
+
+
+class TestRemoveTag:
+    def test_pattern_not_found(self, nonexistent_path: Path):
+        tag = RemoveTag()
+        tag.configure("foo")
+
+        result = tag.process(nonexistent_path, "bar")
+
+        assert result == "bar"
+
+    def test_single_occurrence(self, nonexistent_path: Path):
+        tag = RemoveTag()
+        tag.configure("foo")
+
+        result = tag.process(nonexistent_path, "foobar")
+
+        assert result == "bar"
+
+    def test_multiple_occurrences(self, nonexistent_path: Path):
+        tag = RemoveTag()
+        tag.configure("foo")
+
+        result = tag.process(nonexistent_path, "foobarfoo")
+
+        assert result == "bar"
+
+    def test_case_sensitiveness(self, nonexistent_path: Path):
+        tag = RemoveTag()
+        tag.configure("foo")
+
+        result = tag.process(nonexistent_path, "foobarFOO")
+
+        assert result == "barFOO"
+
+    def test_ignore_case(self, nonexistent_path: Path):
+        tag = RemoveTag()
+        tag.configure("foo", ignore_case=True)
+
+        result = tag.process(nonexistent_path, "foobarFOO")
+
+        assert result == "bar"
+
+    def test_multiple_patterns(self, nonexistent_path: Path):
+        tag = RemoveTag()
+        tag.configure("foo", "spam")
+
+        result = tag.process(nonexistent_path, "foobarspam")
+
+        assert result == "bar"

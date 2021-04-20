@@ -63,5 +63,8 @@ class Pipeline:
         for file in all_files:
             self.log.debug("Generating new name for %s", file)
             new_path = self.path_generator.generate(file)
+            # FIXME: check generated new_path for illegal characters (like '*')
+            # TODO: add CollapseTag (for whitespace collapsing)
+            # TODO: add RemoveTag
             self.log.debug("Generated path: %s", new_path)
             self.renamer(file.path, new_path)

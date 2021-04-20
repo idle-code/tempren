@@ -128,6 +128,7 @@ def build_tag_registry() -> TagRegistry:
     registry.register_tag(tempren.plugins.tags.core.DirnameTag)
     registry.register_tag(tempren.plugins.tags.core.FilenameTag)
     registry.register_tag(tempren.plugins.tags.text.UnidecodeTag)
+    registry.register_tag(tempren.plugins.tags.text.RemoveTag)
     return registry
 
 
