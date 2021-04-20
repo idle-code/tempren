@@ -1,7 +1,7 @@
 import re
 from pathlib import Path
 from re import Pattern
-from typing import Optional
+from typing import List, Optional
 
 from unidecode import unidecode
 
@@ -18,7 +18,7 @@ class UnidecodeTag(Tag):
 
 class RemoveTag(Tag):
     require_context = True
-    patterns: [Pattern]
+    patterns: List[Pattern]
 
     def configure(self, *patterns: str, ignore_case: bool = False):  # type: ignore
         flags = 0
@@ -32,3 +32,15 @@ class RemoveTag(Tag):
         for pattern in self.patterns:
             result = pattern.sub("", result)
         return result
+
+
+class CollapseTag(Tag):
+    require_context = True
+    pattern: Pattern
+
+    def configure(self, characters: str = " "):  # type: ignore
+        self.pattern = re.compile(f"(?<=[{characters}])[{characters}]+")
+
+    def process(self, path: Path, context: Optional[str]) -> str:
+        assert context
+        return self.pattern.sub("", context)

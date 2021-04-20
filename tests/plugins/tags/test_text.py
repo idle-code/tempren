@@ -76,3 +76,29 @@ class TestRemoveTag:
         result = tag.process(nonexistent_path, "foobarspam")
 
         assert result == "bar"
+
+
+class TestCollapseTag:
+    def test_nothing_to_collapse(self, nonexistent_path: Path):
+        tag = CollapseTag()
+        tag.configure()
+
+        result = tag.process(nonexistent_path, "foobar")
+
+        assert result == "foobar"
+
+    def test_spaces_by_default(self, nonexistent_path: Path):
+        tag = CollapseTag()
+        tag.configure()
+
+        result = tag.process(nonexistent_path, "foo   bar")
+
+        assert result == "foo bar"
+
+    def test_define_characters_to_collapse(self, nonexistent_path: Path):
+        tag = CollapseTag()
+        tag.configure("oz")
+
+        result = tag.process(nonexistent_path, "foobazz")
+
+        assert result == "fobaz"
