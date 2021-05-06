@@ -23,8 +23,6 @@ class RuntimeConfiguration(BaseModel):
     name_template: Optional[str] = None
     path_template: Optional[str] = None
     dry_run: bool = False
-    save_config: Optional[Path] = None
-    config: Optional[Path] = None
 
 
 class ConfigurationError(Exception):
@@ -82,14 +80,6 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         type=existing_directory,
         help="Input directory where files to rename are stored",
     )
-    parser.add_argument(
-        "--save-config",
-        metavar="CONFIG",
-        help="Save command line options to configuration file",
-    )
-    parser.add_argument(
-        "-c", "--config", type=existing_file, help="Load configuration from file"
-    )
 
     # Upon parsing error, ArgumentParser tries to exit via calling `sys.exit()`.
     # We could catch resulting `SystemExit` exception but related error message still would be missing.
@@ -102,20 +92,7 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
 
     args = parser.parse_args(argv)
 
-    config = RuntimeConfiguration(**vars(args))
-    if config.config:
-        log.info(f"Reading configuration from {config.config}")
-        config_from_file = RuntimeConfiguration.parse_file(config.config)
-        log.debug(f"Configuration read from file: {config_from_file.json()}")
-        config = RuntimeConfiguration(**config_from_file.dict(), **vars(args))
-
-    if config.save_config:
-        log.info(f"Saving configuration to {config.save_config}")
-        with open(config.save_config, "w") as config_file:
-            config_file.write(config.json(indent=4))
-        raise SystemExitError(0, f"Configuration was saved to: {config.save_config}")
-    # TODO: handle save configuration
-    return config
+    return RuntimeConfiguration(**vars(args))
 
 
 def build_tag_registry() -> TagRegistry:

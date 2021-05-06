@@ -54,18 +54,3 @@ class TestCliParser:
             )
 
         assert exc.match("not allowed with argument")
-
-    def test_config_save(self, tmp_path: Path, text_data_dir: Path):
-        config_path = tmp_path / "test_config.ini"
-
-        with pytest.raises(SystemExitError) as exc:
-            process_cli(
-                "--name-template",
-                valid_name_template,
-                text_data_dir,
-                "--save-config",
-                config_path,
-            )
-
-        assert exc.value.status == 0
-        assert config_path.exists()
