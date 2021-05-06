@@ -125,3 +125,26 @@ class TestFilenameTag:
         filename = tag.process(nonexistent_path, "test/file.name")
 
         assert filename == "file.name"
+
+
+class TestSanitizeTag:
+    def test_no_special_chars(self, nonexistent_path: Path):
+        tag = SanitizeTag()
+
+        filename = tag.process(nonexistent_path, "simple_filename.txt")
+
+        assert filename == "simple_filename.txt"
+
+    def test_special_chars(self, nonexistent_path: Path):
+        tag = SanitizeTag()
+
+        filename = tag.process(nonexistent_path, r"fi:l*en" "a?m>e|.t<xt")
+
+        assert filename == "filename.txt"
+
+    def test_path_separators(self, nonexistent_path: Path):
+        tag = SanitizeTag()
+
+        filename = tag.process(nonexistent_path, "path\\to/file")
+
+        assert filename == "path/to/file"

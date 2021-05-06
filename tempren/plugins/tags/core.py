@@ -1,6 +1,8 @@
 from pathlib import Path
 from typing import Optional
 
+import pathvalidate
+
 from tempren.template.tree_elements import Tag
 
 
@@ -52,3 +54,11 @@ class FilenameTag(Tag):
         if context:
             path = Path(context)
         return str(path.name)
+
+
+class SanitizeTag(Tag):
+    require_context = True
+
+    def process(self, path: Path, context: Optional[str]) -> str:
+        assert context
+        return str(pathvalidate.sanitize_filepath(context))

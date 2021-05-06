@@ -104,6 +104,7 @@ def build_tag_registry() -> TagRegistry:
     registry.register_tag(tempren.plugins.tags.core.ExtTag)
     registry.register_tag(tempren.plugins.tags.core.DirnameTag)
     registry.register_tag(tempren.plugins.tags.core.FilenameTag)
+    registry.register_tag(tempren.plugins.tags.core.SanitizeTag)
     registry.register_tag(tempren.plugins.tags.text.UnidecodeTag)
     registry.register_tag(tempren.plugins.tags.text.RemoveTag)
     registry.register_tag(tempren.plugins.tags.text.CollapseTag)
