@@ -1,34 +1,27 @@
 import logging
-from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Callable, Iterable, Iterator, Optional
 
+from pydantic import BaseModel
 
-class File:
-    path: Path
-    # TODO: add handle for caching open(path) handle - typing.IO?
-
-    def __init__(self, path: Path):
-        self.path = path
-
-    def __str__(self):
-        return f"File({repr(str(self.path))})"
+from tempren.filesystem import FileGatherer, PrintingOnlyRenamer, Renamer
+from tempren.path_generator import File, PathGenerator
+from tempren.template.path_generators import (
+    TemplateNameGenerator,
+    TemplatePathGenerator,
+)
+from tempren.template.tree_builder import TagRegistry, TagTreeBuilder
 
 
-class PathGenerator(ABC):
-    start_directory: Path
+class RuntimeConfiguration(BaseModel):
+    input_directory: Path
+    name_template: Optional[str] = None
+    path_template: Optional[str] = None
+    dry_run: bool = False
 
-    def __init__(self, start_directory: Path):
-        assert start_directory.is_dir()
-        self.start_directory = start_directory
 
-    @abstractmethod
-    def reset(self):
-        raise NotImplementedError()
-
-    @abstractmethod
-    def generate(self, file: File) -> Path:
-        raise NotImplementedError()
+class ConfigurationError(Exception):
+    pass
 
 
 class Pipeline:
@@ -66,3 +59,47 @@ class Pipeline:
             # FIXME: check generated new_path for illegal characters (like '*')
             self.log.debug("Generated path: %s", new_path)
             self.renamer(file.path, new_path)
+
+
+def build_tag_registry() -> TagRegistry:
+    import tempren.plugins.tags.core
+    import tempren.plugins.tags.text
+
+    registry = TagRegistry()
+    registry.register_tag(tempren.plugins.tags.core.CountTag)
+    registry.register_tag(tempren.plugins.tags.core.ExtTag)
+    registry.register_tag(tempren.plugins.tags.core.DirnameTag)
+    registry.register_tag(tempren.plugins.tags.core.FilenameTag)
+    registry.register_tag(tempren.plugins.tags.core.SanitizeTag)
+    registry.register_tag(tempren.plugins.tags.text.UnidecodeTag)
+    registry.register_tag(tempren.plugins.tags.text.RemoveTag)
+    registry.register_tag(tempren.plugins.tags.text.CollapseTag)
+    return registry
+
+
+def build_pipeline(config: RuntimeConfiguration) -> Pipeline:
+    registry = build_tag_registry()
+
+    pipeline = Pipeline()
+    # TODO: specify base_path
+    pipeline.file_gatherer = iter(FileGatherer(config.input_directory))
+    tree_builder = TagTreeBuilder()
+
+    if config.name_template:
+        bound_pattern = registry.bind(tree_builder.parse(config.name_template))
+        pipeline.path_generator = TemplateNameGenerator(
+            config.input_directory, bound_pattern
+        )
+    elif config.path_template:
+        bound_pattern = registry.bind(tree_builder.parse(config.path_template))
+        pipeline.path_generator = TemplatePathGenerator(
+            config.input_directory, bound_pattern
+        )
+    else:
+        raise ConfigurationError()
+
+    if config.dry_run:
+        pipeline.renamer = PrintingOnlyRenamer()
+    else:
+        pipeline.renamer = Renamer()
+    return pipeline

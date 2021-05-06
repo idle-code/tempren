@@ -2,7 +2,7 @@ import logging
 from abc import ABC
 from pathlib import Path
 
-from tempren.pipeline import File, PathGenerator
+from tempren.path_generator import File, PathGenerator
 from tempren.template.tree_elements import Pattern
 
 

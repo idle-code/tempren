@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from tempren.pipeline import File
+from tempren.path_generator import File
 from tempren.template.path_generators import (
     TemplateNameGenerator,
     TemplatePathGenerator,
