@@ -1,4 +1,11 @@
+import importlib
+import inspect
+import logging
+import pkgutil
 from functools import reduce
+from logging import Logger
+from pathlib import Path
+from types import ModuleType
 from typing import Dict, List, Mapping, Optional, Tuple, Type, Union
 
 from antlr4 import CommonTokenStream, InputStream  # type: ignore
@@ -137,16 +144,19 @@ class ConfigurationError(TagError):
 
 
 class TagRegistry:
+    log: Logger
+    _tag_class_suffix = "Tag"
     tag_registry: Dict[str, TagFactory]
 
     def __init__(self):
+        self.log = logging.getLogger(__name__)
         self.tag_registry = {}
 
     def register_tag(self, tag_class: Type[Tag], tag_name: Optional[str] = None):
         if not tag_name:
             tag_class_name = tag_class.__name__
-            if tag_class_name.endswith("Tag"):
-                tag_name = tag_class_name[: -len("Tag")]
+            if tag_class_name.endswith(self._tag_class_suffix):
+                tag_name = tag_class_name[: -len(self._tag_class_suffix)]
             else:
                 raise ValueError(
                     f"Could not determine tag name from tag class: {tag_class_name}"
@@ -157,9 +167,12 @@ class TagRegistry:
             tag.configure(*args, **kwargs)
             return tag
 
+        self.log.debug(f"Registering class {tag_class} as {tag_name} tag")
         self.register_tag_factory(_simple_tag_factory, tag_name)
 
     def register_tag_factory(self, tag_factory: TagFactory, tag_name: str):
+        if not tag_name:
+            raise ValueError(f"Invalid tag name '{tag_name}'")
         if tag_name in self.tag_registry:
             raise ValueError(f"Factory for tag '{tag_name}' already registered")
         self.tag_registry[tag_name] = tag_factory
@@ -202,3 +215,25 @@ class TagRegistry:
             context_pattern = self._rewrite_pattern(tag_placeholder.context)
 
         return TagInstance(tag, context=context_pattern)
+
+    def register_tags_in_module(self, module: ModuleType):
+        self.log.debug(f"Discovering tags in module '{module}'")
+
+        def is_tag_class(klass: type):
+            if not inspect.isclass(klass) or not issubclass(klass, Tag) or klass == Tag:
+                return False
+            return klass.__name__.endswith(self._tag_class_suffix)
+
+        for _, tag_class in inspect.getmembers(module, is_tag_class):
+            self.register_tag(tag_class)
+
+    def register_tags_in_package(self, package):
+        self.log.debug(f"Discovering tags in package '{package}'")
+
+        for _, name, is_pkg in pkgutil.walk_packages(
+            package.__path__, package.__name__ + "."
+        ):
+            if is_pkg:
+                continue
+            module = importlib.import_module(name)
+            self.register_tags_in_module(module)

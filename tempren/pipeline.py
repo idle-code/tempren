@@ -62,23 +62,18 @@ class Pipeline:
 
 
 def build_tag_registry() -> TagRegistry:
-    import tempren.plugins.tags.core
-    import tempren.plugins.tags.text
+    import tempren.plugins.tags
 
     registry = TagRegistry()
-    registry.register_tag(tempren.plugins.tags.core.CountTag)
-    registry.register_tag(tempren.plugins.tags.core.ExtTag)
-    registry.register_tag(tempren.plugins.tags.core.DirnameTag)
-    registry.register_tag(tempren.plugins.tags.core.FilenameTag)
-    registry.register_tag(tempren.plugins.tags.core.SanitizeTag)
-    registry.register_tag(tempren.plugins.tags.text.UnidecodeTag)
-    registry.register_tag(tempren.plugins.tags.text.RemoveTag)
-    registry.register_tag(tempren.plugins.tags.text.CollapseTag)
+    registry.register_tags_in_package(tempren.plugins.tags)
     return registry
 
 
 def build_pipeline(config: RuntimeConfiguration) -> Pipeline:
     registry = build_tag_registry()
+    # import tempren.plugins.tags
+    # register = TagRegistry()
+    # register.discover_tags(tempren.plugins.tags)
 
     pipeline = Pipeline()
     # TODO: specify base_path

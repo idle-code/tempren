@@ -1,3 +1,4 @@
+import pathlib
 from pathlib import Path
 from typing import Optional
 
@@ -54,6 +55,17 @@ class TestTagRegistry:
             registry.register_tag(MockTag)
 
         assert exc.match("already registered")
+
+    def test_register_tag_factory__empty_name(self):
+        registry = TagRegistry()
+
+        def tag_factory(*args, **kwargs):
+            pass
+
+        with pytest.raises(ValueError) as exc:
+            registry.register_tag_factory(tag_factory, "")
+
+        exc.match("Invalid tag name")
 
     def test_bind__missing_tag(self):
         pattern = parse("%Nonexistent()")
@@ -222,3 +234,30 @@ class TestTagRegistry:
                 )
             ]
         )
+
+    def test_register_tags_in_module__finds_first_level_tags(self):
+        registry = TagRegistry()
+        from .test_module import first_level
+
+        registry.register_tags_in_module(first_level)
+
+        first_level_tag_factory = registry.find_tag_factory("FirstLevel")
+        assert first_level_tag_factory
+
+    def test_register_tags_in_package__finds_first_level_tags(self):
+        registry = TagRegistry()
+        import tests.template.test_module
+
+        registry.register_tags_in_package(tests.template.test_module)
+
+        first_level_tag_factory = registry.find_tag_factory("FirstLevel")
+        assert first_level_tag_factory
+
+    def test_register_tags_in_package__finds_second_level_tags(self):
+        registry = TagRegistry()
+        import tests.template.test_module
+
+        registry.register_tags_in_package(tests.template.test_module)
+
+        second_level_tag_factory = registry.find_tag_factory("SecondLevel")
+        assert second_level_tag_factory
