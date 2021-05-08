@@ -17,6 +17,8 @@ class FileGatherer:
         def is_hidden(path: Path) -> bool:
             return path.name.startswith(".")
 
+        # os.chdir(self.start_directory)  # FIXME: implement
+
         yield from filter(
             lambda p: not p.is_dir() and not is_hidden(p),
             self.start_directory.rglob(self.glob_pattern),
@@ -42,13 +44,14 @@ class PrintingOnlyRenamer:
 
     def __call__(self, source_path: Path, destination_path: Path):
         if source_path == destination_path:
-            self.log.debug("Skipping renaming: source and destination are the same")
+            self.log.info("Skipping renaming: source and destination are the same")
             return
         if destination_path.exists():
-            self.log.debug("Skipping renaming: destination path exists")
+            self.log.info("Skipping renaming: destination path exists")
             raise FileExistsError(
                 f"Destination file already exists: {destination_path}"
             )
         if not source_path.exists():
-            raise FileNotFoundError(f"No such fiile or directory: {source_path}")
-        self.log.info("Renaming '%s' -> '%s'", source_path, destination_path)
+            raise FileNotFoundError(f"No such file or directory: {source_path}")
+        print(f"\nRenaming: {source_path}")
+        print(f"      to: {destination_path}")

@@ -77,6 +77,7 @@ def build_pipeline(config: RuntimeConfiguration, registry: TagRegistry) -> Pipel
     log.info("Building pipeline")
     pipeline = Pipeline()
     # TODO: specify base_path
+    config.input_directory = config.input_directory
     pipeline.file_gatherer = iter(FileGatherer(config.input_directory))
     tree_builder = TagTreeBuilder()
 
