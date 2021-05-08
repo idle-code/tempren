@@ -87,6 +87,43 @@ class TestExtTag:
 
         assert extension == "bar"
 
+    def test_multiple_extensions(self, nonexistent_path: Path):
+        tag = ExtTag()
+
+        extension = tag.process(nonexistent_path, "test/file.bar.spam")
+
+        assert extension == "spam"  # TODO: Check if this is desired behaviour
+
+
+class TestBasenameTag:
+    def test_without_context_original_basename_is_used(self):
+        tag = BasenameTag()
+
+        basename = tag.process(Path("test/file.foo"), None)
+
+        assert basename == "file"
+
+    def test_no_extension_on_filename(self):
+        tag = BasenameTag()
+
+        basename = tag.process(Path("test/filename"), None)
+
+        assert basename == "filename"
+
+    def test_context_basename(self, nonexistent_path: Path):
+        tag = BasenameTag()
+
+        basename = tag.process(nonexistent_path, "test/file.bar")
+
+        assert basename == "file"
+
+    def test_multiple_extensions(self, nonexistent_path: Path):
+        tag = BasenameTag()
+
+        basename = tag.process(nonexistent_path, "test/file.bar.spam")
+
+        assert basename == "file.bar"  # TODO: Check if this is desired behaviour
+
 
 class TestDirnameTag:
     def test_no_context(self):

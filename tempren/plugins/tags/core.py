@@ -42,6 +42,17 @@ class ExtTag(Tag):
         return path.suffix.lstrip(".")
 
 
+class BasenameTag(Tag):
+    """Renders processed file name without extension"""
+
+    require_context = None
+
+    def process(self, path: Path, context: Optional[str]) -> str:
+        if context:
+            path = Path(context)
+        return path.stem
+
+
 class DirnameTag(Tag):
     """Renders file parent directory path"""
 
