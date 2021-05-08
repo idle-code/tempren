@@ -12,11 +12,14 @@ from tempren.template.path_generators import (
 )
 from tempren.template.tree_builder import TagRegistry, TagTreeBuilder
 
+log = logging.getLogger(__name__)
+
 
 class RuntimeConfiguration(BaseModel):
     input_directory: Path
-    name_template: Optional[str] = None
-    path_template: Optional[str] = None
+    name: bool = False
+    path: bool = False
+    template: str
     dry_run: bool = False
 
 
@@ -62,6 +65,7 @@ class Pipeline:
 
 
 def build_tag_registry() -> TagRegistry:
+    log.info("Building tag registry")
     import tempren.plugins.tags
 
     registry = TagRegistry()
@@ -69,24 +73,20 @@ def build_tag_registry() -> TagRegistry:
     return registry
 
 
-def build_pipeline(config: RuntimeConfiguration) -> Pipeline:
-    registry = build_tag_registry()
-    # import tempren.plugins.tags
-    # register = TagRegistry()
-    # register.discover_tags(tempren.plugins.tags)
-
+def build_pipeline(config: RuntimeConfiguration, registry: TagRegistry) -> Pipeline:
+    log.info("Building pipeline")
     pipeline = Pipeline()
     # TODO: specify base_path
     pipeline.file_gatherer = iter(FileGatherer(config.input_directory))
     tree_builder = TagTreeBuilder()
 
-    if config.name_template:
-        bound_pattern = registry.bind(tree_builder.parse(config.name_template))
+    if config.name:
+        bound_pattern = registry.bind(tree_builder.parse(config.template))
         pipeline.path_generator = TemplateNameGenerator(
             config.input_directory, bound_pattern
         )
-    elif config.path_template:
-        bound_pattern = registry.bind(tree_builder.parse(config.path_template))
+    elif config.path:
+        bound_pattern = registry.bind(tree_builder.parse(config.template))
         pipeline.path_generator = TemplatePathGenerator(
             config.input_directory, bound_pattern
         )

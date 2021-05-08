@@ -2,9 +2,8 @@ import importlib
 import inspect
 import logging
 import pkgutil
-from functools import reduce
+from functools import reduce, wraps
 from logging import Logger
-from pathlib import Path
 from types import ModuleType
 from typing import Dict, List, Mapping, Optional, Tuple, Type, Union
 
@@ -167,6 +166,7 @@ class TagRegistry:
             tag.configure(*args, **kwargs)
             return tag
 
+        _simple_tag_factory.__doc__ = tag_class.__doc__
         self.log.debug(f"Registering class {tag_class} as {tag_name} tag")
         self.register_tag_factory(_simple_tag_factory, tag_name)
 

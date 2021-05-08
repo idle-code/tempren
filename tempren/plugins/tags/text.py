@@ -9,6 +9,8 @@ from tempren.template.tree_elements import Tag
 
 
 class UnidecodeTag(Tag):
+    """Replace special unicode characters in context with ASCII equivalents"""
+
     require_context = True
 
     def process(self, path: Path, context: Optional[str]) -> str:
@@ -17,6 +19,8 @@ class UnidecodeTag(Tag):
 
 
 class RemoveTag(Tag):
+    """Remove parts of the context based on RegEx patterns"""
+
     require_context = True
     patterns: List[Pattern]
 
@@ -35,6 +39,8 @@ class RemoveTag(Tag):
 
 
 class CollapseTag(Tag):
+    """Collapse specified repeating characters in context"""
+
     require_context = True
     pattern: Pattern
 

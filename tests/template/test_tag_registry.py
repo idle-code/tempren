@@ -1,4 +1,3 @@
-import pathlib
 from pathlib import Path
 from typing import Optional
 
@@ -261,3 +260,5 @@ class TestTagRegistry:
 
         second_level_tag_factory = registry.find_tag_factory("SecondLevel")
         assert second_level_tag_factory
+
+    # TODO: add tests for documentation rewriting from tag class to tag factory
