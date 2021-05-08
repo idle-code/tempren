@@ -39,7 +39,7 @@ class _ListAvailableTags(argparse.Action):
         parser: ArgumentParser,
         namespace: Namespace,
         values: Union[Text, Sequence[Any], None],
-        option_string: Optional[Text] = ...,
+        option_string: Optional[Text] = None,
     ):
         registry = build_tag_registry()
         print("Available tags:")
@@ -54,7 +54,7 @@ class _IncreaseLogVerbosity(argparse.Action):
         parser: ArgumentParser,
         namespace: Namespace,
         values: Union[Text, Sequence[Any], None],
-        option_string: Optional[Text] = ...,
+        option_string: Optional[Text] = None,
     ):
         root_logger = logging.getLogger()
         root_logger.setLevel(root_logger.level - 10)

@@ -50,3 +50,23 @@ class CollapseTag(Tag):
     def process(self, path: Path, context: Optional[str]) -> str:
         assert context
         return self.pattern.sub("", context)
+
+
+class UpperTag(Tag):
+    """Makes context uppercase"""
+
+    require_context = True
+
+    def process(self, path: Path, context: Optional[str]) -> str:
+        assert context
+        return context.upper()
+
+
+class LowerTag(Tag):
+    """Makes context lowercase"""
+
+    require_context = True
+
+    def process(self, path: Path, context: Optional[str]) -> str:
+        assert context
+        return context.lower()

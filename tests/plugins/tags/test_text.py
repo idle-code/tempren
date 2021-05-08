@@ -102,3 +102,21 @@ class TestCollapseTag:
         result = tag.process(nonexistent_path, "foobazz")
 
         assert result == "fobaz"
+
+
+class TestUpperTag:
+    def test_makes_context_upper(self, nonexistent_path: Path):
+        tag = UpperTag()
+
+        result = tag.process(nonexistent_path, "upper")
+
+        assert result == "UPPER"
+
+
+class TestLowerTag:
+    def test_makes_context_upper(self, nonexistent_path: Path):
+        tag = LowerTag()
+
+        result = tag.process(nonexistent_path, "LOWER")
+
+        assert result == "lower"
