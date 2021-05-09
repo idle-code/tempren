@@ -27,7 +27,7 @@ class RemoveTag(Tag):
     def configure(self, *patterns: str, ignore_case: bool = False):  # type: ignore
         flags = 0
         if ignore_case:
-            flags |= re.IGNORECASE
+            flags |= re.IGNORECASE  # TODO: make this configurable?
         self.patterns = list(map(lambda p: re.compile(p, flags), patterns))
 
     def process(self, path: Path, context: Optional[str]) -> str:
@@ -36,6 +36,23 @@ class RemoveTag(Tag):
         for pattern in self.patterns:
             result = pattern.sub("", result)
         return result
+
+
+class ReplaceTag(Tag):
+    """Replaces regex pattern with specified replacement"""
+
+    require_context = True
+    pattern: Pattern
+    replacement: str
+
+    def configure(self, pattern: str, replacement: str):  # type: ignore
+        # TODO: add ignore-case option?
+        self.pattern = re.compile(pattern)
+        self.replacement = replacement
+
+    def process(self, path: Path, context: Optional[str]) -> str:
+        assert context
+        return self.pattern.sub(self.replacement, context)
 
 
 class CollapseTag(Tag):

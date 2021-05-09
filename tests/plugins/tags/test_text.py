@@ -78,6 +78,48 @@ class TestRemoveTag:
         assert result == "bar"
 
 
+class TestReplaceTag:
+    def test_pattern_not_found(self, nonexistent_path: Path):
+        tag = ReplaceTag()
+        tag.configure("foo", "bar")
+
+        result = tag.process(nonexistent_path, "spam")
+
+        assert result == "spam"
+
+    def test_single_replacement(self, nonexistent_path: Path):
+        tag = ReplaceTag()
+        tag.configure("foo", "bar")
+
+        result = tag.process(nonexistent_path, "foobar")
+
+        assert result == "barbar"
+
+    def test_multiple_replacements(self, nonexistent_path: Path):
+        tag = ReplaceTag()
+        tag.configure("foo", "bar")
+
+        result = tag.process(nonexistent_path, "foobarfoo")
+
+        assert result == "barbarbar"
+
+    def test_replace_pattern(self, nonexistent_path: Path):
+        tag = ReplaceTag()
+        tag.configure("o+", "bar")
+
+        result = tag.process(nonexistent_path, "foobar")
+
+        assert result == "fbarbar"
+
+    def test_replace_with_capture(self, nonexistent_path: Path):
+        tag = ReplaceTag()
+        tag.configure("f(o+)", "\\1 \\1 ")
+
+        result = tag.process(nonexistent_path, "foobar")
+
+        assert result == "oo oo bar"
+
+
 class TestCollapseTag:
     def test_nothing_to_collapse(self, nonexistent_path: Path):
         tag = CollapseTag()
