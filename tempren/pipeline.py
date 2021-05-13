@@ -1,4 +1,5 @@
 import logging
+import os
 from pathlib import Path
 from typing import Callable, Iterable, Iterator, Optional
 
@@ -29,7 +30,8 @@ class ConfigurationError(Exception):
 
 class Pipeline:
     log: logging.Logger
-    file_gatherer: Iterator[Path]
+    _input_directory: Path
+    file_gatherer: Callable[[Path], Iterable[Path]]
     sorter: Optional[Callable[[Iterable[File]], Iterable[File]]] = None
     path_generator: PathGenerator
 
@@ -38,12 +40,21 @@ class Pipeline:
         self.filter: Callable[[File], bool] = lambda f: True
         self.renamer: Callable[[Path, Path], None] = lambda src, dst: None
 
+    @property
+    def input_directory(self) -> Path:
+        return self._input_directory
+
+    @input_directory.setter
+    def input_directory(self, input_path: Path):
+        self._input_directory = input_path.absolute()
+
     def execute(self):
         all_files = []
-        self.log.info("Gathering paths")
-        for path in self.file_gatherer:
+        self.log.info(f"Gathering paths in {self.input_directory}")
+        os.chdir(self.input_directory)
+        for path in self.file_gatherer(self.input_directory):
             self.log.debug("Checking %s", path)
-            file = File(path)
+            file = File(path.relative_to(self.input_directory))
             if not self.filter(file):
                 self.log.debug("%s filtered out", file)
                 continue
@@ -61,7 +72,7 @@ class Pipeline:
             new_path = self.path_generator.generate(file)
             # FIXME: check generated new_path for illegal characters (like '*')
             self.log.debug("Generated path: %s", new_path)
-            self.renamer(file.path, new_path)
+            self.renamer(file.relative_path, new_path)
 
 
 def build_tag_registry() -> TagRegistry:
@@ -76,21 +87,17 @@ def build_tag_registry() -> TagRegistry:
 def build_pipeline(config: RuntimeConfiguration, registry: TagRegistry) -> Pipeline:
     log.info("Building pipeline")
     pipeline = Pipeline()
+    pipeline.input_directory = config.input_directory
     # TODO: specify base_path
-    config.input_directory = config.input_directory
-    pipeline.file_gatherer = iter(FileGatherer(config.input_directory))
+    pipeline.file_gatherer = FileGatherer  # type: ignore
     tree_builder = TagTreeBuilder()
 
     if config.name:
         bound_pattern = registry.bind(tree_builder.parse(config.template))
-        pipeline.path_generator = TemplateNameGenerator(
-            config.input_directory, bound_pattern
-        )
+        pipeline.path_generator = TemplateNameGenerator(bound_pattern)
     elif config.path:
         bound_pattern = registry.bind(tree_builder.parse(config.template))
-        pipeline.path_generator = TemplatePathGenerator(
-            config.input_directory, bound_pattern
-        )
+        pipeline.path_generator = TemplatePathGenerator(bound_pattern)
     else:
         raise ConfigurationError()
 

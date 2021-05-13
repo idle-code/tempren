@@ -3,23 +3,18 @@ from pathlib import Path
 
 
 class File:
-    path: Path
+    relative_path: Path
     # TODO: add handle for caching open(path) handle - typing.IO?
 
     def __init__(self, path: Path):
-        self.path = path
+        assert not path.is_absolute()
+        self.relative_path = path
 
     def __str__(self):
-        return f"File({repr(str(self.path))})"
+        return f"File({repr(str(self.relative_path))})"
 
 
 class PathGenerator(ABC):
-    start_directory: Path
-
-    def __init__(self, start_directory: Path):
-        assert start_directory.is_dir()
-        self.start_directory = start_directory
-
     @abstractmethod
     def reset(self):
         raise NotImplementedError()
