@@ -87,3 +87,26 @@ class LowerTag(Tag):
     def process(self, path: Path, context: Optional[str]) -> str:
         assert context
         return context.lower()
+
+
+class StripTag(Tag):
+    """Removes dangling characters on the ends of provided context"""
+
+    require_context = True
+    strip_characters: str = " "
+    left: bool = False
+    right: bool = False
+
+    def configure(self, strip_characters: Optional[str] = None, left: bool = False, right: bool = False):  # type: ignore
+        if strip_characters:
+            self.strip_characters = strip_characters
+        self.left = left
+        self.right = right
+
+    def process(self, path: Path, context: Optional[str]) -> str:
+        assert context
+        if self.left and not self.right:
+            return context.lstrip(self.strip_characters)
+        if self.right and not self.left:
+            return context.rstrip(self.strip_characters)
+        return context.strip(self.strip_characters)

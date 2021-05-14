@@ -158,3 +158,44 @@ class TestLowerTag:
         result = tag.process(nonexistent_path, "LOWER")
 
         assert result == "lower"
+
+
+class TestStripTag:
+    def test_strip_spaces_on_both_ends(self, nonexistent_path: Path):
+        tag = StripTag()
+
+        result = tag.process(nonexistent_path, "  foobar ")
+
+        assert result == "foobar"
+
+    def test_strip_provided_chars_on_both_ends(self, nonexistent_path: Path):
+        tag = StripTag()
+        tag.configure("_.")
+
+        result = tag.process(nonexistent_path, "__foobar..")
+
+        assert result == "foobar"
+
+    def test_left_strip_spaces(self, nonexistent_path: Path):
+        tag = StripTag()
+        tag.configure(left=True)
+
+        result = tag.process(nonexistent_path, "  foobar  ")
+
+        assert result == "foobar  "
+
+    def test_right_strip_spaces(self, nonexistent_path: Path):
+        tag = StripTag()
+        tag.configure(right=True)
+
+        result = tag.process(nonexistent_path, "  foobar  ")
+
+        assert result == "  foobar"
+
+    def test_left_and_right_strip_spaces(self, nonexistent_path: Path):
+        tag = StripTag()
+        tag.configure(left=True, right=True)
+
+        result = tag.process(nonexistent_path, "  foobar  ")
+
+        assert result == "foobar"
