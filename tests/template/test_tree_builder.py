@@ -138,6 +138,12 @@ class TestTreeBuilder:
 
         assert pattern == Pattern([RawText("Text|pipe")])
 
+    def test_pipe_as_tag_context(self):
+        pattern = parse("%OUTER(){Text|%INNER()}")
+        equivalent_pattern = parse("%OUTER(){%INNER(){Text}}")
+
+        assert pattern == equivalent_pattern
+
 
 class TestTreeBuilderErrors:
     pass

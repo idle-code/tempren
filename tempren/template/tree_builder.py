@@ -25,7 +25,7 @@ from .tree_elements import (
 ArgValue = Union[str, int, bool]
 
 
-escaped_characters = ("'", "\\", "{", "}")
+escaped_characters = ("'", "\\", "{", "}", "|")
 replacements = list(("\\" + ec, ec) for ec in escaped_characters)
 
 
@@ -45,21 +45,31 @@ class _TreeVisitor(TagTemplateParserVisitor):
         return pattern + [element]
 
     def visitRootPattern(self, ctx: TagTemplateParser.RootPatternContext) -> Pattern:
-        return self.visitPattern(ctx.pattern())
+        return self.visitPatternExpression(ctx.patternExpression())
+
+    def visitPatternExpression(
+        self, ctx: TagTemplateParser.PatternExpressionContext
+    ) -> Pattern:
+        pattern = self.visitPattern(ctx.pattern())
+        if not ctx.pipeList():
+            return pattern
+
+        tag_list = self.visitPipeList(ctx.pipeList())
+        context = pattern
+        for tag_placeholder in tag_list:
+            tag_placeholder.context = context
+            context = Pattern([tag_placeholder])
+        return context
+
+    def visitPipeList(
+        self, ctx: TagTemplateParser.PipeListContext
+    ) -> List[TagPlaceholder]:
+        tag_list = self.visitChildren(ctx)
+        return list(filter(bool, tag_list))
 
     def visitPattern(self, ctx: TagTemplateParser.PatternContext) -> Pattern:
         pattern_elements = self.visitChildren(ctx)
         return Pattern(pattern_elements)
-
-    def visitPipe(self, ctx: TagTemplateParser.PipeContext) -> TagPlaceholder:
-        entry_pattern = self.visitPattern(ctx.entry_pattern)
-        context = entry_pattern
-        tag: TagPlaceholder
-        for processing_tag in ctx.processing_tags:
-            tag = self.visitContextlessTag(processing_tag)
-            tag.context = context
-            context = Pattern([tag])
-        return tag
 
     def visitContextlessTag(
         self, ctx: TagTemplateParser.ContextlessTagContext
@@ -72,7 +82,7 @@ class _TreeVisitor(TagTemplateParserVisitor):
     def visitTag(self, ctx: TagTemplateParser.TagContext) -> TagPlaceholder:
         tag_name = ctx.TAG_ID().getText()
         args, kwargs = self.visitArgumentList(ctx.argumentList())
-        context = self.visitPattern(ctx.context)
+        context = self.visitPatternExpression(ctx.patternExpression())
         tag = TagPlaceholder(tag_name, args=args, kwargs=kwargs, context=context)
         return tag
 

@@ -3,24 +3,27 @@ parser grammar TagTemplateParser;
 options { tokenVocab=TagTemplateLexer; }
 
 rootPattern
-    : pattern EOF
-    | pipe EOF
-    ;
-
-pipe
-    : entry_pattern=pattern (PIPE processing_tags=contextlessTag)+
-    ;
-
-pattern
-    : (rawText | tag | contextlessTag)*
+    : patternExpression EOF
     ;
 
 tag
-    : TAG_ID argumentList '{' context=pattern '}'
+    : TAG_ID argumentList '{' patternExpression '}'
     ;
 
 contextlessTag
     : TAG_ID argumentList
+    ;
+
+patternExpression
+    : pattern pipeList?
+    ;
+
+pipeList
+    : (PIPE contextlessTag)+
+    ;
+
+pattern
+    : (rawText | tag | contextlessTag)*
     ;
 
 argumentList

@@ -15,27 +15,27 @@ def serializedATN():
     with StringIO() as buf:
         buf.write("\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\24")
         buf.write("G\4\2\t\2\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b")
-        buf.write("\t\b\4\t\t\t\4\n\t\n\3\2\3\2\3\2\3\2\3\2\3\2\5\2\33\n")
-        buf.write("\2\3\3\3\3\3\3\6\3 \n\3\r\3\16\3!\3\4\3\4\3\4\7\4'\n")
-        buf.write("\4\f\4\16\4*\13\4\3\5\3\5\3\5\3\5\3\5\3\5\3\6\3\6\3\6")
-        buf.write("\3\7\6\7\66\n\7\r\7\16\7\67\3\7\5\7;\n\7\3\b\3\b\5\b?")
-        buf.write("\n\b\3\b\3\b\3\t\3\t\3\n\3\n\3\n\2\2\13\2\4\6\b\n\f\16")
-        buf.write("\20\22\2\3\3\2\20\22\2E\2\32\3\2\2\2\4\34\3\2\2\2\6(\3")
-        buf.write("\2\2\2\b+\3\2\2\2\n\61\3\2\2\2\f:\3\2\2\2\16>\3\2\2\2")
-        buf.write("\20B\3\2\2\2\22D\3\2\2\2\24\25\5\6\4\2\25\26\7\2\2\3\26")
-        buf.write("\33\3\2\2\2\27\30\5\4\3\2\30\31\7\2\2\3\31\33\3\2\2\2")
-        buf.write("\32\24\3\2\2\2\32\27\3\2\2\2\33\3\3\2\2\2\34\37\5\6\4")
-        buf.write("\2\35\36\7\5\2\2\36 \5\n\6\2\37\35\3\2\2\2 !\3\2\2\2!")
-        buf.write("\37\3\2\2\2!\"\3\2\2\2\"\5\3\2\2\2#'\5\22\n\2$'\5\b")
-        buf.write("\5\2%'\5\n\6\2&#\3\2\2\2&$\3\2\2\2&%\3\2\2\2'*\3\2\2")
-        buf.write("\2(&\3\2\2\2()\3\2\2\2)\7\3\2\2\2*(\3\2\2\2+,\7\f\2\2")
-        buf.write(",-\5\f\7\2-.\7\7\2\2./\5\6\4\2/\60\7\b\2\2\60\t\3\2\2")
-        buf.write("\2\61\62\7\f\2\2\62\63\5\f\7\2\63\13\3\2\2\2\64\66\5\16")
-        buf.write("\b\2\65\64\3\2\2\2\66\67\3\2\2\2\67\65\3\2\2\2\678\3\2")
-        buf.write("\2\28;\3\2\2\29;\3\2\2\2:\65\3\2\2\2:9\3\2\2\2;\r\3\2")
-        buf.write("\2\2<=\7\23\2\2=?\7\24\2\2><\3\2\2\2>?\3\2\2\2?@\3\2\2")
-        buf.write("\2@A\5\20\t\2A\17\3\2\2\2BC\t\2\2\2C\21\3\2\2\2DE\7\6")
-        buf.write("\2\2E\23\3\2\2\2\t\32!&(\67:>")
+        buf.write("\t\b\4\t\t\t\4\n\t\n\4\13\t\13\3\2\3\2\3\2\3\3\3\3\3\3")
+        buf.write("\3\3\3\3\3\3\3\4\3\4\3\4\3\5\3\5\5\5%\n\5\3\6\3\6\6\6")
+        buf.write(")\n\6\r\6\16\6*\3\7\3\7\3\7\7\7\60\n\7\f\7\16\7\63\13")
+        buf.write("\7\3\b\6\b\66\n\b\r\b\16\b\67\3\b\5\b;\n\b\3\t\3\t\5\t")
+        buf.write("?\n\t\3\t\3\t\3\n\3\n\3\13\3\13\3\13\2\2\f\2\4\6\b\n\f")
+        buf.write("\16\20\22\24\2\3\3\2\20\22\2D\2\26\3\2\2\2\4\31\3\2\2")
+        buf.write('\2\6\37\3\2\2\2\b"\3\2\2\2\n(\3\2\2\2\f\61\3\2\2\2\16')
+        buf.write(":\3\2\2\2\20>\3\2\2\2\22B\3\2\2\2\24D\3\2\2\2\26\27\5")
+        buf.write("\b\5\2\27\30\7\2\2\3\30\3\3\2\2\2\31\32\7\f\2\2\32\33")
+        buf.write("\5\16\b\2\33\34\7\7\2\2\34\35\5\b\5\2\35\36\7\b\2\2\36")
+        buf.write('\5\3\2\2\2\37 \7\f\2\2 !\5\16\b\2!\7\3\2\2\2"$\5\f\7')
+        buf.write("\2#%\5\n\6\2$#\3\2\2\2$%\3\2\2\2%\t\3\2\2\2&'\7\5\2\2")
+        buf.write("')\5\6\4\2(&\3\2\2\2)*\3\2\2\2*(\3\2\2\2*+\3\2\2\2+\13")
+        buf.write("\3\2\2\2,\60\5\24\13\2-\60\5\4\3\2.\60\5\6\4\2/,\3\2\2")
+        buf.write("\2/-\3\2\2\2/.\3\2\2\2\60\63\3\2\2\2\61/\3\2\2\2\61\62")
+        buf.write("\3\2\2\2\62\r\3\2\2\2\63\61\3\2\2\2\64\66\5\20\t\2\65")
+        buf.write("\64\3\2\2\2\66\67\3\2\2\2\67\65\3\2\2\2\678\3\2\2\28;")
+        buf.write("\3\2\2\29;\3\2\2\2:\65\3\2\2\2:9\3\2\2\2;\17\3\2\2\2<")
+        buf.write("=\7\23\2\2=?\7\24\2\2><\3\2\2\2>?\3\2\2\2?@\3\2\2\2@A")
+        buf.write("\5\22\n\2A\21\3\2\2\2BC\t\2\2\2C\23\3\2\2\2DE\7\6\2\2")
+        buf.write("E\25\3\2\2\2\t$*/\61\67:>")
         return buf.getvalue()
 
 
@@ -94,21 +94,23 @@ class TagTemplateParser(Parser):
     ]
 
     RULE_rootPattern = 0
-    RULE_pipe = 1
-    RULE_pattern = 2
-    RULE_tag = 3
-    RULE_contextlessTag = 4
-    RULE_argumentList = 5
-    RULE_argument = 6
-    RULE_argumentValue = 7
-    RULE_rawText = 8
+    RULE_tag = 1
+    RULE_contextlessTag = 2
+    RULE_patternExpression = 3
+    RULE_pipeList = 4
+    RULE_pattern = 5
+    RULE_argumentList = 6
+    RULE_argument = 7
+    RULE_argumentValue = 8
+    RULE_rawText = 9
 
     ruleNames = [
         "rootPattern",
-        "pipe",
-        "pattern",
         "tag",
         "contextlessTag",
+        "patternExpression",
+        "pipeList",
+        "pattern",
         "argumentList",
         "argument",
         "argumentValue",
@@ -152,14 +154,13 @@ class TagTemplateParser(Parser):
             super().__init__(parent, invokingState)
             self.parser = parser
 
-        def pattern(self):
-            return self.getTypedRuleContext(TagTemplateParser.PatternContext, 0)
+        def patternExpression(self):
+            return self.getTypedRuleContext(
+                TagTemplateParser.PatternExpressionContext, 0
+            )
 
         def EOF(self):
             return self.getToken(TagTemplateParser.EOF, 0)
-
-        def pipe(self):
-            return self.getTypedRuleContext(TagTemplateParser.PipeContext, 0)
 
         def getRuleIndex(self):
             return TagTemplateParser.RULE_rootPattern
@@ -175,24 +176,161 @@ class TagTemplateParser(Parser):
         localctx = TagTemplateParser.RootPatternContext(self, self._ctx, self.state)
         self.enterRule(localctx, 0, self.RULE_rootPattern)
         try:
-            self.state = 24
-            self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input, 0, self._ctx)
-            if la_ == 1:
-                self.enterOuterAlt(localctx, 1)
-                self.state = 18
-                self.pattern()
-                self.state = 19
-                self.match(TagTemplateParser.EOF)
-                pass
+            self.enterOuterAlt(localctx, 1)
+            self.state = 20
+            self.patternExpression()
+            self.state = 21
+            self.match(TagTemplateParser.EOF)
+        except RecognitionException as re:
+            localctx.exception = re
+            self._errHandler.reportError(self, re)
+            self._errHandler.recover(self, re)
+        finally:
+            self.exitRule()
+        return localctx
 
-            elif la_ == 2:
-                self.enterOuterAlt(localctx, 2)
-                self.state = 21
-                self.pipe()
-                self.state = 22
-                self.match(TagTemplateParser.EOF)
-                pass
+    class TagContext(ParserRuleContext):
+        __slots__ = "parser"
+
+        def __init__(
+            self, parser, parent: ParserRuleContext = None, invokingState: int = -1
+        ):
+            super().__init__(parent, invokingState)
+            self.parser = parser
+
+        def TAG_ID(self):
+            return self.getToken(TagTemplateParser.TAG_ID, 0)
+
+        def argumentList(self):
+            return self.getTypedRuleContext(TagTemplateParser.ArgumentListContext, 0)
+
+        def CONTEXT_START(self):
+            return self.getToken(TagTemplateParser.CONTEXT_START, 0)
+
+        def patternExpression(self):
+            return self.getTypedRuleContext(
+                TagTemplateParser.PatternExpressionContext, 0
+            )
+
+        def CONTEXT_END(self):
+            return self.getToken(TagTemplateParser.CONTEXT_END, 0)
+
+        def getRuleIndex(self):
+            return TagTemplateParser.RULE_tag
+
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitTag"):
+                return visitor.visitTag(self)
+            else:
+                return visitor.visitChildren(self)
+
+    def tag(self):
+
+        localctx = TagTemplateParser.TagContext(self, self._ctx, self.state)
+        self.enterRule(localctx, 2, self.RULE_tag)
+        try:
+            self.enterOuterAlt(localctx, 1)
+            self.state = 23
+            self.match(TagTemplateParser.TAG_ID)
+            self.state = 24
+            self.argumentList()
+            self.state = 25
+            self.match(TagTemplateParser.CONTEXT_START)
+            self.state = 26
+            self.patternExpression()
+            self.state = 27
+            self.match(TagTemplateParser.CONTEXT_END)
+        except RecognitionException as re:
+            localctx.exception = re
+            self._errHandler.reportError(self, re)
+            self._errHandler.recover(self, re)
+        finally:
+            self.exitRule()
+        return localctx
+
+    class ContextlessTagContext(ParserRuleContext):
+        __slots__ = "parser"
+
+        def __init__(
+            self, parser, parent: ParserRuleContext = None, invokingState: int = -1
+        ):
+            super().__init__(parent, invokingState)
+            self.parser = parser
+
+        def TAG_ID(self):
+            return self.getToken(TagTemplateParser.TAG_ID, 0)
+
+        def argumentList(self):
+            return self.getTypedRuleContext(TagTemplateParser.ArgumentListContext, 0)
+
+        def getRuleIndex(self):
+            return TagTemplateParser.RULE_contextlessTag
+
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitContextlessTag"):
+                return visitor.visitContextlessTag(self)
+            else:
+                return visitor.visitChildren(self)
+
+    def contextlessTag(self):
+
+        localctx = TagTemplateParser.ContextlessTagContext(self, self._ctx, self.state)
+        self.enterRule(localctx, 4, self.RULE_contextlessTag)
+        try:
+            self.enterOuterAlt(localctx, 1)
+            self.state = 29
+            self.match(TagTemplateParser.TAG_ID)
+            self.state = 30
+            self.argumentList()
+        except RecognitionException as re:
+            localctx.exception = re
+            self._errHandler.reportError(self, re)
+            self._errHandler.recover(self, re)
+        finally:
+            self.exitRule()
+        return localctx
+
+    class PatternExpressionContext(ParserRuleContext):
+        __slots__ = "parser"
+
+        def __init__(
+            self, parser, parent: ParserRuleContext = None, invokingState: int = -1
+        ):
+            super().__init__(parent, invokingState)
+            self.parser = parser
+
+        def pattern(self):
+            return self.getTypedRuleContext(TagTemplateParser.PatternContext, 0)
+
+        def pipeList(self):
+            return self.getTypedRuleContext(TagTemplateParser.PipeListContext, 0)
+
+        def getRuleIndex(self):
+            return TagTemplateParser.RULE_patternExpression
+
+        def accept(self, visitor: ParseTreeVisitor):
+            if hasattr(visitor, "visitPatternExpression"):
+                return visitor.visitPatternExpression(self)
+            else:
+                return visitor.visitChildren(self)
+
+    def patternExpression(self):
+
+        localctx = TagTemplateParser.PatternExpressionContext(
+            self, self._ctx, self.state
+        )
+        self.enterRule(localctx, 6, self.RULE_patternExpression)
+        self._la = 0  # Token type
+        try:
+            self.enterOuterAlt(localctx, 1)
+            self.state = 32
+            self.pattern()
+            self.state = 34
+            self._errHandler.sync(self)
+            _la = self._input.LA(1)
+            if _la == TagTemplateParser.PIPE:
+                self.state = 33
+                self.pipeList()
 
         except RecognitionException as re:
             localctx.exception = re
@@ -202,7 +340,7 @@ class TagTemplateParser(Parser):
             self.exitRule()
         return localctx
 
-    class PipeContext(ParserRuleContext):
+    class PipeListContext(ParserRuleContext):
         __slots__ = "parser"
 
         def __init__(
@@ -210,11 +348,6 @@ class TagTemplateParser(Parser):
         ):
             super().__init__(parent, invokingState)
             self.parser = parser
-            self.entry_pattern = None  # PatternContext
-            self.processing_tags = None  # ContextlessTagContext
-
-        def pattern(self):
-            return self.getTypedRuleContext(TagTemplateParser.PatternContext, 0)
 
         def PIPE(self, i: int = None):
             if i is None:
@@ -233,32 +366,30 @@ class TagTemplateParser(Parser):
                 )
 
         def getRuleIndex(self):
-            return TagTemplateParser.RULE_pipe
+            return TagTemplateParser.RULE_pipeList
 
         def accept(self, visitor: ParseTreeVisitor):
-            if hasattr(visitor, "visitPipe"):
-                return visitor.visitPipe(self)
+            if hasattr(visitor, "visitPipeList"):
+                return visitor.visitPipeList(self)
             else:
                 return visitor.visitChildren(self)
 
-    def pipe(self):
+    def pipeList(self):
 
-        localctx = TagTemplateParser.PipeContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 2, self.RULE_pipe)
+        localctx = TagTemplateParser.PipeListContext(self, self._ctx, self.state)
+        self.enterRule(localctx, 8, self.RULE_pipeList)
         self._la = 0  # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 26
-            localctx.entry_pattern = self.pattern()
-            self.state = 29
+            self.state = 38
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while True:
-                self.state = 27
+                self.state = 36
                 self.match(TagTemplateParser.PIPE)
-                self.state = 28
-                localctx.processing_tags = self.contextlessTag()
-                self.state = 31
+                self.state = 37
+                self.contextlessTag()
+                self.state = 40
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
                 if not (_la == TagTemplateParser.PIPE):
@@ -315,136 +446,36 @@ class TagTemplateParser(Parser):
     def pattern(self):
 
         localctx = TagTemplateParser.PatternContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 4, self.RULE_pattern)
+        self.enterRule(localctx, 10, self.RULE_pattern)
         self._la = 0  # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 38
+            self.state = 47
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while _la == TagTemplateParser.TEXT or _la == TagTemplateParser.TAG_ID:
-                self.state = 36
+                self.state = 45
                 self._errHandler.sync(self)
                 la_ = self._interp.adaptivePredict(self._input, 2, self._ctx)
                 if la_ == 1:
-                    self.state = 33
+                    self.state = 42
                     self.rawText()
                     pass
 
                 elif la_ == 2:
-                    self.state = 34
+                    self.state = 43
                     self.tag()
                     pass
 
                 elif la_ == 3:
-                    self.state = 35
+                    self.state = 44
                     self.contextlessTag()
                     pass
 
-                self.state = 40
+                self.state = 49
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
 
-        except RecognitionException as re:
-            localctx.exception = re
-            self._errHandler.reportError(self, re)
-            self._errHandler.recover(self, re)
-        finally:
-            self.exitRule()
-        return localctx
-
-    class TagContext(ParserRuleContext):
-        __slots__ = "parser"
-
-        def __init__(
-            self, parser, parent: ParserRuleContext = None, invokingState: int = -1
-        ):
-            super().__init__(parent, invokingState)
-            self.parser = parser
-            self.context = None  # PatternContext
-
-        def TAG_ID(self):
-            return self.getToken(TagTemplateParser.TAG_ID, 0)
-
-        def argumentList(self):
-            return self.getTypedRuleContext(TagTemplateParser.ArgumentListContext, 0)
-
-        def CONTEXT_START(self):
-            return self.getToken(TagTemplateParser.CONTEXT_START, 0)
-
-        def CONTEXT_END(self):
-            return self.getToken(TagTemplateParser.CONTEXT_END, 0)
-
-        def pattern(self):
-            return self.getTypedRuleContext(TagTemplateParser.PatternContext, 0)
-
-        def getRuleIndex(self):
-            return TagTemplateParser.RULE_tag
-
-        def accept(self, visitor: ParseTreeVisitor):
-            if hasattr(visitor, "visitTag"):
-                return visitor.visitTag(self)
-            else:
-                return visitor.visitChildren(self)
-
-    def tag(self):
-
-        localctx = TagTemplateParser.TagContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 6, self.RULE_tag)
-        try:
-            self.enterOuterAlt(localctx, 1)
-            self.state = 41
-            self.match(TagTemplateParser.TAG_ID)
-            self.state = 42
-            self.argumentList()
-            self.state = 43
-            self.match(TagTemplateParser.CONTEXT_START)
-            self.state = 44
-            localctx.context = self.pattern()
-            self.state = 45
-            self.match(TagTemplateParser.CONTEXT_END)
-        except RecognitionException as re:
-            localctx.exception = re
-            self._errHandler.reportError(self, re)
-            self._errHandler.recover(self, re)
-        finally:
-            self.exitRule()
-        return localctx
-
-    class ContextlessTagContext(ParserRuleContext):
-        __slots__ = "parser"
-
-        def __init__(
-            self, parser, parent: ParserRuleContext = None, invokingState: int = -1
-        ):
-            super().__init__(parent, invokingState)
-            self.parser = parser
-
-        def TAG_ID(self):
-            return self.getToken(TagTemplateParser.TAG_ID, 0)
-
-        def argumentList(self):
-            return self.getTypedRuleContext(TagTemplateParser.ArgumentListContext, 0)
-
-        def getRuleIndex(self):
-            return TagTemplateParser.RULE_contextlessTag
-
-        def accept(self, visitor: ParseTreeVisitor):
-            if hasattr(visitor, "visitContextlessTag"):
-                return visitor.visitContextlessTag(self)
-            else:
-                return visitor.visitChildren(self)
-
-    def contextlessTag(self):
-
-        localctx = TagTemplateParser.ContextlessTagContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 8, self.RULE_contextlessTag)
-        try:
-            self.enterOuterAlt(localctx, 1)
-            self.state = 47
-            self.match(TagTemplateParser.TAG_ID)
-            self.state = 48
-            self.argumentList()
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -480,7 +511,7 @@ class TagTemplateParser(Parser):
     def argumentList(self):
 
         localctx = TagTemplateParser.ArgumentListContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 10, self.RULE_argumentList)
+        self.enterRule(localctx, 12, self.RULE_argumentList)
         self._la = 0  # Token type
         try:
             self.state = 56
@@ -572,7 +603,7 @@ class TagTemplateParser(Parser):
     def argument(self):
 
         localctx = TagTemplateParser.ArgumentContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 12, self.RULE_argument)
+        self.enterRule(localctx, 14, self.RULE_argument)
         self._la = 0  # Token type
         try:
             self.enterOuterAlt(localctx, 1)
@@ -625,7 +656,7 @@ class TagTemplateParser(Parser):
     def argumentValue(self):
 
         localctx = TagTemplateParser.ArgumentValueContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 14, self.RULE_argumentValue)
+        self.enterRule(localctx, 16, self.RULE_argumentValue)
         self._la = 0  # Token type
         try:
             self.enterOuterAlt(localctx, 1)
@@ -681,7 +712,7 @@ class TagTemplateParser(Parser):
     def rawText(self):
 
         localctx = TagTemplateParser.RawTextContext(self, self._ctx, self.state)
-        self.enterRule(localctx, 16, self.RULE_rawText)
+        self.enterRule(localctx, 18, self.RULE_rawText)
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 66
