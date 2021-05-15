@@ -20,8 +20,12 @@ TAG_START
     : '%' -> skip, mode(TAG_MODE)
     ;
 
+PIPE
+    : '|'
+    ;
+
 TEXT
-    : ('\\{' | '\\}' | ~[%{}\t\n\r])+
+    : ('\\{' | '\\}' | '\\|' | ~[%{}|\t\n\r])+
     ;
 
 CONTEXT_START

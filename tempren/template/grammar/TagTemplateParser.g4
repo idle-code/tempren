@@ -4,14 +4,23 @@ options { tokenVocab=TagTemplateLexer; }
 
 rootPattern
     : pattern EOF
+    | pipe EOF
+    ;
+
+pipe
+    : entry_pattern=pattern (PIPE processing_tags=contextlessTag)+
     ;
 
 pattern
-    : (rawText | tag)*
+    : (rawText | tag | contextlessTag)*
     ;
 
 tag
-    : TAG_ID argumentList ('{' context=pattern '}')?
+    : TAG_ID argumentList '{' context=pattern '}'
+    ;
+
+contextlessTag
+    : TAG_ID argumentList
     ;
 
 argumentList

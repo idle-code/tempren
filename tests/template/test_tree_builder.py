@@ -121,6 +121,23 @@ class TestTreeBuilder:
             [TagPlaceholder("TAG", args=[123, True], kwargs={"bar": "spam"})]
         )
 
+    def test_single_pipe(self):
+        pattern = parse("Text|%TAG()")
+        equivalent_pattern = parse("%TAG(){Text}")
+
+        assert pattern == equivalent_pattern
+
+    def test_multiple_tags_in_pipe(self):
+        pattern = parse("%First()|%Second()|%Third()")
+        equivalent_pattern = parse("%Third(){%Second(){%First()}}")
+
+        assert pattern == equivalent_pattern
+
+    def test_pipe_symbol_escaping(self):
+        pattern = parse("Text\\|pipe")
+
+        assert pattern == Pattern([RawText("Text|pipe")])
+
 
 class TestTreeBuilderErrors:
     pass

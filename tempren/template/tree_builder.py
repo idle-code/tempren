@@ -51,13 +51,28 @@ class _TreeVisitor(TagTemplateParserVisitor):
         pattern_elements = self.visitChildren(ctx)
         return Pattern(pattern_elements)
 
+    def visitPipe(self, ctx: TagTemplateParser.PipeContext) -> TagPlaceholder:
+        entry_pattern = self.visitPattern(ctx.entry_pattern)
+        context = entry_pattern
+        tag: TagPlaceholder
+        for processing_tag in ctx.processing_tags:
+            tag = self.visitContextlessTag(processing_tag)
+            tag.context = context
+            context = Pattern([tag])
+        return tag
+
+    def visitContextlessTag(
+        self, ctx: TagTemplateParser.ContextlessTagContext
+    ) -> TagPlaceholder:
+        tag_name = ctx.TAG_ID().getText()
+        args, kwargs = self.visitArgumentList(ctx.argumentList())
+        tag = TagPlaceholder(tag_name, args=args, kwargs=kwargs, context=None)
+        return tag
+
     def visitTag(self, ctx: TagTemplateParser.TagContext) -> TagPlaceholder:
         tag_name = ctx.TAG_ID().getText()
         args, kwargs = self.visitArgumentList(ctx.argumentList())
-        ctx.argumentList()
-        context: Optional[Pattern] = None
-        if ctx.context:
-            context = self.visitPattern(ctx.context)
+        context = self.visitPattern(ctx.context)
         tag = TagPlaceholder(tag_name, args=args, kwargs=kwargs, context=context)
         return tag
 

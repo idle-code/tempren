@@ -26,7 +26,7 @@ class Pattern(PatternElement):
         return "".join(map(lambda se: se.process(path), self.sub_elements))
 
 
-@dataclass(frozen=True)
+@dataclass
 class TagPlaceholder(PatternElement):
     tag_name: str
     context: Optional[Pattern] = None
