@@ -1,4 +1,4 @@
-# Generated from TagTemplateParser.g4 by ANTLR 4.8
+# Generated from TagTemplateParser.g4 by ANTLR 4.9.2
 # encoding: utf-8
 import sys
 from io import StringIO
@@ -125,13 +125,15 @@ class TagTemplateParser(Parser):
 
     def __init__(self, input: TokenStream, output: TextIO = sys.stdout):
         super().__init__(input, output)
-        self.checkVersion("4.8")
+        self.checkVersion("4.9.2")
         self._interp = ParserATNSimulator(
             self, self.atn, self.decisionsToDFA, self.sharedContextCache
         )
         self._predicates = None
 
     class RootPatternContext(ParserRuleContext):
+        __slots__ = "parser"
+
         def __init__(
             self, parser, parent: ParserRuleContext = None, invokingState: int = -1
         ):
@@ -172,6 +174,8 @@ class TagTemplateParser(Parser):
         return localctx
 
     class PatternContext(ParserRuleContext):
+        __slots__ = "parser"
+
         def __init__(
             self, parser, parent: ParserRuleContext = None, invokingState: int = -1
         ):
@@ -237,6 +241,8 @@ class TagTemplateParser(Parser):
         return localctx
 
     class TagContext(ParserRuleContext):
+        __slots__ = "parser"
+
         def __init__(
             self, parser, parent: ParserRuleContext = None, invokingState: int = -1
         ):
@@ -299,6 +305,8 @@ class TagTemplateParser(Parser):
         return localctx
 
     class ArgumentListContext(ParserRuleContext):
+        __slots__ = "parser"
+
         def __init__(
             self, parser, parent: ParserRuleContext = None, invokingState: int = -1
         ):
@@ -385,6 +393,8 @@ class TagTemplateParser(Parser):
         return localctx
 
     class ArgumentContext(ParserRuleContext):
+        __slots__ = "parser"
+
         def __init__(
             self, parser, parent: ParserRuleContext = None, invokingState: int = -1
         ):
@@ -436,6 +446,8 @@ class TagTemplateParser(Parser):
         return localctx
 
     class ArgumentValueContext(ParserRuleContext):
+        __slots__ = "parser"
+
         def __init__(
             self, parser, parent: ParserRuleContext = None, invokingState: int = -1
         ):
@@ -496,6 +508,8 @@ class TagTemplateParser(Parser):
         return localctx
 
     class RawTextContext(ParserRuleContext):
+        __slots__ = "parser"
+
         def __init__(
             self, parser, parent: ParserRuleContext = None, invokingState: int = -1
         ):
