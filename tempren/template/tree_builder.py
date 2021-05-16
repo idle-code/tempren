@@ -118,7 +118,10 @@ class _TreeVisitor(TagTemplateParserVisitor):
         self, ctx: TagTemplateParser.ArgumentContext
     ) -> Tuple[Optional[str], ArgValue]:
         arg_name = ctx.ARG_NAME().getText() if ctx.ARG_NAME() else None
-        arg_value = self.visitArgumentValue(ctx.argumentValue())
+        if ctx.argumentValue():
+            arg_value = self.visitArgumentValue(ctx.argumentValue())
+        else:
+            arg_value = True
         return arg_name, arg_value
 
     def visitRawText(self, ctx: TagTemplateParser.RawTextContext) -> RawText:

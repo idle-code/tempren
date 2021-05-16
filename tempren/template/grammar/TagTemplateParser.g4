@@ -33,6 +33,7 @@ argumentList
 
 argument
     : (ARG_NAME '=')? argumentValue
+    | ARG_NAME
     ;
 
 argumentValue

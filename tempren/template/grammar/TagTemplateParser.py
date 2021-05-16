@@ -14,28 +14,29 @@ else:
 def serializedATN():
     with StringIO() as buf:
         buf.write("\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\24")
-        buf.write("G\4\2\t\2\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b")
+        buf.write("I\4\2\t\2\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b")
         buf.write("\t\b\4\t\t\t\4\n\t\n\4\13\t\13\3\2\3\2\3\2\3\3\3\3\3\3")
         buf.write("\3\3\3\3\3\3\3\4\3\4\3\4\3\5\3\5\5\5%\n\5\3\6\3\6\6\6")
         buf.write(")\n\6\r\6\16\6*\3\7\3\7\3\7\7\7\60\n\7\f\7\16\7\63\13")
         buf.write("\7\3\b\6\b\66\n\b\r\b\16\b\67\3\b\5\b;\n\b\3\t\3\t\5\t")
-        buf.write("?\n\t\3\t\3\t\3\n\3\n\3\13\3\13\3\13\2\2\f\2\4\6\b\n\f")
-        buf.write("\16\20\22\24\2\3\3\2\20\22\2D\2\26\3\2\2\2\4\31\3\2\2")
-        buf.write('\2\6\37\3\2\2\2\b"\3\2\2\2\n(\3\2\2\2\f\61\3\2\2\2\16')
-        buf.write(":\3\2\2\2\20>\3\2\2\2\22B\3\2\2\2\24D\3\2\2\2\26\27\5")
-        buf.write("\b\5\2\27\30\7\2\2\3\30\3\3\2\2\2\31\32\7\f\2\2\32\33")
-        buf.write("\5\16\b\2\33\34\7\7\2\2\34\35\5\b\5\2\35\36\7\b\2\2\36")
-        buf.write('\5\3\2\2\2\37 \7\f\2\2 !\5\16\b\2!\7\3\2\2\2"$\5\f\7')
-        buf.write("\2#%\5\n\6\2$#\3\2\2\2$%\3\2\2\2%\t\3\2\2\2&'\7\5\2\2")
-        buf.write("')\5\6\4\2(&\3\2\2\2)*\3\2\2\2*(\3\2\2\2*+\3\2\2\2+\13")
-        buf.write("\3\2\2\2,\60\5\24\13\2-\60\5\4\3\2.\60\5\6\4\2/,\3\2\2")
-        buf.write("\2/-\3\2\2\2/.\3\2\2\2\60\63\3\2\2\2\61/\3\2\2\2\61\62")
-        buf.write("\3\2\2\2\62\r\3\2\2\2\63\61\3\2\2\2\64\66\5\20\t\2\65")
-        buf.write("\64\3\2\2\2\66\67\3\2\2\2\67\65\3\2\2\2\678\3\2\2\28;")
-        buf.write("\3\2\2\29;\3\2\2\2:\65\3\2\2\2:9\3\2\2\2;\17\3\2\2\2<")
-        buf.write("=\7\23\2\2=?\7\24\2\2><\3\2\2\2>?\3\2\2\2?@\3\2\2\2@A")
-        buf.write("\5\22\n\2A\21\3\2\2\2BC\t\2\2\2C\23\3\2\2\2DE\7\6\2\2")
-        buf.write("E\25\3\2\2\2\t$*/\61\67:>")
+        buf.write("?\n\t\3\t\3\t\5\tC\n\t\3\n\3\n\3\13\3\13\3\13\2\2\f\2")
+        buf.write("\4\6\b\n\f\16\20\22\24\2\3\3\2\20\22\2G\2\26\3\2\2\2\4")
+        buf.write('\31\3\2\2\2\6\37\3\2\2\2\b"\3\2\2\2\n(\3\2\2\2\f\61\3')
+        buf.write("\2\2\2\16:\3\2\2\2\20B\3\2\2\2\22D\3\2\2\2\24F\3\2\2\2")
+        buf.write("\26\27\5\b\5\2\27\30\7\2\2\3\30\3\3\2\2\2\31\32\7\f\2")
+        buf.write("\2\32\33\5\16\b\2\33\34\7\7\2\2\34\35\5\b\5\2\35\36\7")
+        buf.write("\b\2\2\36\5\3\2\2\2\37 \7\f\2\2 !\5\16\b\2!\7\3\2\2\2")
+        buf.write('"$\5\f\7\2#%\5\n\6\2$#\3\2\2\2$%\3\2\2\2%\t\3\2\2\2&')
+        buf.write("'\7\5\2\2')\5\6\4\2(&\3\2\2\2)*\3\2\2\2*(\3\2\2\2*+")
+        buf.write("\3\2\2\2+\13\3\2\2\2,\60\5\24\13\2-\60\5\4\3\2.\60\5\6")
+        buf.write("\4\2/,\3\2\2\2/-\3\2\2\2/.\3\2\2\2\60\63\3\2\2\2\61/\3")
+        buf.write("\2\2\2\61\62\3\2\2\2\62\r\3\2\2\2\63\61\3\2\2\2\64\66")
+        buf.write("\5\20\t\2\65\64\3\2\2\2\66\67\3\2\2\2\67\65\3\2\2\2\67")
+        buf.write("8\3\2\2\28;\3\2\2\29;\3\2\2\2:\65\3\2\2\2:9\3\2\2\2;\17")
+        buf.write("\3\2\2\2<=\7\23\2\2=?\7\24\2\2><\3\2\2\2>?\3\2\2\2?@\3")
+        buf.write("\2\2\2@C\5\22\n\2AC\7\23\2\2B>\3\2\2\2BA\3\2\2\2C\21\3")
+        buf.write("\2\2\2DE\t\2\2\2E\23\3\2\2\2FG\7\6\2\2G\25\3\2\2\2\n$")
+        buf.write("*/\61\67:>B")
         return buf.getvalue()
 
 
@@ -606,18 +607,30 @@ class TagTemplateParser(Parser):
         self.enterRule(localctx, 14, self.RULE_argument)
         self._la = 0  # Token type
         try:
-            self.enterOuterAlt(localctx, 1)
-            self.state = 60
+            self.state = 64
             self._errHandler.sync(self)
-            _la = self._input.LA(1)
-            if _la == TagTemplateParser.ARG_NAME:
-                self.state = 58
-                self.match(TagTemplateParser.ARG_NAME)
-                self.state = 59
-                self.match(TagTemplateParser.ARG_EQUALS)
+            la_ = self._interp.adaptivePredict(self._input, 7, self._ctx)
+            if la_ == 1:
+                self.enterOuterAlt(localctx, 1)
+                self.state = 60
+                self._errHandler.sync(self)
+                _la = self._input.LA(1)
+                if _la == TagTemplateParser.ARG_NAME:
+                    self.state = 58
+                    self.match(TagTemplateParser.ARG_NAME)
+                    self.state = 59
+                    self.match(TagTemplateParser.ARG_EQUALS)
 
-            self.state = 62
-            self.argumentValue()
+                self.state = 62
+                self.argumentValue()
+                pass
+
+            elif la_ == 2:
+                self.enterOuterAlt(localctx, 2)
+                self.state = 63
+                self.match(TagTemplateParser.ARG_NAME)
+                pass
+
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -660,7 +673,7 @@ class TagTemplateParser(Parser):
         self._la = 0  # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 64
+            self.state = 66
             _la = self._input.LA(1)
             if not (
                 (
@@ -715,7 +728,7 @@ class TagTemplateParser(Parser):
         self.enterRule(localctx, 18, self.RULE_rawText)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 66
+            self.state = 68
             self.match(TagTemplateParser.TEXT)
         except RecognitionException as re:
             localctx.exception = re

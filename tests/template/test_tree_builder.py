@@ -69,6 +69,13 @@ class TestTreeBuilder:
         assert capital_true_pattern == Pattern([TagPlaceholder("TRUE", args=[True])])
         assert capital_false_pattern == Pattern([TagPlaceholder("FALSE", args=[False])])
 
+    def test_boolean_flag(self):
+        bool_flag_pattern = parse("%TAG(flag_name)")
+
+        assert bool_flag_pattern == Pattern(
+            [TagPlaceholder("TAG", kwargs={"flag_name": True})]
+        )
+
     def test_string_argument(self):
         pattern = parse("%TAG('text value')")
 
