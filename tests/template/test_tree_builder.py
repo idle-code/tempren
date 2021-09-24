@@ -1,3 +1,5 @@
+import pytest
+
 from tempren.template.tree_builder import *
 from tempren.template.tree_elements import Pattern, RawText, TagPlaceholder
 
@@ -153,4 +155,6 @@ class TestTreeBuilder:
 
 
 class TestTreeBuilderErrors:
-    pass
+    def test_missing_closing_bracket(self):
+        with pytest.raises(Exception) as exc:
+            parse("Some %TAG( text")

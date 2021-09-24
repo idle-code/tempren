@@ -17,7 +17,7 @@ GLOBAL_WHITESPACE
     ;
 
 TAG_START
-    : '%' -> skip, mode(TAG_MODE)
+    : '%' -> mode(TAG_MODE)
     ;
 
 PIPE
@@ -47,7 +47,7 @@ TAG_WHITESPACE
     ;
 
 ARGS_START
-    : '(' -> skip, mode(ARGS_MODE)
+    : '(' -> mode(ARGS_MODE)
     ;
 
 TAG_ID
@@ -61,12 +61,12 @@ ARGS_WHITESPACE
     : [ \t\n\r] -> skip
     ;
 
-ARG_END
-    : ')' -> skip, mode(DEFAULT_MODE)
+ARGS_END
+    : ')' -> mode(DEFAULT_MODE)
     ;
 
 ARG_SEPARATOR
-    : ',' -> skip
+    : ','
     ;
 
 NUMERIC_VALUE

@@ -35,31 +35,46 @@ def unescape(text: str) -> str:
     )
 
 
+IGNORED_TERMINAL = object()
+ARGUMENT_VALUE_TYPES = (
+    TagTemplateLexer.NUMERIC_VALUE,
+    TagTemplateLexer.BOOLEAN_VALUE,
+    TagTemplateLexer.STRING_VALUE,
+)
+
+
 class _TreeVisitor(TagTemplateParserVisitor):
     def defaultResult(self) -> List[PatternElement]:
         return list()
 
+    def visitTerminal(self, node):
+        if node.getSymbol().type not in ARGUMENT_VALUE_TYPES:
+            return IGNORED_TERMINAL
+        return self.defaultResult()
+
     def aggregateResult(
         self, pattern: List[PatternElement], element: PatternElement
     ) -> List[PatternElement]:
+        if element is IGNORED_TERMINAL:
+            return pattern
         return pattern + [element]
 
     def visitRootPattern(self, ctx: TagTemplateParser.RootPatternContext) -> Pattern:
-        return self.visitPatternExpression(ctx.patternExpression())
+        return self.visitPattern(ctx.pattern())
 
-    def visitPatternExpression(
-        self, ctx: TagTemplateParser.PatternExpressionContext
-    ) -> Pattern:
-        pattern = self.visitPattern(ctx.pattern())
-        if not ctx.pipeList():
-            return pattern
-
-        tag_list = self.visitPipeList(ctx.pipeList())
-        context = pattern
-        for tag_placeholder in tag_list:
-            tag_placeholder.context = context
-            context = Pattern([tag_placeholder])
-        return context
+    # def visitPatternExpression(
+    #     self, ctx: TagTemplateParser.PatternExpressionContext
+    # ) -> Pattern:
+    #     pattern = self.visitPattern(ctx.pattern())
+    #     if not ctx.pipeList():
+    #         return pattern
+    #
+    #     tag_list = self.visitPipeList(ctx.pipeList())
+    #     context = pattern
+    #     for tag_placeholder in tag_list:
+    #         tag_placeholder.context = context
+    #         context = Pattern([tag_placeholder])
+    #     return context
 
     def visitPipeList(
         self, ctx: TagTemplateParser.PipeListContext
@@ -71,18 +86,13 @@ class _TreeVisitor(TagTemplateParserVisitor):
         pattern_elements = self.visitChildren(ctx)
         return Pattern(pattern_elements)
 
-    def visitContextlessTag(
-        self, ctx: TagTemplateParser.ContextlessTagContext
-    ) -> TagPlaceholder:
-        tag_name = ctx.TAG_ID().getText()
-        args, kwargs = self.visitArgumentList(ctx.argumentList())
-        tag = TagPlaceholder(tag_name, args=args, kwargs=kwargs, context=None)
-        return tag
-
     def visitTag(self, ctx: TagTemplateParser.TagContext) -> TagPlaceholder:
         tag_name = ctx.TAG_ID().getText()
         args, kwargs = self.visitArgumentList(ctx.argumentList())
-        context = self.visitPatternExpression(ctx.patternExpression())
+        context = None
+        context_pattern = ctx.pattern()
+        if context_pattern is not None:
+            context = self.visitPattern(ctx.pattern())
         tag = TagPlaceholder(tag_name, args=args, kwargs=kwargs, context=context)
         return tag
 

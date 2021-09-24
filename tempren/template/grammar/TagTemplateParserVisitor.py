@@ -19,14 +19,6 @@ class TagTemplateParserVisitor(ParseTreeVisitor):
     def visitTag(self, ctx: TagTemplateParser.TagContext):
         return self.visitChildren(ctx)
 
-    # Visit a parse tree produced by TagTemplateParser#contextlessTag.
-    def visitContextlessTag(self, ctx: TagTemplateParser.ContextlessTagContext):
-        return self.visitChildren(ctx)
-
-    # Visit a parse tree produced by TagTemplateParser#patternExpression.
-    def visitPatternExpression(self, ctx: TagTemplateParser.PatternExpressionContext):
-        return self.visitChildren(ctx)
-
     # Visit a parse tree produced by TagTemplateParser#pipeList.
     def visitPipeList(self, ctx: TagTemplateParser.PipeListContext):
         return self.visitChildren(ctx)
