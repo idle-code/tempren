@@ -319,6 +319,7 @@ class TagTemplateParser(Parser):
         ):
             super().__init__(parent, invokingState)
             self.parser = parser
+            self.pipe_list = None  # PipeListContext
 
         def rawText(self, i: int = None):
             if i is None:
@@ -378,7 +379,7 @@ class TagTemplateParser(Parser):
             _la = self._input.LA(1)
             if _la == TagTemplateParser.PIPE:
                 self.state = 41
-                self.pipeList()
+                localctx.pipe_list = self.pipeList()
 
         except RecognitionException as re:
             localctx.exception = re

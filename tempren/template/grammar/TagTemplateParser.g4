@@ -15,7 +15,7 @@ pipeList
     ;
 
 pattern
-    : (rawText | tag)* pipeList?
+    : (rawText | tag)* pipe_list=pipeList?
     ;
 
 argumentList

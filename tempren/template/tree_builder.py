@@ -8,6 +8,7 @@ from types import ModuleType
 from typing import Dict, List, Mapping, Optional, Tuple, Type, Union
 
 from antlr4 import CommonTokenStream, InputStream  # type: ignore
+from antlr4.error.ErrorListener import ErrorListener
 
 from .grammar.TagTemplateLexer import TagTemplateLexer
 from .grammar.TagTemplateParser import TagTemplateParser
@@ -84,6 +85,14 @@ class _TreeVisitor(TagTemplateParserVisitor):
 
     def visitPattern(self, ctx: TagTemplateParser.PatternContext) -> Pattern:
         pattern_elements = self.visitChildren(ctx)
+        pipe_list = ctx.pipeList()
+        if pipe_list:
+            pipe_tags = self.visitPipeList(pipe_list)
+            context = Pattern(pattern_elements[:-1])
+            for tag_placeholder in pipe_tags:
+                tag_placeholder.context = context
+                context = Pattern([tag_placeholder])
+            return context
         return Pattern(pattern_elements)
 
     def visitTag(self, ctx: TagTemplateParser.TagContext) -> TagPlaceholder:
@@ -145,13 +154,63 @@ class TagTreeBuilder:
         token_stream = CommonTokenStream(lexer)
         token_stream.fill()
         parser = TagTemplateParser(token_stream)
+        parser.addErrorListener(TagTemplateErrorListener())
 
         visitor = _TreeVisitor()
         root_pattern = visitor.visitRootPattern(parser.rootPattern())
         return root_pattern
 
 
-class TagError(Exception):
+class TagTemplateErrorListener(ErrorListener):
+    def syntaxError(self, recognizer, offendingSymbol, line, column, msg, e):
+        raise TagTemplateSyntaxError(line, column, 1, msg)
+
+    def reportAmbiguity(
+        self, recognizer, dfa, startIndex, stopIndex, exact, ambigAlts, configs
+    ):
+        print("reportAmbiguity")
+        super().reportAmbiguity(
+            recognizer, dfa, startIndex, stopIndex, exact, ambigAlts, configs
+        )
+
+    def reportAttemptingFullContext(
+        self, recognizer, dfa, startIndex, stopIndex, conflictingAlts, configs
+    ):
+        print("reportAttemptingFullContext")
+        super().reportAttemptingFullContext(
+            recognizer, dfa, startIndex, stopIndex, conflictingAlts, configs
+        )
+
+    def reportContextSensitivity(
+        self, recognizer, dfa, startIndex, stopIndex, prediction, configs
+    ):
+        print("reportContextSensitivity")
+        super().reportContextSensitivity(
+            recognizer, dfa, startIndex, stopIndex, prediction, configs
+        )
+
+
+class TagTemplateSyntaxError(Exception):
+    line: int
+    column: int
+    length: int
+    message: str
+
+    def __init__(self, line: int, column: int, length: int, message: str):
+        super(TagTemplateSyntaxError, self).__init__(
+            f"{line}:{column}-{column + length}: {message}"
+        )
+        self.line = line
+        self.column = column
+        self.length = length
+        self.message = message
+
+
+class TagTemplateSemanticError(Exception):
+    pass
+
+
+class TagError(TagTemplateSemanticError):
     tag_name: str
 
     def __init__(self, tag_name: str, message: str):

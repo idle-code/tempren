@@ -42,6 +42,11 @@ class TestTreeBuilder:
         tag_context = Pattern([RawText("Context "), TagPlaceholder("SUB_TAG")])
         assert pattern == Pattern([TagPlaceholder("TAG", context=tag_context)])
 
+    def test_parenthesis_escaping(self):
+        pattern = parse("Text with (parentheses)")
+
+        assert pattern == Pattern([RawText("Text with (parentheses)")])
+
     def test_curly_braces_escaping(self):
         pattern = parse("Text with \\{ braces \\}")
 
@@ -154,7 +159,70 @@ class TestTreeBuilder:
         assert pattern == equivalent_pattern
 
 
-class TestTreeBuilderErrors:
-    def test_missing_closing_bracket(self):
-        with pytest.raises(Exception) as exc:
+class TestTreeBuilderSyntaxErrors:
+    def test_missing_closing_argument_bracket(self):
+        with pytest.raises(TagTemplateSyntaxError) as syntax_error:
             parse("Some %TAG( text")
+
+        # assert "missing closing" in syntax_error.value.message
+        # assert syntax_error.value.line == 1
+        # assert syntax_error.value.column == 10
+        # assert syntax_error.value.length == 1
+
+    def test_missing_opening_argument_bracket(self):
+        with pytest.raises(TagTemplateSyntaxError) as syntax_error:
+            parse("Some %TAG text)")
+
+        # assert "missing argument list" in syntax_error.value.message
+        # assert syntax_error.value.line == 1
+        # assert syntax_error.value.column == 7
+        # assert syntax_error.value.length == 4
+
+    def test_missing_closing_context_bracket(self):
+        with pytest.raises(TagTemplateSyntaxError) as syntax_error:
+            parse("Some %TAG(){ Context")
+
+        # assert "missing closing context bracket" in syntax_error.value.message
+        # assert syntax_error.value.line == 1
+        # assert syntax_error.value.column == 12
+        # assert syntax_error.value.length == 1
+
+    def test_unescaped_context_opening_bracket(self):
+        with pytest.raises(TagTemplateSyntaxError) as syntax_error:
+            parse("Some { Context ")
+
+        # assert "unescaped context bracket" in syntax_error.value.message
+        # assert syntax_error.value.line == 1
+        # assert syntax_error.value.column == 6
+        # assert syntax_error.value.length == 1
+
+    def test_unescaped_context_closing_bracket(self):
+        with pytest.raises(TagTemplateSyntaxError) as syntax_error:
+            parse("Some %TAG() Context }")
+
+        # assert "unescaped context bracket" in syntax_error.value.message
+        # assert syntax_error.value.line == 1
+        # assert syntax_error.value.column == 21
+        # assert syntax_error.value.length == 1
+
+    def test_missing_tag_name(self):
+        with pytest.raises(TagTemplateSyntaxError) as syntax_error:
+            parse("Some %()")
+
+        # assert "missing tag" in syntax_error.value.message
+        # assert syntax_error.value.line == 1
+        # assert syntax_error.value.column == 6
+        # assert syntax_error.value.length == 1
+
+    def test_non_tag_in_pipe_list(self):
+        with pytest.raises(TagTemplateSyntaxError) as syntax_error:
+            parse("Text|Pipe")
+
+        # assert "Non-tag element in " in syntax_error.value.message
+        # assert syntax_error.value.line == 1
+        # assert syntax_error.value.column == 5
+        # assert syntax_error.value.length == 4
+
+
+class TestTreeBuilderSemanticErrors:
+    pass
