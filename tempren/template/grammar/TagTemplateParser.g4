@@ -8,6 +8,8 @@ rootPattern
 
 tag
     : TAG_START TAG_ID argumentList ('{' pattern '}')?
+    | TAG_START errorNoArgumentList=TAG_ID
+    | TAG_START TAG_ID argumentList errorUnclosedContext='{' pattern
     ;
 
 pipeList
@@ -21,7 +23,10 @@ pattern
 argumentList
     : ARGS_START ARGS_END
     | ARGS_START argument (ARG_SEPARATOR argument)* ARGS_END
+    | errorUnclosedArgumentList=ARGS_START
+    | errorUnclosedArgumentList=ARGS_START argument (ARG_SEPARATOR argument)*
     ;
+
 
 argument
     : ARG_NAME '=' argumentValue

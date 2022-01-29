@@ -97,6 +97,22 @@ class _TreeVisitor(TagTemplateParserVisitor):
 
     def visitTag(self, ctx: TagTemplateParser.TagContext) -> TagPlaceholder:
         tag_name = ctx.TAG_ID().getText()
+        if ctx.errorNoArgumentList:
+            raise TagTemplateSyntaxError(
+                line=ctx.errorNoArgumentList.line,
+                column=ctx.errorNoArgumentList.start,
+                length=ctx.errorNoArgumentList.stop - ctx.errorNoArgumentList.start + 1,
+                message=f"missing argument list for tag '{tag_name}'",
+            )
+        if ctx.errorUnclosedContext:
+            raise TagTemplateSyntaxError(
+                line=ctx.errorUnclosedContext.line,
+                column=ctx.errorUnclosedContext.start,
+                length=ctx.errorUnclosedContext.stop
+                - ctx.errorUnclosedContext.start
+                + 1,
+                message=f"missing closing context bracket for tag '{tag_name}'",
+            )
         args, kwargs = self.visitArgumentList(ctx.argumentList())
         context = None
         context_pattern = ctx.pattern()
@@ -108,6 +124,15 @@ class _TreeVisitor(TagTemplateParserVisitor):
     def visitArgumentList(
         self, ctx: TagTemplateParser.ArgumentListContext
     ) -> Tuple[List[ArgValue], Mapping[str, ArgValue]]:
+        if ctx.errorUnclosedArgumentList:
+            raise TagTemplateSyntaxError(
+                line=ctx.errorUnclosedArgumentList.line,
+                column=ctx.errorUnclosedArgumentList.start,
+                length=ctx.errorUnclosedArgumentList.stop
+                - ctx.errorUnclosedArgumentList.start
+                + 1,
+                message="missing closing argument list bracket",
+            )
         collected_arguments = super().visitArgumentList(ctx)
         args = [
             arg_val for arg_name, arg_val in collected_arguments if arg_name is None
@@ -154,7 +179,7 @@ class TagTreeBuilder:
         token_stream = CommonTokenStream(lexer)
         token_stream.fill()
         parser = TagTemplateParser(token_stream)
-        parser.addErrorListener(TagTemplateErrorListener())
+        # parser.addErrorListener(TagTemplateErrorListener())
 
         visitor = _TreeVisitor()
         root_pattern = visitor.visitRootPattern(parser.rootPattern())

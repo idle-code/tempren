@@ -52,6 +52,12 @@ class TestTreeBuilder:
 
         assert pattern == Pattern([RawText("Text with { braces }")])
 
+    @pytest.mark.skip("Not tested yet")
+    def test_curly_braces_no_tag_no_escaping(self):
+        pattern = parse("Text with { braces }")
+
+        assert pattern == Pattern([RawText("Text with { braces }")])
+
     def test_numeric_argument(self):
         pattern = parse("%TAG(123)")
 
@@ -164,37 +170,55 @@ class TestTreeBuilderSyntaxErrors:
         with pytest.raises(TagTemplateSyntaxError) as syntax_error:
             parse("Some %TAG( text")
 
-        # assert "missing closing" in syntax_error.value.message
-        # assert syntax_error.value.line == 1
-        # assert syntax_error.value.column == 10
-        # assert syntax_error.value.length == 1
+        assert "missing closing" in syntax_error.value.message
+        assert syntax_error.value.line == 1
+        assert syntax_error.value.column == 9
+        assert syntax_error.value.length == 1
+
+    def test_missing_closing_argument_bracket_at_end(self):
+        with pytest.raises(TagTemplateSyntaxError) as syntax_error:
+            parse("Some %TAG(")
+
+        assert "missing closing" in syntax_error.value.message
+        assert syntax_error.value.line == 1
+        assert syntax_error.value.column == 9
+        assert syntax_error.value.length == 1
 
     def test_missing_opening_argument_bracket(self):
         with pytest.raises(TagTemplateSyntaxError) as syntax_error:
             parse("Some %TAG text)")
 
-        # assert "missing argument list" in syntax_error.value.message
-        # assert syntax_error.value.line == 1
-        # assert syntax_error.value.column == 7
-        # assert syntax_error.value.length == 4
+        assert "missing argument list" in syntax_error.value.message
+        assert syntax_error.value.line == 1
+        assert syntax_error.value.column == 6
+        assert syntax_error.value.length == 3
+
+    def test_missing_opening_argument_bracket_at_end(self):
+        with pytest.raises(TagTemplateSyntaxError) as syntax_error:
+            parse("Some %TAG")
+
+        assert "missing argument list" in syntax_error.value.message
+        assert syntax_error.value.line == 1
+        assert syntax_error.value.column == 6
+        assert syntax_error.value.length == 3
 
     def test_missing_closing_context_bracket(self):
         with pytest.raises(TagTemplateSyntaxError) as syntax_error:
             parse("Some %TAG(){ Context")
 
-        # assert "missing closing context bracket" in syntax_error.value.message
-        # assert syntax_error.value.line == 1
-        # assert syntax_error.value.column == 12
-        # assert syntax_error.value.length == 1
+        assert "missing closing context bracket" in syntax_error.value.message
+        assert syntax_error.value.line == 1
+        assert syntax_error.value.column == 11
+        assert syntax_error.value.length == 1
 
     def test_unescaped_context_opening_bracket(self):
         with pytest.raises(TagTemplateSyntaxError) as syntax_error:
             parse("Some { Context ")
 
-        # assert "unescaped context bracket" in syntax_error.value.message
-        # assert syntax_error.value.line == 1
-        # assert syntax_error.value.column == 6
-        # assert syntax_error.value.length == 1
+        assert "unescaped context bracket" in syntax_error.value.message
+        assert syntax_error.value.line == 1
+        assert syntax_error.value.column == 6
+        assert syntax_error.value.length == 1
 
     def test_unescaped_context_closing_bracket(self):
         with pytest.raises(TagTemplateSyntaxError) as syntax_error:
@@ -225,4 +249,11 @@ class TestTreeBuilderSyntaxErrors:
 
 
 class TestTreeBuilderSemanticErrors:
-    pass
+    def test_empty_context(self):
+        with pytest.raises(TagTemplateSemanticError) as semantic_error:
+            parse("Some {}")
+
+        # assert "unescaped context bracket" in syntax_error.value.message
+        # assert syntax_error.value.line == 1
+        # assert syntax_error.value.column == 6
+        # assert syntax_error.value.length == 1

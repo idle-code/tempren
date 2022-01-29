@@ -14,29 +14,36 @@ else:
 def serializedATN():
     with StringIO() as buf:
         buf.write("\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\24")
-        buf.write("I\4\2\t\2\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b")
+        buf.write("]\4\2\t\2\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b")
         buf.write("\t\b\4\t\t\t\3\2\3\2\3\2\3\3\3\3\3\3\3\3\3\3\3\3\3\3\5")
-        buf.write("\3\35\n\3\3\4\3\4\6\4!\n\4\r\4\16\4\"\3\5\3\5\7\5'\n")
-        buf.write("\5\f\5\16\5*\13\5\3\5\5\5-\n\5\3\6\3\6\3\6\3\6\3\6\3\6")
-        buf.write("\7\6\65\n\6\f\6\16\68\13\6\3\6\3\6\5\6<\n\6\3\7\3\7\3")
-        buf.write("\7\3\7\3\7\5\7C\n\7\3\b\3\b\3\t\3\t\3\t\2\2\n\2\4\6\b")
-        buf.write("\n\f\16\20\2\3\3\2\20\22\2I\2\22\3\2\2\2\4\25\3\2\2\2")
-        buf.write("\6 \3\2\2\2\b(\3\2\2\2\n;\3\2\2\2\fB\3\2\2\2\16D\3\2\2")
-        buf.write("\2\20F\3\2\2\2\22\23\5\b\5\2\23\24\7\2\2\3\24\3\3\2\2")
-        buf.write("\2\25\26\7\4\2\2\26\27\7\f\2\2\27\34\5\n\6\2\30\31\7\7")
-        buf.write("\2\2\31\32\5\b\5\2\32\33\7\b\2\2\33\35\3\2\2\2\34\30\3")
-        buf.write("\2\2\2\34\35\3\2\2\2\35\5\3\2\2\2\36\37\7\5\2\2\37!\5")
-        buf.write('\4\3\2 \36\3\2\2\2!"\3\2\2\2" \3\2\2\2"#\3\2\2\2#\7')
-        buf.write("\3\2\2\2$'\5\20\t\2%'\5\4\3\2&$\3\2\2\2&%\3\2\2\2'")
-        buf.write("*\3\2\2\2(&\3\2\2\2()\3\2\2\2),\3\2\2\2*(\3\2\2\2+-\5")
-        buf.write("\6\4\2,+\3\2\2\2,-\3\2\2\2-\t\3\2\2\2./\7\13\2\2/<\7\16")
-        buf.write("\2\2\60\61\7\13\2\2\61\66\5\f\7\2\62\63\7\17\2\2\63\65")
-        buf.write("\5\f\7\2\64\62\3\2\2\2\658\3\2\2\2\66\64\3\2\2\2\66\67")
-        buf.write("\3\2\2\2\679\3\2\2\28\66\3\2\2\29:\7\16\2\2:<\3\2\2\2")
-        buf.write(";.\3\2\2\2;\60\3\2\2\2<\13\3\2\2\2=>\7\23\2\2>?\7\24\2")
-        buf.write("\2?C\5\16\b\2@C\7\23\2\2AC\5\16\b\2B=\3\2\2\2B@\3\2\2")
-        buf.write("\2BA\3\2\2\2C\r\3\2\2\2DE\t\2\2\2E\17\3\2\2\2FG\7\6\2")
-        buf.write('\2G\21\3\2\2\2\n\34"&(,\66;B')
+        buf.write("\3\35\n\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\5\3'\n\3\3")
+        buf.write("\4\3\4\6\4+\n\4\r\4\16\4,\3\5\3\5\7\5\61\n\5\f\5\16\5")
+        buf.write("\64\13\5\3\5\5\5\67\n\5\3\6\3\6\3\6\3\6\3\6\3\6\7\6?\n")
+        buf.write("\6\f\6\16\6B\13\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\7\6K\n\6")
+        buf.write("\f\6\16\6N\13\6\5\6P\n\6\3\7\3\7\3\7\3\7\3\7\5\7W\n\7")
+        buf.write("\3\b\3\b\3\t\3\t\3\t\2\2\n\2\4\6\b\n\f\16\20\2\3\3\2\20")
+        buf.write("\22\2b\2\22\3\2\2\2\4&\3\2\2\2\6*\3\2\2\2\b\62\3\2\2\2")
+        buf.write("\nO\3\2\2\2\fV\3\2\2\2\16X\3\2\2\2\20Z\3\2\2\2\22\23\5")
+        buf.write("\b\5\2\23\24\7\2\2\3\24\3\3\2\2\2\25\26\7\4\2\2\26\27")
+        buf.write("\7\f\2\2\27\34\5\n\6\2\30\31\7\7\2\2\31\32\5\b\5\2\32")
+        buf.write("\33\7\b\2\2\33\35\3\2\2\2\34\30\3\2\2\2\34\35\3\2\2\2")
+        buf.write("\35'\3\2\2\2\36\37\7\4\2\2\37'\7\f\2\2 !\7\4\2\2!\"")
+        buf.write("\7\f\2\2\"#\5\n\6\2#$\7\7\2\2$%\5\b\5\2%'\3\2\2\2&\25")
+        buf.write("\3\2\2\2&\36\3\2\2\2& \3\2\2\2'\5\3\2\2\2()\7\5\2\2)")
+        buf.write("+\5\4\3\2*(\3\2\2\2+,\3\2\2\2,*\3\2\2\2,-\3\2\2\2-\7\3")
+        buf.write("\2\2\2.\61\5\20\t\2/\61\5\4\3\2\60.\3\2\2\2\60/\3\2\2")
+        buf.write("\2\61\64\3\2\2\2\62\60\3\2\2\2\62\63\3\2\2\2\63\66\3\2")
+        buf.write("\2\2\64\62\3\2\2\2\65\67\5\6\4\2\66\65\3\2\2\2\66\67\3")
+        buf.write("\2\2\2\67\t\3\2\2\289\7\13\2\29P\7\16\2\2:;\7\13\2\2;")
+        buf.write("@\5\f\7\2<=\7\17\2\2=?\5\f\7\2><\3\2\2\2?B\3\2\2\2@>\3")
+        buf.write("\2\2\2@A\3\2\2\2AC\3\2\2\2B@\3\2\2\2CD\7\16\2\2DP\3\2")
+        buf.write("\2\2EP\7\13\2\2FG\7\13\2\2GL\5\f\7\2HI\7\17\2\2IK\5\f")
+        buf.write("\7\2JH\3\2\2\2KN\3\2\2\2LJ\3\2\2\2LM\3\2\2\2MP\3\2\2\2")
+        buf.write("NL\3\2\2\2O8\3\2\2\2O:\3\2\2\2OE\3\2\2\2OF\3\2\2\2P\13")
+        buf.write("\3\2\2\2QR\7\23\2\2RS\7\24\2\2SW\5\16\b\2TW\7\23\2\2U")
+        buf.write("W\5\16\b\2VQ\3\2\2\2VT\3\2\2\2VU\3\2\2\2W\r\3\2\2\2XY")
+        buf.write("\t\2\2\2Y\17\3\2\2\2Z[\7\6\2\2[\21\3\2\2\2\f\34&,\60\62")
+        buf.write("\66@LOV")
         return buf.getvalue()
 
 
@@ -192,6 +199,8 @@ class TagTemplateParser(Parser):
         ):
             super().__init__(parent, invokingState)
             self.parser = parser
+            self.errorNoArgumentList = None  # Token
+            self.errorUnclosedContext = None  # Token
 
         def TAG_START(self):
             return self.getToken(TagTemplateParser.TAG_START, 0)
@@ -226,23 +235,53 @@ class TagTemplateParser(Parser):
         self.enterRule(localctx, 2, self.RULE_tag)
         self._la = 0  # Token type
         try:
-            self.enterOuterAlt(localctx, 1)
-            self.state = 19
-            self.match(TagTemplateParser.TAG_START)
-            self.state = 20
-            self.match(TagTemplateParser.TAG_ID)
-            self.state = 21
-            self.argumentList()
-            self.state = 26
+            self.state = 36
             self._errHandler.sync(self)
-            _la = self._input.LA(1)
-            if _la == TagTemplateParser.CONTEXT_START:
-                self.state = 22
-                self.match(TagTemplateParser.CONTEXT_START)
-                self.state = 23
+            la_ = self._interp.adaptivePredict(self._input, 1, self._ctx)
+            if la_ == 1:
+                self.enterOuterAlt(localctx, 1)
+                self.state = 19
+                self.match(TagTemplateParser.TAG_START)
+                self.state = 20
+                self.match(TagTemplateParser.TAG_ID)
+                self.state = 21
+                self.argumentList()
+                self.state = 26
+                self._errHandler.sync(self)
+                _la = self._input.LA(1)
+                if _la == TagTemplateParser.CONTEXT_START:
+                    self.state = 22
+                    self.match(TagTemplateParser.CONTEXT_START)
+                    self.state = 23
+                    self.pattern()
+                    self.state = 24
+                    self.match(TagTemplateParser.CONTEXT_END)
+
+                pass
+
+            elif la_ == 2:
+                self.enterOuterAlt(localctx, 2)
+                self.state = 28
+                self.match(TagTemplateParser.TAG_START)
+                self.state = 29
+                localctx.errorNoArgumentList = self.match(TagTemplateParser.TAG_ID)
+                pass
+
+            elif la_ == 3:
+                self.enterOuterAlt(localctx, 3)
+                self.state = 30
+                self.match(TagTemplateParser.TAG_START)
+                self.state = 31
+                self.match(TagTemplateParser.TAG_ID)
+                self.state = 32
+                self.argumentList()
+                self.state = 33
+                localctx.errorUnclosedContext = self.match(
+                    TagTemplateParser.CONTEXT_START
+                )
+                self.state = 34
                 self.pattern()
-                self.state = 24
-                self.match(TagTemplateParser.CONTEXT_END)
+                pass
 
         except RecognitionException as re:
             localctx.exception = re
@@ -286,22 +325,23 @@ class TagTemplateParser(Parser):
 
         localctx = TagTemplateParser.PipeListContext(self, self._ctx, self.state)
         self.enterRule(localctx, 4, self.RULE_pipeList)
-        self._la = 0  # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 30
+            self.state = 40
             self._errHandler.sync(self)
-            _la = self._input.LA(1)
-            while True:
-                self.state = 28
-                self.match(TagTemplateParser.PIPE)
-                self.state = 29
-                self.tag()
-                self.state = 32
+            _alt = 1
+            while _alt != 2 and _alt != ATN.INVALID_ALT_NUMBER:
+                if _alt == 1:
+                    self.state = 38
+                    self.match(TagTemplateParser.PIPE)
+                    self.state = 39
+                    self.tag()
+
+                else:
+                    raise NoViableAltException(self)
+                self.state = 42
                 self._errHandler.sync(self)
-                _la = self._input.LA(1)
-                if not (_la == TagTemplateParser.PIPE):
-                    break
+                _alt = self._interp.adaptivePredict(self._input, 2, self._ctx)
 
         except RecognitionException as re:
             localctx.exception = re
@@ -349,36 +389,36 @@ class TagTemplateParser(Parser):
 
         localctx = TagTemplateParser.PatternContext(self, self._ctx, self.state)
         self.enterRule(localctx, 6, self.RULE_pattern)
-        self._la = 0  # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 38
+            self.state = 48
             self._errHandler.sync(self)
-            _la = self._input.LA(1)
-            while _la == TagTemplateParser.TAG_START or _la == TagTemplateParser.TEXT:
-                self.state = 36
-                self._errHandler.sync(self)
-                token = self._input.LA(1)
-                if token in [TagTemplateParser.TEXT]:
-                    self.state = 34
-                    self.rawText()
-                    pass
-                elif token in [TagTemplateParser.TAG_START]:
-                    self.state = 35
-                    self.tag()
-                    pass
-                else:
-                    raise NoViableAltException(self)
+            _alt = self._interp.adaptivePredict(self._input, 4, self._ctx)
+            while _alt != 2 and _alt != ATN.INVALID_ALT_NUMBER:
+                if _alt == 1:
+                    self.state = 46
+                    self._errHandler.sync(self)
+                    token = self._input.LA(1)
+                    if token in [TagTemplateParser.TEXT]:
+                        self.state = 44
+                        self.rawText()
+                        pass
+                    elif token in [TagTemplateParser.TAG_START]:
+                        self.state = 45
+                        self.tag()
+                        pass
+                    else:
+                        raise NoViableAltException(self)
 
-                self.state = 40
+                self.state = 50
                 self._errHandler.sync(self)
-                _la = self._input.LA(1)
+                _alt = self._interp.adaptivePredict(self._input, 4, self._ctx)
 
-            self.state = 42
+            self.state = 52
             self._errHandler.sync(self)
-            _la = self._input.LA(1)
-            if _la == TagTemplateParser.PIPE:
-                self.state = 41
+            la_ = self._interp.adaptivePredict(self._input, 5, self._ctx)
+            if la_ == 1:
+                self.state = 51
                 localctx.pipe_list = self.pipeList()
 
         except RecognitionException as re:
@@ -397,6 +437,7 @@ class TagTemplateParser(Parser):
         ):
             super().__init__(parent, invokingState)
             self.parser = parser
+            self.errorUnclosedArgumentList = None  # Token
 
         def ARGS_START(self):
             return self.getToken(TagTemplateParser.ARGS_START, 0)
@@ -431,37 +472,67 @@ class TagTemplateParser(Parser):
         self.enterRule(localctx, 8, self.RULE_argumentList)
         self._la = 0  # Token type
         try:
-            self.state = 57
+            self.state = 77
             self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input, 6, self._ctx)
+            la_ = self._interp.adaptivePredict(self._input, 8, self._ctx)
             if la_ == 1:
                 self.enterOuterAlt(localctx, 1)
-                self.state = 44
+                self.state = 54
                 self.match(TagTemplateParser.ARGS_START)
-                self.state = 45
+                self.state = 55
                 self.match(TagTemplateParser.ARGS_END)
                 pass
 
             elif la_ == 2:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 46
+                self.state = 56
                 self.match(TagTemplateParser.ARGS_START)
-                self.state = 47
+                self.state = 57
                 self.argument()
-                self.state = 52
+                self.state = 62
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
                 while _la == TagTemplateParser.ARG_SEPARATOR:
-                    self.state = 48
+                    self.state = 58
                     self.match(TagTemplateParser.ARG_SEPARATOR)
-                    self.state = 49
+                    self.state = 59
                     self.argument()
-                    self.state = 54
+                    self.state = 64
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
 
-                self.state = 55
+                self.state = 65
                 self.match(TagTemplateParser.ARGS_END)
+                pass
+
+            elif la_ == 3:
+                self.enterOuterAlt(localctx, 3)
+                self.state = 67
+                localctx.errorUnclosedArgumentList = self.match(
+                    TagTemplateParser.ARGS_START
+                )
+                pass
+
+            elif la_ == 4:
+                self.enterOuterAlt(localctx, 4)
+                self.state = 68
+                localctx.errorUnclosedArgumentList = self.match(
+                    TagTemplateParser.ARGS_START
+                )
+                self.state = 69
+                self.argument()
+                self.state = 74
+                self._errHandler.sync(self)
+                _la = self._input.LA(1)
+                while _la == TagTemplateParser.ARG_SEPARATOR:
+                    self.state = 70
+                    self.match(TagTemplateParser.ARG_SEPARATOR)
+                    self.state = 71
+                    self.argument()
+                    self.state = 76
+                    self._errHandler.sync(self)
+                    _la = self._input.LA(1)
+
                 pass
 
         except RecognitionException as re:
@@ -504,28 +575,28 @@ class TagTemplateParser(Parser):
         localctx = TagTemplateParser.ArgumentContext(self, self._ctx, self.state)
         self.enterRule(localctx, 10, self.RULE_argument)
         try:
-            self.state = 64
+            self.state = 84
             self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input, 7, self._ctx)
+            la_ = self._interp.adaptivePredict(self._input, 9, self._ctx)
             if la_ == 1:
                 self.enterOuterAlt(localctx, 1)
-                self.state = 59
+                self.state = 79
                 self.match(TagTemplateParser.ARG_NAME)
-                self.state = 60
+                self.state = 80
                 self.match(TagTemplateParser.ARG_EQUALS)
-                self.state = 61
+                self.state = 81
                 self.argumentValue()
                 pass
 
             elif la_ == 2:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 62
+                self.state = 82
                 self.match(TagTemplateParser.ARG_NAME)
                 pass
 
             elif la_ == 3:
                 self.enterOuterAlt(localctx, 3)
-                self.state = 63
+                self.state = 83
                 self.argumentValue()
                 pass
 
@@ -571,7 +642,7 @@ class TagTemplateParser(Parser):
         self._la = 0  # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 66
+            self.state = 86
             _la = self._input.LA(1)
             if not (
                 (
@@ -626,7 +697,7 @@ class TagTemplateParser(Parser):
         self.enterRule(localctx, 14, self.RULE_rawText)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 68
+            self.state = 88
             self.match(TagTemplateParser.TEXT)
         except RecognitionException as re:
             localctx.exception = re
