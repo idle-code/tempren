@@ -63,23 +63,17 @@ class _TreeVisitor(TagTemplateParserVisitor):
     def visitRootPattern(self, ctx: TagTemplateParser.RootPatternContext) -> Pattern:
         return self.visitPattern(ctx.pattern())
 
-    # def visitPatternExpression(
-    #     self, ctx: TagTemplateParser.PatternExpressionContext
-    # ) -> Pattern:
-    #     pattern = self.visitPattern(ctx.pattern())
-    #     if not ctx.pipeList():
-    #         return pattern
-    #
-    #     tag_list = self.visitPipeList(ctx.pipeList())
-    #     context = pattern
-    #     for tag_placeholder in tag_list:
-    #         tag_placeholder.context = context
-    #         context = Pattern([tag_placeholder])
-    #     return context
-
     def visitPipeList(
         self, ctx: TagTemplateParser.PipeListContext
     ) -> List[TagPlaceholder]:
+        if ctx.errorNonTagInPipeList:
+            non_tag_symbol = ctx.errorNonTagInPipeList.children[0].symbol
+            raise TagTemplateSyntaxError(
+                line=non_tag_symbol.line,
+                column=non_tag_symbol.start,
+                length=non_tag_symbol.stop - non_tag_symbol.start + 1,
+                message=f"non-tag in the pipe list",
+            )
         tag_list = self.visitChildren(ctx)
         return list(filter(bool, tag_list))
 
@@ -96,6 +90,13 @@ class _TreeVisitor(TagTemplateParserVisitor):
         return Pattern(pattern_elements)
 
     def visitTag(self, ctx: TagTemplateParser.TagContext) -> TagPlaceholder:
+        if ctx.errorMissingTagId:
+            raise TagTemplateSyntaxError(
+                line=ctx.errorMissingTagId.line,
+                column=ctx.errorMissingTagId.start,
+                length=ctx.errorMissingTagId.stop - ctx.errorMissingTagId.start + 1,
+                message=f"missing tag name",
+            )
         tag_name = ctx.TAG_ID().getText()
         if ctx.errorNoArgumentList:
             raise TagTemplateSyntaxError(
@@ -179,7 +180,7 @@ class TagTreeBuilder:
         token_stream = CommonTokenStream(lexer)
         token_stream.fill()
         parser = TagTemplateParser(token_stream)
-        # parser.addErrorListener(TagTemplateErrorListener())
+        parser.addErrorListener(TagTemplateErrorListener())
 
         visitor = _TreeVisitor()
         root_pattern = visitor.visitRootPattern(parser.rootPattern())
@@ -188,7 +189,17 @@ class TagTreeBuilder:
 
 class TagTemplateErrorListener(ErrorListener):
     def syntaxError(self, recognizer, offendingSymbol, line, column, msg, e):
-        raise TagTemplateSyntaxError(line, column, 1, msg)
+        from pprint import pprint
+
+        pprint([">>>>>///", recognizer, offendingSymbol, line, column, msg, e])
+        if "extraneous input" in msg or "mismatched input" in msg:
+            raise TagTemplateSyntaxError(
+                line,
+                column,
+                len(offendingSymbol.text),
+                f"unexpected symbol '{offendingSymbol.text}'",
+            )
+        raise TagTemplateSyntaxError(line, column, len(offendingSymbol.text), msg)
 
     def reportAmbiguity(
         self, recognizer, dfa, startIndex, stopIndex, exact, ambigAlts, configs

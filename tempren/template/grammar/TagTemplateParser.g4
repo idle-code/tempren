@@ -10,10 +10,12 @@ tag
     : TAG_START TAG_ID argumentList ('{' pattern '}')?
     | TAG_START errorNoArgumentList=TAG_ID
     | TAG_START TAG_ID argumentList errorUnclosedContext='{' pattern
+    | errorMissingTagId=TAG_START argumentList
     ;
 
 pipeList
     : (PIPE tag)+
+    | (PIPE errorNonTagInPipeList=rawText)+
     ;
 
 pattern
