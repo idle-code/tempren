@@ -92,6 +92,12 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         help="Use template to generate relative file path",
     )
     parser.add_argument(
+        "-f",
+        "--filter",
+        type=str,
+        help="Filter expression used to include/exclude individual files",
+    )
+    parser.add_argument(
         "template",
         type=str,
         help="Template used to generate new filename/path",

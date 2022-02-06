@@ -8,7 +8,7 @@ from types import ModuleType
 from typing import Dict, List, Mapping, Optional, Tuple, Type, Union
 
 from antlr4 import CommonTokenStream, InputStream  # type: ignore
-from antlr4.error.ErrorListener import ErrorListener
+from antlr4.error.ErrorListener import ErrorListener  # type: ignore
 
 from .grammar.TagTemplateLexer import TagTemplateLexer
 from .grammar.TagTemplateParser import TagTemplateParser

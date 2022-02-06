@@ -5,6 +5,7 @@ from typing import Callable, Iterable, Iterator, Optional
 
 from pydantic import BaseModel
 
+from tempren.file_filters import RegexFilenameFileFilter, RegexPathFileFilter
 from tempren.filesystem import FileGatherer, PrintingOnlyRenamer, Renamer
 from tempren.path_generator import File, PathGenerator
 from tempren.template.path_generators import (
@@ -17,9 +18,11 @@ log = logging.getLogger(__name__)
 
 
 class RuntimeConfiguration(BaseModel):
+    # CHECK: add mode of operation (path/name)
     input_directory: Path
     name: bool = False
     path: bool = False
+    filter: Optional[str] = None
     template: str
     dry_run: bool = False
 
@@ -32,12 +35,12 @@ class Pipeline:
     log: logging.Logger
     _input_directory: Path
     file_gatherer: Callable[[Path], Iterable[Path]]
+    file_filter: Callable[[File], bool] = lambda file: True
     sorter: Optional[Callable[[Iterable[File]], Iterable[File]]] = None
     path_generator: PathGenerator
 
     def __init__(self):
         self.log = logging.getLogger(__name__)
-        self.filter: Callable[[File], bool] = lambda f: True
         self.renamer: Callable[[Path, Path], None] = lambda src, dst: None
 
     @property
@@ -55,7 +58,7 @@ class Pipeline:
         for path in self.file_gatherer(self.input_directory):
             self.log.debug("Checking %s", path)
             file = File(path.relative_to(self.input_directory))
-            if not self.filter(file):
+            if not self.file_filter(file):
                 self.log.debug("%s filtered out", file)
                 continue
             self.log.debug("%s considered for renaming", file)
@@ -95,9 +98,13 @@ def build_pipeline(config: RuntimeConfiguration, registry: TagRegistry) -> Pipel
     if config.name:
         bound_pattern = registry.bind(tree_builder.parse(config.template))
         pipeline.path_generator = TemplateNameGenerator(bound_pattern)
+        if config.filter:
+            pipeline.file_filter = RegexFilenameFileFilter(config.filter)  # type: ignore
     elif config.path:
         bound_pattern = registry.bind(tree_builder.parse(config.template))
         pipeline.path_generator = TemplatePathGenerator(bound_pattern)
+        if config.filter:
+            pipeline.file_filter = RegexPathFileFilter(config.filter)  # type: ignore
     else:
         raise ConfigurationError()
 
