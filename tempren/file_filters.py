@@ -35,3 +35,7 @@ class RegexPathFileFilter(RegexFileFilter):
     def __call__(self, file: File) -> bool:
         match = self.pattern.match(str(file.relative_path))
         return (match is not None) != self.invert
+
+
+# TODO: Add glob-based filters
+# TODO: Add evaluation/tag-expression based filters

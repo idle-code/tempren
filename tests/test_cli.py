@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 
 from tempren.cli import RuntimeConfiguration, SystemExitError, process_cli_configuration
+from tempren.pipeline import OperationMode
 
 
 def process_cli(*args) -> RuntimeConfiguration:
@@ -37,7 +38,7 @@ class TestCliParser:
         config = process_cli("--name", valid_name_template, text_data_dir)
 
         assert config.template == valid_name_template
-        assert config.name and not config.path
+        assert config.mode == OperationMode.name
         assert config.input_directory == text_data_dir
         assert not config.dry_run
 
@@ -45,7 +46,7 @@ class TestCliParser:
         config = process_cli("--path", valid_path_template, text_data_dir)
 
         assert config.template == valid_path_template
-        assert not config.name and config.path
+        assert config.mode == OperationMode.path
         assert config.input_directory == text_data_dir
         assert not config.dry_run
 

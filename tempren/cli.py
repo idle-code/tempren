@@ -5,7 +5,13 @@ from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from typing import Any, List, NoReturn, Optional, Sequence, Text, Union
 
-from tempren.pipeline import RuntimeConfiguration, build_pipeline, build_tag_registry
+from tempren.pipeline import (
+    FilterType,
+    OperationMode,
+    RuntimeConfiguration,
+    build_pipeline,
+    build_tag_registry,
+)
 
 log = logging.getLogger("CLI")
 logging.basicConfig(level=logging.WARNING)
@@ -78,24 +84,44 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         nargs=0,
         help="Increase logging verbosity",
     )
-    operation_mode = parser.add_mutually_exclusive_group(required=True)
+    operation_mode = parser.add_mutually_exclusive_group()
+    # TODO: generate modes based on OperationMode
     operation_mode.add_argument(
         "-n",
         "--name",
-        action="store_true",
+        action="store_const",
+        dest="mode",
+        const=OperationMode.name,
+        default=OperationMode.name,
         help="Use template to generate file name",
     )
     operation_mode.add_argument(
         "-p",
         "--path",
-        action="store_true",
+        action="store_const",
+        dest="mode",
+        const=OperationMode.path,
         help="Use template to generate relative file path",
+    )
+    parser.add_argument(
+        "-ft",
+        "--filter-type",
+        choices=[e.value for e in FilterType],
+        default=FilterType.regex,  # TODO: change to template when available
+        help="Type of filter expression",
+    )
+    parser.add_argument(
+        "-fi",
+        "--filter-invert",
+        action="store_true",
+        help="Invert (negate) filter expression result",
     )
     parser.add_argument(
         "-f",
         "--filter",
         type=str,
-        help="Filter expression used to include/exclude individual files",
+        metavar="FILTER_EXPRESSION",
+        help="Filter expression used to include individual files",
     )
     parser.add_argument(
         "template",
@@ -125,7 +151,9 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
 
     args = parser.parse_args(argv)
 
-    return RuntimeConfiguration(**vars(args))
+    configuration = RuntimeConfiguration(**vars(args))
+
+    return configuration
 
 
 def main(argv: List[str]) -> int:
