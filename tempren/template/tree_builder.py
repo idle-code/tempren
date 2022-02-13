@@ -119,7 +119,17 @@ class _TreeVisitor(TagTemplateParserVisitor):
         context_pattern = ctx.pattern()
         if context_pattern is not None:
             context = self.visitPattern(ctx.pattern())
-        tag = TagPlaceholder(tag_name, args=args, kwargs=kwargs, context=context)
+
+        symbol = ctx.TAG_ID().getSymbol()
+        tag = TagPlaceholder(
+            line=symbol.line,
+            column=symbol.start,
+            length=symbol.stop - symbol.start + 1,
+            tag_name=tag_name,
+            args=args,
+            kwargs=kwargs,
+            context=context,
+        )
         return tag
 
     def visitArgumentList(
@@ -170,7 +180,14 @@ class _TreeVisitor(TagTemplateParserVisitor):
         return arg_name, arg_value
 
     def visitRawText(self, ctx: TagTemplateParser.RawTextContext) -> RawText:
-        raw_text = RawText(unescape(ctx.TEXT().getText()))
+        symbol = ctx.TEXT().getSymbol()
+        # CHECK: is location necessary for RawText?
+        raw_text = RawText(
+            line=symbol.line,
+            column=symbol.start,
+            length=symbol.stop - symbol.start + 1,
+            text=unescape(ctx.TEXT().getText()),
+        )
         return raw_text
 
 
@@ -183,15 +200,19 @@ class TagTreeBuilder:
         parser.addErrorListener(TagTemplateErrorListener())
 
         visitor = _TreeVisitor()
-        root_pattern = visitor.visitRootPattern(parser.rootPattern())
-        return root_pattern
+        try:
+            root_pattern = visitor.visitRootPattern(parser.rootPattern())
+            return root_pattern
+        except TagTemplateError as template_error:
+            template_error.template = text
+            raise template_error
 
 
 class TagTemplateErrorListener(ErrorListener):
     def syntaxError(self, recognizer, offendingSymbol, line, column, msg, e):
         from pprint import pprint
 
-        pprint([">>>>>///", recognizer, offendingSymbol, line, column, msg, e])
+        # pprint([">>>>>///", recognizer, offendingSymbol, line, column, msg, e])
         if "extraneous input" in msg or "mismatched input" in msg:
             raise TagTemplateSyntaxError(
                 line,
@@ -204,7 +225,7 @@ class TagTemplateErrorListener(ErrorListener):
     def reportAmbiguity(
         self, recognizer, dfa, startIndex, stopIndex, exact, ambigAlts, configs
     ):
-        print("reportAmbiguity")
+        # print("reportAmbiguity")
         super().reportAmbiguity(
             recognizer, dfa, startIndex, stopIndex, exact, ambigAlts, configs
         )
@@ -212,7 +233,7 @@ class TagTemplateErrorListener(ErrorListener):
     def reportAttemptingFullContext(
         self, recognizer, dfa, startIndex, stopIndex, conflictingAlts, configs
     ):
-        print("reportAttemptingFullContext")
+        # print("reportAttemptingFullContext")
         super().reportAttemptingFullContext(
             recognizer, dfa, startIndex, stopIndex, conflictingAlts, configs
         )
@@ -220,26 +241,29 @@ class TagTemplateErrorListener(ErrorListener):
     def reportContextSensitivity(
         self, recognizer, dfa, startIndex, stopIndex, prediction, configs
     ):
-        print("reportContextSensitivity")
+        # print("reportContextSensitivity")
         super().reportContextSensitivity(
             recognizer, dfa, startIndex, stopIndex, prediction, configs
         )
 
 
-class TagTemplateSyntaxError(Exception):
+class TagTemplateError(Exception):
     line: int
     column: int
     length: int
     message: str
+    template: str
 
     def __init__(self, line: int, column: int, length: int, message: str):
-        super(TagTemplateSyntaxError, self).__init__(
-            f"{line}:{column}-{column + length}: {message}"
-        )
+        super().__init__(f"{line}:{column}-{column + length}: {message}")
         self.line = line
         self.column = column
         self.length = length
         self.message = message
+
+
+class TagTemplateSyntaxError(TagTemplateError):
+    pass
 
 
 class TagTemplateSemanticError(Exception):

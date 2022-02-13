@@ -12,6 +12,7 @@ from tempren.pipeline import (
     build_pipeline,
     build_tag_registry,
 )
+from tempren.template.tree_builder import TagTemplateError, TagTemplateSyntaxError
 
 log = logging.getLogger("CLI")
 logging.basicConfig(level=logging.WARNING)
@@ -166,6 +167,7 @@ def main(argv: List[str]) -> int:
         pipeline = build_pipeline(config, registry)
 
         log.debug("Executing pipeline")
+        log.info("Directory base: %s", config.input_directory)
         pipeline.execute()
         log.info("Done")
         return 0
@@ -173,6 +175,12 @@ def main(argv: List[str]) -> int:
         if exc.status != 0:
             print(exc, file=sys.stderr, end="")
         return exc.status
+    except TagTemplateError as template_error:
+        print(template_error)
+        print(template_error.column)
+        print(template_error.length)
+        # TODO: pretty print error messages
+        return 3
 
 
 if __name__ == "__main__":

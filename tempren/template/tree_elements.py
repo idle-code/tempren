@@ -4,21 +4,30 @@ from pathlib import Path
 from typing import Any, Callable, List, Mapping, Optional
 
 
+@dataclass
+class Location:
+    line: int
+    column: int
+    length: int
+
+
+@dataclass
 class PatternElement(ABC):
     @abstractmethod
     def process(self, path: Path) -> str:
         raise NotImplementedError()
 
 
-@dataclass(frozen=True)
+@dataclass
 class RawText(PatternElement):
+    location: Location
     text: str
 
     def process(self, path: Path) -> str:
         return self.text
 
 
-@dataclass(frozen=True)
+@dataclass
 class Pattern(PatternElement):
     sub_elements: List[PatternElement] = field(default_factory=list)
 
@@ -28,6 +37,7 @@ class Pattern(PatternElement):
 
 @dataclass
 class TagPlaceholder(PatternElement):
+    location: Location
     tag_name: str
     context: Optional[Pattern] = None
     args: List[Any] = field(default_factory=list)

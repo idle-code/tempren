@@ -31,7 +31,7 @@ class RemoveTag(Tag):
         self.patterns = list(map(lambda p: re.compile(p, flags), patterns))
 
     def process(self, path: Path, context: Optional[str]) -> str:
-        assert context
+        assert context is not None
         result = context
         for pattern in self.patterns:
             result = pattern.sub("", result)
@@ -65,7 +65,7 @@ class CollapseTag(Tag):
         self.pattern = re.compile(f"(?<=[{characters}])[{characters}]+")
 
     def process(self, path: Path, context: Optional[str]) -> str:
-        assert context
+        assert context is not None
         return self.pattern.sub("", context)
 
 
@@ -75,7 +75,7 @@ class UpperTag(Tag):
     require_context = True
 
     def process(self, path: Path, context: Optional[str]) -> str:
-        assert context
+        assert context is not None
         return context.upper()
 
 
@@ -85,7 +85,7 @@ class LowerTag(Tag):
     require_context = True
 
     def process(self, path: Path, context: Optional[str]) -> str:
-        assert context
+        assert context is not None
         return context.lower()
 
 
@@ -104,7 +104,7 @@ class StripTag(Tag):
         self.right = right
 
     def process(self, path: Path, context: Optional[str]) -> str:
-        assert context
+        assert context is not None
         if self.left and not self.right:
             return context.lstrip(self.strip_characters)
         if self.right and not self.left:
