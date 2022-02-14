@@ -13,7 +13,7 @@ from tempren.template.path_generators import (
     TemplateNameGenerator,
     TemplatePathGenerator,
 )
-from tempren.template.tree_builder import TagRegistry, TagTreeBuilder
+from tempren.template.tree_builder import TagRegistry, TagTemplateError, TagTreeBuilder
 
 log = logging.getLogger(__name__)
 
@@ -106,8 +106,13 @@ def build_pipeline(config: RuntimeConfiguration, registry: TagRegistry) -> Pipel
     pipeline.file_gatherer = FileGatherer  # type: ignore
     tree_builder = TagTreeBuilder()
 
-    if config.mode == OperationMode.name:
+    try:
         bound_pattern = registry.bind(tree_builder.parse(config.template))
+    except TagTemplateError as template_error:
+        template_error.template = config.template
+        raise template_error
+
+    if config.mode == OperationMode.name:
         pipeline.path_generator = TemplateNameGenerator(bound_pattern)
         if config.filter:
             if config.filter_type == FilterType.regex:
@@ -117,7 +122,6 @@ def build_pipeline(config: RuntimeConfiguration, registry: TagRegistry) -> Pipel
             else:
                 raise ConfigurationError()
     elif config.mode == OperationMode.path:
-        bound_pattern = registry.bind(tree_builder.parse(config.template))
         pipeline.path_generator = TemplatePathGenerator(bound_pattern)
         if config.filter:
             if config.filter_type == FilterType.regex:

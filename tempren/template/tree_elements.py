@@ -10,8 +10,12 @@ class Location:
     column: int
     length: int
 
+    def __str__(self) -> str:
+        if self.length == 1:
+            return f"{self.line}:{self.column}"
+        return f"{self.line}:{self.column}-{self.column + self.length}"
 
-@dataclass
+
 class PatternElement(ABC):
     @abstractmethod
     def process(self, path: Path) -> str:
@@ -20,7 +24,7 @@ class PatternElement(ABC):
 
 @dataclass
 class RawText(PatternElement):
-    location: Location
+    location: Location = field(init=False, compare=False)
     text: str
 
     def process(self, path: Path) -> str:
@@ -37,7 +41,7 @@ class Pattern(PatternElement):
 
 @dataclass
 class TagPlaceholder(PatternElement):
-    location: Location
+    location: Location = field(init=False, compare=False)
     tag_name: str
     context: Optional[Pattern] = None
     args: List[Any] = field(default_factory=list)

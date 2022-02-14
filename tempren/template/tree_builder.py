@@ -14,6 +14,7 @@ from .grammar.TagTemplateLexer import TagTemplateLexer
 from .grammar.TagTemplateParser import TagTemplateParser
 from .grammar.TagTemplateParserVisitor import TagTemplateParserVisitor
 from .tree_elements import (
+    Location,
     Pattern,
     PatternElement,
     RawText,
@@ -44,6 +45,12 @@ ARGUMENT_VALUE_TYPES = (
 )
 
 
+def location_from_symbol(symbol) -> Location:
+    return Location(
+        line=symbol.line, column=symbol.start, length=symbol.stop - symbol.start + 1
+    )
+
+
 class _TreeVisitor(TagTemplateParserVisitor):
     def defaultResult(self) -> List[PatternElement]:
         return list()
@@ -69,9 +76,7 @@ class _TreeVisitor(TagTemplateParserVisitor):
         if ctx.errorNonTagInPipeList:
             non_tag_symbol = ctx.errorNonTagInPipeList.children[0].symbol
             raise TagTemplateSyntaxError(
-                line=non_tag_symbol.line,
-                column=non_tag_symbol.start,
-                length=non_tag_symbol.stop - non_tag_symbol.start + 1,
+                location_from_symbol(non_tag_symbol),
                 message=f"non-tag in the pipe list",
             )
         tag_list = self.visitChildren(ctx)
@@ -92,26 +97,18 @@ class _TreeVisitor(TagTemplateParserVisitor):
     def visitTag(self, ctx: TagTemplateParser.TagContext) -> TagPlaceholder:
         if ctx.errorMissingTagId:
             raise TagTemplateSyntaxError(
-                line=ctx.errorMissingTagId.line,
-                column=ctx.errorMissingTagId.start,
-                length=ctx.errorMissingTagId.stop - ctx.errorMissingTagId.start + 1,
+                location_from_symbol(ctx.errorMissingTagId),
                 message=f"missing tag name",
             )
         tag_name = ctx.TAG_ID().getText()
         if ctx.errorNoArgumentList:
             raise TagTemplateSyntaxError(
-                line=ctx.errorNoArgumentList.line,
-                column=ctx.errorNoArgumentList.start,
-                length=ctx.errorNoArgumentList.stop - ctx.errorNoArgumentList.start + 1,
+                location_from_symbol(ctx.errorNoArgumentList),
                 message=f"missing argument list for tag '{tag_name}'",
             )
         if ctx.errorUnclosedContext:
             raise TagTemplateSyntaxError(
-                line=ctx.errorUnclosedContext.line,
-                column=ctx.errorUnclosedContext.start,
-                length=ctx.errorUnclosedContext.stop
-                - ctx.errorUnclosedContext.start
-                + 1,
+                location_from_symbol(ctx.errorUnclosedContext),
                 message=f"missing closing context bracket for tag '{tag_name}'",
             )
         args, kwargs = self.visitArgumentList(ctx.argumentList())
@@ -120,16 +117,14 @@ class _TreeVisitor(TagTemplateParserVisitor):
         if context_pattern is not None:
             context = self.visitPattern(ctx.pattern())
 
-        symbol = ctx.TAG_ID().getSymbol()
         tag = TagPlaceholder(
-            line=symbol.line,
-            column=symbol.start,
-            length=symbol.stop - symbol.start + 1,
             tag_name=tag_name,
             args=args,
             kwargs=kwargs,
             context=context,
         )
+        symbol = ctx.TAG_ID().getSymbol()
+        tag.location = location_from_symbol(symbol)
         return tag
 
     def visitArgumentList(
@@ -137,11 +132,7 @@ class _TreeVisitor(TagTemplateParserVisitor):
     ) -> Tuple[List[ArgValue], Mapping[str, ArgValue]]:
         if ctx.errorUnclosedArgumentList:
             raise TagTemplateSyntaxError(
-                line=ctx.errorUnclosedArgumentList.line,
-                column=ctx.errorUnclosedArgumentList.start,
-                length=ctx.errorUnclosedArgumentList.stop
-                - ctx.errorUnclosedArgumentList.start
-                + 1,
+                location_from_symbol(ctx.errorUnclosedArgumentList),
                 message="missing closing argument list bracket",
             )
         collected_arguments = super().visitArgumentList(ctx)
@@ -182,12 +173,8 @@ class _TreeVisitor(TagTemplateParserVisitor):
     def visitRawText(self, ctx: TagTemplateParser.RawTextContext) -> RawText:
         symbol = ctx.TEXT().getSymbol()
         # CHECK: is location necessary for RawText?
-        raw_text = RawText(
-            line=symbol.line,
-            column=symbol.start,
-            length=symbol.stop - symbol.start + 1,
-            text=unescape(ctx.TEXT().getText()),
-        )
+        raw_text = RawText(text=unescape(ctx.TEXT().getText()))
+        raw_text.location = location_from_symbol(symbol)
         return raw_text
 
 
@@ -200,12 +187,8 @@ class TagTreeBuilder:
         parser.addErrorListener(TagTemplateErrorListener())
 
         visitor = _TreeVisitor()
-        try:
-            root_pattern = visitor.visitRootPattern(parser.rootPattern())
-            return root_pattern
-        except TagTemplateError as template_error:
-            template_error.template = text
-            raise template_error
+        root_pattern = visitor.visitRootPattern(parser.rootPattern())
+        return root_pattern
 
 
 class TagTemplateErrorListener(ErrorListener):
@@ -213,14 +196,13 @@ class TagTemplateErrorListener(ErrorListener):
         from pprint import pprint
 
         # pprint([">>>>>///", recognizer, offendingSymbol, line, column, msg, e])
+        error_location = Location(line, column, len(offendingSymbol.text))
         if "extraneous input" in msg or "mismatched input" in msg:
             raise TagTemplateSyntaxError(
-                line,
-                column,
-                len(offendingSymbol.text),
+                error_location,
                 f"unexpected symbol '{offendingSymbol.text}'",
             )
-        raise TagTemplateSyntaxError(line, column, len(offendingSymbol.text), msg)
+        raise TagTemplateSyntaxError(error_location, msg)
 
     def reportAmbiguity(
         self, recognizer, dfa, startIndex, stopIndex, exact, ambigAlts, configs
@@ -248,17 +230,13 @@ class TagTemplateErrorListener(ErrorListener):
 
 
 class TagTemplateError(Exception):
-    line: int
-    column: int
-    length: int
+    location: Location
     message: str
     template: str
 
-    def __init__(self, line: int, column: int, length: int, message: str):
-        super().__init__(f"{line}:{column}-{column + length}: {message}")
-        self.line = line
-        self.column = column
-        self.length = length
+    def __init__(self, location: Location, message: str):
+        super().__init__(f"{location}: {message}")
+        self.location = location
         self.message = message
 
 
@@ -266,37 +244,37 @@ class TagTemplateSyntaxError(TagTemplateError):
     pass
 
 
-class TagTemplateSemanticError(Exception):
+class TagTemplateSemanticError(TagTemplateError):
     pass
 
 
 class TagError(TagTemplateSemanticError):
     tag_name: str
 
-    def __init__(self, tag_name: str, message: str):
+    def __init__(self, location: Location, tag_name: str, message: str):
         assert tag_name
         self.tag_name = tag_name
-        super().__init__(f"Error in tag '{self.tag_name}': {message}")
+        super().__init__(location, f"Error in tag '{self.tag_name}': {message}")
 
 
 class UnknownTagError(TagError):
-    def __init__(self, tag_name: str):
-        super().__init__(tag_name, "Tag not recognized")
+    def __init__(self, location: Location, tag_name: str):
+        super().__init__(location, tag_name, "Tag not recognized")
 
 
 class ContextMissingError(TagError):
-    def __init__(self, tag_name: str):
-        super().__init__(tag_name, f"Context is required for this tag")
+    def __init__(self, location: Location, tag_name: str):
+        super().__init__(location, tag_name, f"Context is required for this tag")
 
 
 class ContextForbiddenError(TagError):
-    def __init__(self, tag_name: str):
-        super().__init__(tag_name, f"This tag cannot be used with context")
+    def __init__(self, location: Location, tag_name: str):
+        super().__init__(location, tag_name, f"This tag cannot be used with context")
 
 
 class ConfigurationError(TagError):
-    def __init__(self, tag_name: str, message: str):
-        super().__init__(tag_name, f"Configuration not valid: {message}")
+    def __init__(self, location: Location, tag_name: str, message: str):
+        super().__init__(location, tag_name, f"Configuration not valid: {message}")
 
 
 class TagRegistry:
@@ -354,18 +332,24 @@ class TagRegistry:
             tag_placeholder.tag_name
         )
         if not tag_factory:
-            raise UnknownTagError(tag_placeholder.tag_name)
+            raise UnknownTagError(tag_placeholder.location, tag_placeholder.tag_name)
 
         try:
             tag = tag_factory(*tag_placeholder.args, **tag_placeholder.kwargs)
         except Exception as exc:
-            raise ConfigurationError(tag_placeholder.tag_name, str(exc)) from exc
+            raise ConfigurationError(
+                tag_placeholder.location, tag_placeholder.tag_name, str(exc)
+            ) from exc
 
         if tag.require_context is not None:
             if tag_placeholder.context and not tag.require_context:
-                raise ContextForbiddenError(tag_placeholder.tag_name)
+                raise ContextForbiddenError(
+                    tag_placeholder.location, tag_placeholder.tag_name
+                )
             elif tag_placeholder.context is None and tag.require_context:
-                raise ContextMissingError(tag_placeholder.tag_name)
+                raise ContextMissingError(
+                    tag_placeholder.location, tag_placeholder.tag_name
+                )
 
         context_pattern: Optional[Pattern] = None
         if tag_placeholder.context:

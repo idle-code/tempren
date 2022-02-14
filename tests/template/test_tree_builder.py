@@ -171,81 +171,63 @@ class TestTreeBuilderSyntaxErrors:
             parse("Some %TAG( text")
 
         assert "missing closing" in syntax_error.value.message
-        assert syntax_error.value.line == 1
-        assert syntax_error.value.column == 9
-        assert syntax_error.value.length == 1
+        assert syntax_error.value.location == Location(1, 9, 1)
 
     def test_missing_closing_argument_bracket_at_end(self):
         with pytest.raises(TagTemplateSyntaxError) as syntax_error:
             parse("Some %TAG(")
 
         assert "missing closing" in syntax_error.value.message
-        assert syntax_error.value.line == 1
-        assert syntax_error.value.column == 9
-        assert syntax_error.value.length == 1
+        assert syntax_error.value.location == Location(1, 9, 1)
 
     def test_missing_opening_argument_bracket(self):
         with pytest.raises(TagTemplateSyntaxError) as syntax_error:
             parse("Some %TAG text)")
 
         assert "unexpected symbol 'text'" in syntax_error.value.message
-        assert syntax_error.value.line == 1
-        assert syntax_error.value.column == 10
-        assert syntax_error.value.length == 4
+        assert syntax_error.value.location == Location(1, 10, 4)
 
     def test_missing_opening_argument_bracket_at_end(self):
         with pytest.raises(TagTemplateSyntaxError) as syntax_error:
             parse("Some %TAG")
 
         assert "missing argument list" in syntax_error.value.message
-        assert syntax_error.value.line == 1
-        assert syntax_error.value.column == 6
-        assert syntax_error.value.length == 3
+        assert syntax_error.value.location == Location(1, 6, 3)
 
     def test_missing_closing_context_bracket(self):
         with pytest.raises(TagTemplateSyntaxError) as syntax_error:
             parse("Some %TAG(){ Context")
 
         assert "missing closing context bracket" in syntax_error.value.message
-        assert syntax_error.value.line == 1
-        assert syntax_error.value.column == 11
-        assert syntax_error.value.length == 1
+        assert syntax_error.value.location == Location(1, 11, 1)
 
     def test_unescaped_context_opening_bracket(self):
         with pytest.raises(TagTemplateSyntaxError) as syntax_error:
             parse("Some { Context ")
 
         assert "unexpected symbol '{'" in syntax_error.value.message
-        assert syntax_error.value.line == 1
-        assert syntax_error.value.column == 5
-        assert syntax_error.value.length == 1
+        assert syntax_error.value.location == Location(1, 5, 1)
 
     def test_unescaped_context_closing_bracket(self):
         with pytest.raises(TagTemplateSyntaxError) as syntax_error:
             parse("Some %TAG() Context }")
 
         assert "unexpected symbol '}'" in syntax_error.value.message
-        assert syntax_error.value.line == 1
-        assert syntax_error.value.column == 20
-        assert syntax_error.value.length == 1
+        assert syntax_error.value.location == Location(1, 20, 1)
 
     def test_missing_tag_name(self):
         with pytest.raises(TagTemplateSyntaxError) as syntax_error:
             parse("Some %()")
 
         assert "missing tag" in syntax_error.value.message
-        assert syntax_error.value.line == 1
-        assert syntax_error.value.column == 5
-        assert syntax_error.value.length == 1
+        assert syntax_error.value.location == Location(1, 5, 1)
 
     def test_non_tag_in_pipe_list(self):
         with pytest.raises(TagTemplateSyntaxError) as syntax_error:
             parse("Text|Pipe")
 
         assert "non-tag in the pipe list" in syntax_error.value.message
-        assert syntax_error.value.line == 1
-        assert syntax_error.value.column == 5
-        assert syntax_error.value.length == 4
+        assert syntax_error.value.location == Location(1, 5, 4)
 
 
 class TestTreeBuilderSemanticErrors:
@@ -255,6 +237,4 @@ class TestTreeBuilderSemanticErrors:
             parse("%TAG(){}")
 
         # assert "unescaped context bracket" in syntax_error.value.message
-        # assert syntax_error.value.line == 1
-        # assert syntax_error.value.column == 6
-        # assert syntax_error.value.length == 1
+        # assert syntax_error.value.location == Location(1, 6, 1)

@@ -3,6 +3,7 @@ import argparse
 import logging
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
+from textwrap import indent
 from typing import Any, List, NoReturn, Optional, Sequence, Text, Union
 
 from tempren.pipeline import (
@@ -157,6 +158,19 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
     return configuration
 
 
+def render_template_error(template_error: TagTemplateError, indent_size: int = 4):
+    assert template_error.location.line == 1, "Nu support for multiline templates yet"
+    if template_error.location.length == 1:
+        underline = " " * template_error.location.column + "^"
+    else:
+        underline = (
+            " " * template_error.location.column + "~" * template_error.location.length
+        )
+    print()
+    print(indent("\n".join((template_error.template, underline)), " " * indent_size))
+    print(f"{template_error.location}: {template_error.message}")
+
+
 def main(argv: List[str]) -> int:
     try:
         log.debug("Parsing configuration")
@@ -176,10 +190,7 @@ def main(argv: List[str]) -> int:
             print(exc, file=sys.stderr, end="")
         return exc.status
     except TagTemplateError as template_error:
-        print(template_error)
-        print(template_error.column)
-        print(template_error.length)
-        # TODO: pretty print error messages
+        render_template_error(template_error)
         return 3
 
 
