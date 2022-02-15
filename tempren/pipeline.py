@@ -6,7 +6,11 @@ from typing import Callable, Iterable, Iterator, Optional
 
 from pydantic import BaseModel
 
-from tempren.file_filters import RegexFilenameFileFilter, RegexPathFileFilter
+from tempren.file_filters import (
+    FileFilterInverter,
+    RegexFilenameFileFilter,
+    RegexPathFileFilter,
+)
 from tempren.filesystem import FileGatherer, PrintingOnlyRenamer, Renamer
 from tempren.path_generator import File, PathGenerator
 from tempren.template.path_generators import (
@@ -116,22 +120,21 @@ def build_pipeline(config: RuntimeConfiguration, registry: TagRegistry) -> Pipel
         pipeline.path_generator = TemplateNameGenerator(bound_pattern)
         if config.filter:
             if config.filter_type == FilterType.regex:
-                pipeline.file_filter = RegexFilenameFileFilter(
-                    config.filter, invert=config.filter_invert
-                )
+                pipeline.file_filter = RegexFilenameFileFilter(config.filter)
             else:
                 raise ConfigurationError()
     elif config.mode == OperationMode.path:
         pipeline.path_generator = TemplatePathGenerator(bound_pattern)
         if config.filter:
             if config.filter_type == FilterType.regex:
-                pipeline.file_filter = RegexPathFileFilter(
-                    config.filter, invert=config.filter_invert
-                )
+                pipeline.file_filter = RegexPathFileFilter(config.filter)
             else:
                 raise ConfigurationError()
     else:
         raise ConfigurationError()
+
+    if config.filter_invert and config.filter is not None:
+        pipeline.file_filter = FileFilterInverter(pipeline.file_filter)
 
     if config.dry_run:
         pipeline.renamer = PrintingOnlyRenamer()

@@ -25,13 +25,6 @@ class TestRegexFilenameFileFilter:
         assert file_filter(File(Path("file.ext")))
         assert file_filter(File(Path("filename.ext")))
 
-    @pytest.mark.parametrize("invert", [False, True])
-    def test_inversion_of_result(self, invert: bool):
-        file_filter = RegexFilenameFileFilter(".*\\.ext$", invert=invert)
-
-        assert file_filter(File(Path("name.EXT"))) == invert
-        assert file_filter(File(Path("name.ext"))) != invert
-
     @pytest.mark.parametrize("ignore_case", [False, True])
     def test_case_insensitivity(self, ignore_case: bool):
         file_filter = RegexFilenameFileFilter(".*\\.ext$", ignore_case=ignore_case)
@@ -58,13 +51,6 @@ class TestRegexPathFileFilter:
 
         assert file_filter(File(Path("file/path.ext")))
         assert file_filter(File(Path("filename/path.ext")))
-
-    @pytest.mark.parametrize("invert", [False, True])
-    def test_inversion_of_result(self, invert: bool):
-        file_filter = RegexPathFileFilter("^foo", invert=invert)
-
-        assert file_filter(File(Path("bar/foo.spam"))) == invert
-        assert file_filter(File(Path("foo/bar.spam"))) != invert
 
     @pytest.mark.parametrize("ignore_case", [False, True])
     def test_case_insensitivity(self, ignore_case: bool):

@@ -11,30 +11,38 @@ class FileFilter(ABC):
         raise NotImplementedError()
 
 
+class FileFilterInverter(FileFilter):
+    original_filter: FileFilter
+
+    def __init__(self, original_filter: FileFilter):
+        self.original_filter = original_filter
+
+    def __call__(self, file: File) -> bool:
+        return not self.original_filter(file)
+
+
 class RegexFileFilter(FileFilter, ABC):
     pattern: Pattern
-    invert: bool
     ignore_case: bool
 
-    def __init__(self, pattern: str, invert: bool = False, ignore_case: bool = False):
+    def __init__(self, pattern: str, ignore_case: bool = False):
         flags = 0
         if ignore_case:
             flags |= re.IGNORECASE
         self.pattern = re.compile(pattern, flags)
-        self.invert = invert
         self.ignore_case = ignore_case
 
 
 class RegexFilenameFileFilter(RegexFileFilter):
     def __call__(self, file: File) -> bool:
         match = self.pattern.match(file.relative_path.name)
-        return (match is not None) != self.invert
+        return match is not None
 
 
 class RegexPathFileFilter(RegexFileFilter):
     def __call__(self, file: File) -> bool:
         match = self.pattern.match(str(file.relative_path))
-        return (match is not None) != self.invert
+        return match is not None
 
 
 # TODO: Add glob-based filters
