@@ -168,7 +168,7 @@ def render_template_error(template_error: TagTemplateError, indent_size: int = 4
         )
     print()
     print(indent("\n".join((template_error.template, underline)), " " * indent_size))
-    print(f"{template_error.location}: {template_error.message}")
+    print(f"Template error at {template_error.location}: {template_error.message}")
 
 
 def main(argv: List[str]) -> int:

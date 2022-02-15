@@ -12,8 +12,8 @@ class Location:
 
     def __str__(self) -> str:
         if self.length == 1:
-            return f"{self.line}:{self.column}"
-        return f"{self.line}:{self.column}-{self.column + self.length}"
+            return f"line {self.line}:{self.column}"
+        return f"line {self.line}:{self.column}-{self.column + self.length}"
 
 
 class PatternElement(ABC):

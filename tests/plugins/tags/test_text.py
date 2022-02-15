@@ -1,3 +1,5 @@
+import pytest
+
 from tempren.plugins.tags.text import *
 
 
@@ -199,3 +201,44 @@ class TestStripTag:
         result = tag.process(nonexistent_path, "  foobar  ")
 
         assert result == "foobar"
+
+
+class TestTrimTag:
+    def test_by_default_trims_right(self, nonexistent_path: Path):
+        tag = TrimTag()
+        tag.configure(4)
+
+        result = tag.process(nonexistent_path, "0123456789")
+
+        assert result == "0123"
+
+    def test_trims_right(self, nonexistent_path: Path):
+        tag = TrimTag()
+        tag.configure(4, right=True)
+
+        result = tag.process(nonexistent_path, "0123456789")
+
+        assert result == "0123"
+
+    def test_trims_left(self, nonexistent_path: Path):
+        tag = TrimTag()
+        tag.configure(4, left=True)
+
+        result = tag.process(nonexistent_path, "0123456789")
+
+        assert result == "6789"
+
+    def test_both_trims_misconfiguration(self, nonexistent_path: Path):
+        tag = TrimTag()
+
+        with pytest.raises(AssertionError):
+            tag.configure(4, left=True, right=True)
+
+    def test_length_misconfiguration(self, nonexistent_path: Path):
+        tag = TrimTag()
+
+        with pytest.raises(AssertionError):
+            tag.configure(0)
+
+        with pytest.raises(AssertionError):
+            tag.configure(-2)

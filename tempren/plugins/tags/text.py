@@ -110,3 +110,27 @@ class StripTag(Tag):
         if self.right and not self.left:
             return context.rstrip(self.strip_characters)
         return context.strip(self.strip_characters)
+
+
+class TrimTag(Tag):
+    """Trims context to specified length"""
+
+    require_context = True
+    length: int
+    left: bool = False
+    right: bool = False
+
+    def configure(self, length: int, left: bool = False, right: bool = False):  # type: ignore
+        assert length > 0, "length have to be positive integer"
+        self.length = length
+        assert (
+            not left or not right
+        ), "left and right cannot be specified at the same time"
+        self.left = left
+        self.right = right
+
+    def process(self, path: Path, context: Optional[str]) -> str:
+        assert context is not None
+        if self.left:
+            return context[-self.length :]
+        return context[: self.length]
