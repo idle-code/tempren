@@ -8,6 +8,8 @@ from pydantic import BaseModel
 
 from tempren.file_filters import (
     FileFilterInverter,
+    GlobFilenameFileFilter,
+    GlobPathFileFilter,
     RegexFilenameFileFilter,
     RegexPathFileFilter,
 )
@@ -25,6 +27,7 @@ log = logging.getLogger(__name__)
 class FilterType(Enum):
     template = "template"
     regex = "regex"
+    glob = "glob"
 
 
 class OperationMode(Enum):
@@ -121,6 +124,8 @@ def build_pipeline(config: RuntimeConfiguration, registry: TagRegistry) -> Pipel
         if config.filter:
             if config.filter_type == FilterType.regex:
                 pipeline.file_filter = RegexFilenameFileFilter(config.filter)
+            elif config.filter_type == FilterType.glob:
+                pipeline.file_filter = GlobFilenameFileFilter(config.filter)
             else:
                 raise ConfigurationError()
     elif config.mode == OperationMode.path:
@@ -128,6 +133,8 @@ def build_pipeline(config: RuntimeConfiguration, registry: TagRegistry) -> Pipel
         if config.filter:
             if config.filter_type == FilterType.regex:
                 pipeline.file_filter = RegexPathFileFilter(config.filter)
+            elif config.filter_type == FilterType.glob:
+                pipeline.file_filter = GlobPathFileFilter(config.filter)
             else:
                 raise ConfigurationError()
     else:
