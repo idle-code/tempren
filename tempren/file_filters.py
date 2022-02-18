@@ -1,10 +1,11 @@
 import fnmatch
+import logging
 import re
 from abc import ABC, abstractmethod
-from re import Pattern
 from typing import Callable
 
 from tempren.path_generator import File
+from tempren.template.tree_elements import Pattern
 
 
 class FileFilter(ABC):
@@ -22,7 +23,7 @@ class FileFilterInverter(FileFilter):
 
 
 class RegexFileFilter(FileFilter, ABC):
-    pattern: Pattern
+    pattern: re.Pattern
     ignore_case: bool
 
     def __init__(self, pattern: str, ignore_case: bool = False):
@@ -70,4 +71,18 @@ class GlobPathFileFilter(GlobFileFilter):
         return fnmatch.fnmatchcase(str(file.relative_path), self.pattern)
 
 
-# TODO: Add evaluation/tag-expression based filters
+class TemplateFileFilter(FileFilter):
+    log: logging.Logger
+    pattern: Pattern
+
+    def __init__(self, pattern: Pattern):
+        self.log = logging.getLogger(__name__)
+        self.pattern = pattern
+
+    def __call__(self, file: File) -> bool:
+        self.log.debug("Rendering filter template for '%s'", file)
+        rendered_expression = self.pattern.process(file.relative_path)
+        self.log.debug("Evaluating filter expression '%s'", rendered_expression)
+        evaluation_result = eval(rendered_expression, {}, {})
+        self.log.debug("Evaluation result '%s'", repr(evaluation_result))
+        return bool(evaluation_result)

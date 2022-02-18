@@ -18,7 +18,7 @@ class Location:
 
 class PatternElement(ABC):
     @abstractmethod
-    def process(self, path: Path) -> str:
+    def process(self, path: Path) -> Any:
         raise NotImplementedError()
 
 
@@ -36,7 +36,18 @@ class Pattern(PatternElement):
     sub_elements: List[PatternElement] = field(default_factory=list)
 
     def process(self, path: Path) -> str:
-        return "".join(map(lambda se: se.process(path), self.sub_elements))
+        return "".join(
+            map(
+                lambda se: Pattern._convert_tag_value(se.process(path)),
+                self.sub_elements,
+            )
+        )
+
+    @staticmethod
+    def _convert_tag_value(tag_value) -> str:
+        if isinstance(tag_value, str):
+            return tag_value
+        return repr(tag_value)
 
 
 @dataclass
@@ -65,7 +76,7 @@ class Tag(ABC):
         pass
 
     @abstractmethod
-    def process(self, path: Path, context: Optional[str]) -> str:
+    def process(self, path: Path, context: Optional[str]) -> Any:
         raise NotImplementedError()
 
 
@@ -77,6 +88,6 @@ class TagInstance(PatternElement):
     tag: Tag
     context: Optional[Pattern] = None
 
-    def process(self, path: Path) -> str:
+    def process(self, path: Path) -> Any:
         context_str = self.context.process(path) if self.context else None
         return self.tag.process(path, context_str)

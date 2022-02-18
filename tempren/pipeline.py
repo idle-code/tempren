@@ -12,6 +12,7 @@ from tempren.file_filters import (
     GlobPathFileFilter,
     RegexFilenameFileFilter,
     RegexPathFileFilter,
+    TemplateFileFilter,
 )
 from tempren.filesystem import FileGatherer, PrintingOnlyRenamer, Renamer
 from tempren.path_generator import File, PathGenerator
@@ -126,6 +127,15 @@ def build_pipeline(config: RuntimeConfiguration, registry: TagRegistry) -> Pipel
                 pipeline.file_filter = RegexFilenameFileFilter(config.filter)
             elif config.filter_type == FilterType.glob:
                 pipeline.file_filter = GlobFilenameFileFilter(config.filter)
+            elif config.filter_type == FilterType.template:
+                try:
+                    bound_filter_pattern = registry.bind(
+                        tree_builder.parse(config.filter)
+                    )
+                    pipeline.file_filter = TemplateFileFilter(bound_filter_pattern)
+                except TagTemplateError as template_error:
+                    template_error.template = config.filter
+                    raise template_error
             else:
                 raise ConfigurationError()
     elif config.mode == OperationMode.path:
@@ -135,6 +145,15 @@ def build_pipeline(config: RuntimeConfiguration, registry: TagRegistry) -> Pipel
                 pipeline.file_filter = RegexPathFileFilter(config.filter)
             elif config.filter_type == FilterType.glob:
                 pipeline.file_filter = GlobPathFileFilter(config.filter)
+            elif config.filter_type == FilterType.template:
+                try:
+                    bound_filter_pattern = registry.bind(
+                        tree_builder.parse(config.filter)
+                    )
+                    pipeline.file_filter = TemplateFileFilter(bound_filter_pattern)
+                except TagTemplateError as template_error:
+                    template_error.template = config.filter
+                    raise template_error
             else:
                 raise ConfigurationError()
     else:
