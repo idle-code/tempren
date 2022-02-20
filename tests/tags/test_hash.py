@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from tempren.plugins.tags.hash import Crc32Tag, Md5Tag, Sha1Tag, Sha224Tag, Sha256Tag
+from tempren.tags.hash import Crc32Tag, Md5Tag, Sha1Tag, Sha224Tag, Sha256Tag
 
 
 class TestMd5Tag:

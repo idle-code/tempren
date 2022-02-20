@@ -72,7 +72,7 @@ class TestGlobFilenameFileFilter:
 
         assert not file_filter(file)
 
-    def test_start_filter_matches_everything(self):
+    def test_star_filter_matches_everything(self):
         file_filter = GlobFilenameFileFilter("*")
         file = File(Path("some/file.name"))
 
@@ -105,7 +105,7 @@ class TestGlobPathFileFilter:
 
         assert not file_filter(file)
 
-    def test_start_filter_matches_everything(self):
+    def test_star_filter_matches_everything(self):
         file_filter = GlobPathFileFilter("*")
         file = File(Path("some/file.name"))
 

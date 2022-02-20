@@ -2,7 +2,7 @@ import logging
 import os
 from enum import Enum
 from pathlib import Path
-from typing import Callable, Iterable, Iterator, Optional
+from typing import Callable, Iterable, Optional
 
 from pydantic import BaseModel
 
@@ -99,10 +99,10 @@ class Pipeline:
 
 def build_tag_registry() -> TagRegistry:
     log.info("Building tag registry")
-    import tempren.plugins.tags
+    import tempren.tags
 
     registry = TagRegistry()
-    registry.register_tags_in_package(tempren.plugins.tags)
+    registry.register_tags_in_package(tempren.tags)
     return registry
 
 

@@ -2,7 +2,14 @@ from pathlib import Path
 
 import pytest
 
-from tempren.plugins.tags.core import *
+from tempren.tags.core import (
+    BasenameTag,
+    CountTag,
+    DirnameTag,
+    ExtTag,
+    FilenameTag,
+    SanitizeTag,
+)
 
 
 class TestCountTag:

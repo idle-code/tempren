@@ -1,6 +1,17 @@
+from pathlib import Path
+
 import pytest
 
-from tempren.plugins.tags.text import *
+from tempren.tags.text import (
+    CollapseTag,
+    LowerTag,
+    RemoveTag,
+    ReplaceTag,
+    StripTag,
+    TrimTag,
+    UnidecodeTag,
+    UpperTag,
+)
 
 
 class TestUnidecodeTag:
