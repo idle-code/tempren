@@ -7,15 +7,10 @@
 TODO: Summary
 
 ## Features
-- [ ] Batch file renaming
-- [ ] Metadata extraction
-  - [ ] ID3 tags
-  - [ ] EXIF
-- [x] Template language for specifying name generation patterns
-- [ ] Metadata-based filtering
-- [ ] Metadata-based sorting
-- [ ] Can operate on whole path (to move files and create directories)
-- [ ] Plugins infrastructure
+- Template-based filename/path generation
+- Configurable file selection
+- Metadata-based sorting
+
 
 ## Install
 ```console
@@ -25,18 +20,38 @@ $ poetry install
 
 ## TODO: Usage
 
+**Note: When playing with tempren make sure to use `--dry-run` (`-d`) flag so that the actual files are not accidentally changed.**
+
+Tempren have two main modes of operation: **name** and **path**.
+
+In the **name** mode, the template is used for filename generation only.
+This is useful if you want to operate on files specified on the command line or in a single directory.
+
+With **path** mode, the template generates a whole path (relative to the input directory).
+This way you can sort files into dynamically generated catalogues.
+### Template syntax
+
+### Name mode
+### Path mode
+### Filtering
+#### Glob filtering
+#### Regex filtering
+#### Template filtering
+#### Case sensitiveness and filter inversion
+### Sorting
+
+### Testing
+Tests are written with a help of [pytest](https://docs.pytest.org/en/latest/). Just enter repository root and run:
+```console
+$ pytest
+```
+
 ## Contribution
-Code convetions are enforced via [pre-commit](https://pre-commit.com/). It is listed in development depenencies so if you are able to run tests - you should have it installed too.
+Code conventions are enforced via [pre-commit](https://pre-commit.com/). It is listed in development depenencies so if you are able to run tests - you should have it installed too.
 To get started you will still need to install git hooks via:
 ```console
 $ pre-commit install
 ```
 Now every time you invoke `git commit` a series of cleanup scripts will run and modify your patchset.
 
-### TODO: Testing
-Tests are written with a help of [pytest](https://docs.pytest.org/en/latest/). Just enter repository root and run:
-```console
-$ pytest
-```
-
-### TODO: Plugin development
+### TODO: Tags development
