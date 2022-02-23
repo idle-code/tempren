@@ -51,8 +51,11 @@ class _ListAvailableTags(argparse.Action):
     ):
         registry = build_tag_registry()
         print("Available tags:")
-        for tag_name, factory in registry.tag_registry.items():
-            print(f"  {tag_name}\t{factory.__doc__}")
+        all_tags = sorted(registry.tag_registry.items())
+        max_name_length = max([len(tag_name) for tag_name, factory in all_tags])
+        log.debug("Longest tag name: %d", max_name_length)
+        for tag_name, factory in all_tags:
+            print(f"  {tag_name.ljust(max_name_length)} - {factory.__doc__}")
         parser.exit()
 
 

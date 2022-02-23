@@ -134,3 +134,23 @@ class TrimTag(Tag):
         if self.left:
             return context[-self.length :]
         return context[: self.length]
+
+
+class CapitalizeTag(Tag):
+    """Capitalizes first letter of the context"""
+
+    require_context = True
+
+    def process(self, path: Path, context: Optional[str]) -> str:
+        assert context is not None
+        return context.capitalize()
+
+
+class TitleTag(Tag):
+    """Capitalizes first letter of every word in the context"""
+
+    require_context = True
+
+    def process(self, path: Path, context: Optional[str]) -> str:
+        assert context is not None
+        return context.title()

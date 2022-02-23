@@ -30,7 +30,7 @@ This is useful if you want to operate on files specified on the command line or 
 With **path** mode, the template generates a whole path (relative to the input directory).
 This way you can sort files into dynamically generated catalogues.
 ### Template syntax
-
+#### Pipe list sugar
 ### Name mode
 ### Path mode
 ### Filtering

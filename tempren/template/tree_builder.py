@@ -335,6 +335,12 @@ class TagRegistry:
             raise UnknownTagError(tag_placeholder.location, tag_placeholder.tag_name)
 
         try:
+            self.log.debug(
+                "Creating tag '%s' with arguments: %s %s",
+                tag_placeholder.tag_name,
+                tag_placeholder.args,
+                tag_placeholder.kwargs,
+            )
             tag = tag_factory(*tag_placeholder.args, **tag_placeholder.kwargs)
         except Exception as exc:
             raise ConfigurationError(
