@@ -3,11 +3,13 @@ from pathlib import Path
 import pytest
 
 from tempren.tags.text import (
+    CapitalizeTag,
     CollapseTag,
     LowerTag,
     RemoveTag,
     ReplaceTag,
     StripTag,
+    TitleTag,
     TrimTag,
     UnidecodeTag,
     UpperTag,
@@ -253,3 +255,36 @@ class TestTrimTag:
 
         with pytest.raises(AssertionError):
             tag.configure(-2)
+
+
+class TestCapitalizeTag:
+    def test_capitalize(self, nonexistent_path: Path):
+        tag = CapitalizeTag()
+
+        result = tag.process(nonexistent_path, "Foo Bar SPAM")
+
+        assert result == "Foo bar spam"
+
+    @pytest.mark.skip("May not be necessary")
+    def test_capitalize_with_whitespace(self, nonexistent_path: Path):
+        tag = CapitalizeTag()
+
+        result = tag.process(nonexistent_path, "  foo bar SPAM ")
+
+        assert result == "  Foo bar spam "
+
+
+class TestTitleTag:
+    def test_title(self, nonexistent_path: Path):
+        tag = TitleTag()
+
+        result = tag.process(nonexistent_path, "foo bar SPAM")
+
+        assert result == "Foo Bar Spam"
+
+    def test_title_with_whitespace(self, nonexistent_path: Path):
+        tag = TitleTag()
+
+        result = tag.process(nonexistent_path, "  foo bar SPAM ")
+
+        assert result == "  Foo Bar Spam "
