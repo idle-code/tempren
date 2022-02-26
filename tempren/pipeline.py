@@ -14,6 +14,7 @@ from tempren.file_filters import (
     RegexPathFileFilter,
     TemplateFileFilter,
 )
+from tempren.file_sorters import TemplateFileSorter
 from tempren.filesystem import FileGatherer, PrintingOnlyRenamer, Renamer
 from tempren.path_generator import File, PathGenerator
 from tempren.template.path_generators import (
@@ -41,6 +42,8 @@ class RuntimeConfiguration(BaseModel):
     filter_type: FilterType = FilterType.regex  # TODO: update
     filter_invert: bool = False
     filter: Optional[str] = None
+    sort_invert: bool = False
+    sort: Optional[str] = None
     mode: OperationMode = OperationMode.name
     template: str
     input_directory: Path
@@ -161,6 +164,16 @@ def build_pipeline(config: RuntimeConfiguration, registry: TagRegistry) -> Pipel
 
     if config.filter_invert and config.filter is not None:
         pipeline.file_filter = FileFilterInverter(pipeline.file_filter)
+
+    if config.sort:
+        try:
+            bound_sorter_pattern = registry.bind(tree_builder.parse(config.sort))
+            pipeline.sorter = TemplateFileSorter(
+                bound_sorter_pattern, config.sort_invert
+            )
+        except TagTemplateError as template_error:
+            template_error.template = config.sort
+            raise template_error
 
     if config.dry_run:
         pipeline.renamer = PrintingOnlyRenamer()

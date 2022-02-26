@@ -71,6 +71,7 @@ class TagPlaceholder(PatternElement):
 class Tag(ABC):
     require_context: Optional[bool] = None
     # TODO: works_on_directories: bool = False
+    # TODO: stateful: bool = False  # Warn if no sorting expression is specified
 
     def configure(self, *args, **kwargs):
         pass

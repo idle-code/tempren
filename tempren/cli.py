@@ -129,6 +129,19 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         help="Filter expression used to include individual files",
     )
     parser.add_argument(
+        "-si",
+        "--sort-invert",
+        action="store_true",
+        help="Reverse sorting order",
+    )
+    parser.add_argument(
+        "-s",
+        "--sort",
+        type=str,
+        metavar="SORT_EXPRESSION",
+        help="Sorting expression used to order file list before processing",
+    )
+    parser.add_argument(
         "template",
         type=str,
         help="Template used to generate new filename/path",
