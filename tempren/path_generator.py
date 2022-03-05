@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from pathlib import Path
 
 
+@dataclass
 class File:
     relative_path: Path
     # TODO: add handle for caching open(path) handle - typing.IO?
