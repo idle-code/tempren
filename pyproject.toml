@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "tempren"
 version = "2.0.0"
-description = "Template-based Renaming utility"
+description = "Template-based renaming utility"
 authors = ["Pawel Zukowski <p.z.idlecode@gmail.com>"]
 
 [tool.poetry.dependencies]
@@ -26,7 +26,7 @@ use_parentheses = true
 line_length = 88
 
 [tool.pytest.ini_options]
-addopts = "--cov-report term-missing --cov=tempren"
+addopts = "--cov-report=xml --cov-report=term-missing --cov=tempren"
 testpaths = ["tests"]
 
 [build-system]
