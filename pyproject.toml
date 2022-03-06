@@ -1,8 +1,21 @@
 [tool.poetry]
 name = "tempren"
-version = "2.0.0"
+version = "0.1.4"
 description = "Template-based renaming utility"
 authors = ["Pawel Zukowski <p.z.idlecode@gmail.com>"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "Intended Audience :: System Administrators",
+    "Natural Language :: English",
+    "Operating System :: POSIX",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: Unix",
+    "Programming Language :: Python :: 3",
+    "Topic :: System :: Filesystems",
+    "Topic :: Utilities"
+]
 
 [tool.poetry.dependencies]
 python = "^3.7"
@@ -17,6 +30,9 @@ pytest-cov = "^2.10.1"
 coverage = "^5.3"
 pre-commit = "^2.7.1"
 mypy = "^0.790"
+
+[tool.poetry.scripts]
+tempren = "tempren.cli:main"
 
 [tool.isort]
 multi_line_output = 3

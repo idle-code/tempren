@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import argparse
 import logging
+import sys
 from argparse import ArgumentParser, Namespace
 from pathlib import Path
 from textwrap import indent
@@ -187,7 +188,8 @@ def render_template_error(template_error: TagTemplateError, indent_size: int = 4
     print(f"Template error at {template_error.location}: {template_error.message}")
 
 
-def main(argv: List[str]) -> int:
+def main() -> int:
+    argv = sys.argv[1:]
     try:
         log.debug("Parsing configuration")
         config = process_cli_configuration(argv)
@@ -211,6 +213,4 @@ def main(argv: List[str]) -> int:
 
 
 if __name__ == "__main__":
-    import sys
-
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(main())
