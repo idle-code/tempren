@@ -1,8 +1,12 @@
 [tool.poetry]
 name = "tempren"
-version = "0.1.4"
+version = "0.1.5"
 description = "Template-based renaming utility"
-authors = ["Pawel Zukowski <p.z.idlecode@gmail.com>"]
+readme = "README.md"
+license = "GPL-3.0-or-later"
+authors = ["Paweł Żukowski <p.z.idlecode@gmail.com>"]
+homepage = "https://github.com/idle-code/tempren"
+keywords = ["batch-renaming", "cli", "filename"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Environment :: Console",
@@ -46,5 +50,5 @@ addopts = "--cov-report=xml --cov-report=term-missing --cov=tempren"
 testpaths = ["tests"]
 
 [build-system]
-requires = ["poetry>=0.12"]
+requires = ["poetry_core>=1.0.0"]
 build-backend = "poetry.masonry.api"
