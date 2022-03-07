@@ -60,6 +60,33 @@ class _ListAvailableTags(argparse.Action):
         parser.exit()
 
 
+class _ShowVersion(argparse.Action):
+    def __call__(
+        self,
+        parser: ArgumentParser,
+        namespace: Namespace,
+        values: Union[Text, Sequence[Any], None],
+        option_string: Optional[Text] = None,
+    ):
+        print(self.find_package_version())
+        parser.exit()
+
+    @staticmethod
+    def find_package_version() -> str:
+        package_name = "tempren"
+        try:
+            import importlib.metadata
+
+            return importlib.metadata.version(package_name)
+        except ModuleNotFoundError:
+            try:
+                import importlib_metadata
+
+                return importlib_metadata.version(package_name)
+            except ModuleNotFoundError:
+                return "0.0.0"
+
+
 class _IncreaseLogVerbosity(argparse.Action):
     def __call__(
         self,
@@ -153,10 +180,17 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         help="Input directory where files to rename are stored",
     )
     parser.add_argument(
+        "-l",
         "--list-tags",
         action=_ListAvailableTags,
         nargs=0,
         help="List available tags and exit",
+    )
+    parser.add_argument(
+        "--version",
+        action=_ShowVersion,
+        nargs=0,
+        help="Print version and exit",
     )
 
     # Upon parsing error, ArgumentParser tries to exit via calling `sys.exit()`.
