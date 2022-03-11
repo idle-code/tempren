@@ -34,3 +34,8 @@ def test_data_dir(tmp_path_factory: TempPathFactory) -> Callable[[str], Path]:
 @pytest.fixture
 def text_data_dir(test_data_dir: Callable[[str], Path]) -> Path:
     yield from test_data_dir("text")
+
+
+@pytest.fixture
+def tags_data_dir(test_data_dir: Callable[[str], Path]) -> Path:
+    yield from test_data_dir("tags")

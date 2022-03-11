@@ -14,7 +14,7 @@ from tempren.pipeline import (
     build_pipeline,
     build_tag_registry,
 )
-from tempren.template.tree_builder import TagTemplateError, TagTemplateSyntaxError
+from tempren.template.tree_builder import TagTemplateError
 
 log = logging.getLogger("CLI")
 logging.basicConfig(level=logging.WARNING)
@@ -52,11 +52,19 @@ class _ListAvailableTags(argparse.Action):
     ):
         registry = build_tag_registry()
         print("Available tags:")
-        all_tags = sorted(registry.tag_registry.items())
-        max_name_length = max([len(tag_name) for tag_name, factory in all_tags])
-        log.debug("Longest tag name: %d", max_name_length)
-        for tag_name, factory in all_tags:
-            print(f"  {tag_name.ljust(max_name_length)} - {factory.__doc__}")
+        for category_name in sorted(registry.category_map.keys()):
+            print(f"{category_name.capitalize()}:")
+            category = registry.category_map[category_name]
+
+            all_category_tags = sorted(category.tag_map.items())
+            max_name_length = max(
+                [len(tag_name) for tag_name, factory in all_category_tags]
+            )
+            log.debug(
+                "Longest tag name: %d in category %s", max_name_length, category_name
+            )
+            for tag_name, factory in all_category_tags:
+                print(f"  {tag_name.ljust(max_name_length)} - {factory.__doc__}")
         parser.exit()
 
 

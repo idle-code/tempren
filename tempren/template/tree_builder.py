@@ -2,7 +2,7 @@ import importlib
 import inspect
 import logging
 import pkgutil
-from functools import reduce, wraps
+from functools import reduce
 from logging import Logger
 from types import ModuleType
 from typing import Dict, List, Mapping, Optional, Tuple, Type, Union
@@ -277,14 +277,18 @@ class ConfigurationError(TagError):
         super().__init__(location, tag_name, f"Configuration not valid: {message}")
 
 
-class TagRegistry:
+class TagCategory:
     log: Logger
     _tag_class_suffix = "Tag"
-    tag_registry: Dict[str, TagFactory]
+    name: str
+    description: Optional[str] = None
+    tag_map: Dict[str, TagFactory]
 
-    def __init__(self):
+    def __init__(self, name: str, description: Optional[str] = None):
         self.log = logging.getLogger(__name__)
-        self.tag_registry = {}
+        self.tag_map = {}
+        self.name = name
+        self.description = description
 
     def register_tag(self, tag_class: Type[Tag], tag_name: Optional[str] = None):
         if not tag_name:
@@ -308,12 +312,36 @@ class TagRegistry:
     def register_tag_factory(self, tag_factory: TagFactory, tag_name: str):
         if not tag_name:
             raise ValueError(f"Invalid tag name '{tag_name}'")
-        if tag_name in self.tag_registry:
+        if tag_name in self.tag_map:
             raise ValueError(f"Factory for tag '{tag_name}' already registered")
-        self.tag_registry[tag_name] = tag_factory
+        self.tag_map[tag_name] = tag_factory
 
     def find_tag_factory(self, tag_name: str) -> Optional[TagFactory]:
-        return self.tag_registry.get(tag_name, None)
+        return self.tag_map.get(tag_name, None)
+
+
+class TagRegistry:
+    log: Logger
+    _tag_class_suffix = "Tag"
+    category_map: Dict[str, TagCategory]
+
+    def __init__(self):
+        self.log = logging.getLogger(__name__)
+        self.category_map = {}
+
+    @property
+    def categories(self) -> List[str]:
+        return sorted(self.category_map.keys())
+
+    def find_category(self, category_name: str) -> Optional[TagCategory]:
+        return self.category_map.get(category_name, None)
+
+    def find_tag_factory(self, tag_name: str) -> Optional[TagFactory]:
+        for category in self.category_map.values():
+            tag_factory = category.find_tag_factory(tag_name)
+            if tag_factory:
+                return tag_factory
+        return None
 
     def bind(self, pattern: Pattern) -> Pattern:
         return self._rewrite_pattern(pattern)
@@ -363,6 +391,15 @@ class TagRegistry:
 
         return TagInstance(tag, context=context_pattern)
 
+    def register_category(
+        self, category_name: str, description: Optional[str] = None
+    ) -> TagCategory:
+        if self.find_category(category_name) is not None:
+            raise ValueError(f"Category '{category_name}' already registered")
+        new_category = TagCategory(category_name)
+        self.category_map[category_name] = new_category
+        return new_category
+
     def register_tags_in_module(self, module: ModuleType):
         self.log.debug(f"Discovering tags in module '{module}'")
 
@@ -371,8 +408,15 @@ class TagRegistry:
                 return False
             return klass.__name__.endswith(self._tag_class_suffix)
 
+        if module.__package__:
+            category_name = module.__name__[len(module.__package__) + 1 :]
+        else:
+            category_name = module.__name__
+
+        # TODO: do not register empty modules
+        module_category = self.register_category(category_name)
         for _, tag_class in inspect.getmembers(module, is_tag_class):
-            self.register_tag(tag_class)
+            module_category.register_tag(tag_class)
 
     def register_tags_in_package(self, package):
         self.log.debug(f"Discovering tags in package '{package}'")
