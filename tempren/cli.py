@@ -214,7 +214,17 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
 
     args = parser.parse_args(argv)
 
-    configuration = RuntimeConfiguration(**vars(args))
+    configuration = RuntimeConfiguration(
+        template=args.template,
+        input_directory=args.input_directory,
+        dry_run=args.dry_run,
+        filter_type=args.filter_type,
+        filter_invert=args.filter_invert,
+        filter=args.filter,
+        sort_invert=args.sort_invert,
+        sort=args.sort,
+        mode=args.mode,
+    )
 
     return configuration
 

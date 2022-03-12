@@ -1,10 +1,9 @@
 import logging
 import os
+from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from typing import Callable, Iterable, Optional
-
-from pydantic import BaseModel
 
 from tempren.file_filters import (
     FileFilterInverter,
@@ -37,16 +36,17 @@ class OperationMode(Enum):
     path = "path"
 
 
-class RuntimeConfiguration(BaseModel):
+@dataclass
+class RuntimeConfiguration:
+    template: str
+    input_directory: Path
     dry_run: bool = False
-    filter_type: FilterType = FilterType.regex  # TODO: update
+    filter_type: FilterType = FilterType.glob  # TODO: update
     filter_invert: bool = False
     filter: Optional[str] = None
     sort_invert: bool = False
     sort: Optional[str] = None
     mode: OperationMode = OperationMode.name
-    template: str
-    input_directory: Path
 
 
 class ConfigurationError(Exception):

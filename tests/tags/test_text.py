@@ -34,7 +34,7 @@ class TestUnidecodeTag:
     def test_emoticons_are_removed(self, nonexistent_path: Path):
         tag = UnidecodeTag()
 
-        result = tag.process(nonexistent_path, "Some|😴☯😸❓🆗🇨🇭🌌|emotes")
+        result = tag.process(nonexistent_path, "Some|😴☯😸❓🇨🇭🌌|emotes")
 
         assert result == "Some||emotes"
 
