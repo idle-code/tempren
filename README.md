@@ -1,24 +1,25 @@
-# [WIP] Tempren - template-based batch file renaming utility
-[![Build Status](https://travis-ci.org/idle-code/tempren.svg?branch=develop)](https://travis-ci.org/idle-code/tempren)
+# Tempren - template-based batch file renaming utility
+
+![run-tests](https://github.com/idle-code/tempren/actions/workflows/run-tests.yml/badge.svg)
 [![codecov](https://codecov.io/gh/idle-code/tempren/branch/develop/graph/badge.svg?token=1CR2PX6GYB)](https://codecov.io/gh/idle-code/tempren)
+
+`tempren` is a powerful batch file renamer that can generate filenames based on flexible template expressions.
+It can create new or process existing filenames or sort files into directories based on their attributes (metadata).
 
 **This project is currently in a Work-In-Progress stage so if you are looking for working solution... keep looking.**
 
-TODO: Summary
-
 ## Features
 - Template-based filename/path generation
-- Configurable file selection
+- Configurable file selection (filtering)
 - Metadata-based sorting
 
 
 ## Install
 ```console
-$ pip install [--user] poetry
-$ poetry install
+$ pip install [--user] tempren
 ```
 
-## TODO: Usage
+## Usage
 
 **Note: When playing with tempren make sure to use `--dry-run` (`-d`) flag so that the actual files are not accidentally changed.**
 
@@ -30,15 +31,56 @@ This is useful if you want to operate on files specified on the command line or 
 With **path** mode, the template generates a whole path (relative to the input directory).
 This way you can sort files into dynamically generated catalogues.
 ### Template syntax
+#### Tag configuration
 #### Pipe list sugar
 ### Name mode
 ### Path mode
 ### Filtering
+To select which files should be considered for processing one can use filtering predicate.
+
+There are three types of a filtering expressions supported (by `-ft`, `--filter-type` option):
+- `glob` (default) - filename globbing expression, eg: `*.mp3`, `IMG_????.jpg`
+- `regex` - python-flavored regex, eg: `.*\.jpe?g`
+- `template` - tag-template evaluated python expression, eg: `%Size() > 10*1024`
+
+Sometimes it might be easier to specify filter for files which should **not** be included.
+To negate/invert filtering expression you can use `-fi`, `--filter-invert` flag.
+
 #### Glob filtering
 #### Regex filtering
 #### Template filtering
 #### Case sensitiveness and filter inversion
 ### Sorting
+
+## Contribution
+Minimal Python version supported is 3.7, so you should make sure that you have it installed on your system.
+You can use `pyenv` for that:
+```console
+$ pyenv shell 3.7.10
+```
+
+After cloning repo you should install `poetry` as it is used for dependency resolution and packaging:
+```console
+$ pip install [--user] poetry
+```
+
+It is good to use separate virtualenv for development, `poetry` can spawn one:
+```console
+# Make sure that your `python --version` is at least 3.7 before this step
+$ poetry shell
+```
+
+Now you can install required packages (specified in `pyproject.toml`) via:
+```console
+$ poetry install
+```
+
+Code conventions are enforced via [pre-commit](https://pre-commit.com/). It is listed in development depenencies so if you are able to run tests - you should have it installed too.
+To get started you will still need to install git hooks:
+```console
+$ pre-commit install
+```
+Now every time you invoke `git commit` a series of cleanup scripts will run and modify your patchset.
 
 ### Testing
 Tests are written with a help of [pytest](https://docs.pytest.org/en/latest/). Just enter repository root and run:
@@ -46,12 +88,9 @@ Tests are written with a help of [pytest](https://docs.pytest.org/en/latest/). J
 $ pytest
 ```
 
-## Contribution
-Code conventions are enforced via [pre-commit](https://pre-commit.com/). It is listed in development depenencies so if you are able to run tests - you should have it installed too.
-To get started you will still need to install git hooks via:
+`mypy` on the other hand takes care of static analysis - it can catch early type-related errors:
 ```console
-$ pre-commit install
+$ mypy
 ```
-Now every time you invoke `git commit` a series of cleanup scripts will run and modify your patchset.
 
 ### TODO: Tags development
