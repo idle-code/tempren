@@ -110,7 +110,9 @@ class _IncreaseLogVerbosity(argparse.Action):
 # CHECK: use pydantic-cli for argument parsing
 def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
     parser = argparse.ArgumentParser(
-        prog="tempren", description="Template-based renaming utility."
+        prog="tempren",
+        description="Template-based renaming utility.",
+        fromfile_prefix_chars="@",
     )
     parser.add_argument(
         "-d",
