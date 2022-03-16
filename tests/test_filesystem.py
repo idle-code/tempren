@@ -206,6 +206,18 @@ class TestFileMover:
         assert nonexistent_dir.exists()
         assert dst.exists()
 
+    def test_create_already_existing_directory(self, nested_data_dir: Path):
+        src = nested_data_dir / "level-1.file"
+        existing_dir = nested_data_dir / "second"
+        dst = existing_dir / "level-1.file"
+        assert existing_dir.exists()
+        mover = FileMover()
+
+        mover(src, dst)
+
+        assert existing_dir.exists()
+        assert dst.exists()
+
 
 class TestPrintingOnlyRenamer:
     def test_same_name(self, text_data_dir: Path):
