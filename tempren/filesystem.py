@@ -1,5 +1,6 @@
 import logging
 import os
+import shutil
 from pathlib import Path
 from typing import Generator
 
@@ -25,7 +26,7 @@ class FileGatherer:
         )
 
 
-class Renamer:
+class FileRenamer:
     def __call__(self, source_path: Path, destination_path: Path):
         if source_path == destination_path:
             return
@@ -34,6 +35,18 @@ class Renamer:
                 f"Destination file already exists: {destination_path}"
             )
         os.rename(source_path, destination_path)
+
+
+class FileMover:
+    def __call__(self, source_path: Path, destination_path: Path):
+        if source_path == destination_path:
+            return
+        if destination_path.exists():
+            raise FileExistsError(
+                f"Destination file already exists: {destination_path}"
+            )
+        destination_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.move(str(source_path), destination_path)
 
 
 class PrintingOnlyRenamer:

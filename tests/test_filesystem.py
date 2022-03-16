@@ -4,7 +4,7 @@ from typing import Callable
 
 import pytest
 
-from tempren.filesystem import FileGatherer, PrintingOnlyRenamer, Renamer
+from tempren.filesystem import FileGatherer, FileMover, FileRenamer, PrintingOnlyRenamer
 
 
 @pytest.fixture
@@ -57,10 +57,10 @@ class TestFileGatherer:
         assert files == test_files
 
 
-class TestRenamer:
+class TestFileRenamer:
     def test_same_name(self, text_data_dir: Path):
         src = text_data_dir / "hello.txt"
-        renamer = Renamer()
+        renamer = FileRenamer()
 
         renamer(src, src)
 
@@ -71,7 +71,7 @@ class TestRenamer:
         assert src.is_file()
         dst = text_data_dir / "hi.txt"
         assert not dst.exists()
-        renamer = Renamer()
+        renamer = FileRenamer()
 
         renamer(src, dst)
 
@@ -82,7 +82,7 @@ class TestRenamer:
         assert src.is_dir()
         dst = nested_data_dir / "fourth"
         assert not dst.exists()
-        renamer = Renamer()
+        renamer = FileRenamer()
 
         renamer(src, dst)
 
@@ -92,7 +92,7 @@ class TestRenamer:
         src = text_data_dir / "goodbye.txt"
         assert not src.exists()
         dst = text_data_dir / "bye.md"
-        renamer = Renamer()
+        renamer = FileRenamer()
 
         with pytest.raises(FileNotFoundError) as exc:
             renamer(src, dst)
@@ -102,7 +102,7 @@ class TestRenamer:
         src = text_data_dir / "hello.txt"
         dst = text_data_dir / "markdown.md"
         assert dst.exists()
-        renamer = Renamer()
+        renamer = FileRenamer()
 
         with pytest.raises(FileExistsError) as exc:
             renamer(src, dst)
@@ -112,11 +112,99 @@ class TestRenamer:
         src = nested_data_dir / "level-1.file"
         dst = nested_data_dir / "first"
         assert dst.is_dir()
-        renamer = Renamer()
+        renamer = FileRenamer()
 
         with pytest.raises(FileExistsError) as exc:
             renamer(src, dst)
         assert exc.match(str(dst))
+
+
+class TestFileMover:
+    def test_same_name(self, text_data_dir: Path):
+        src = text_data_dir / "hello.txt"
+        mover = FileMover()
+
+        mover(src, src)
+
+        assert src.exists()
+
+    def test_simple_file(self, text_data_dir: Path):
+        src = text_data_dir / "hello.txt"
+        assert src.is_file()
+        dst = text_data_dir / "hi.txt"
+        assert not dst.exists()
+        mover = FileMover()
+
+        mover(src, dst)
+
+        assert dst.exists()
+        assert not src.exists()
+
+    def test_source_doesnt_exists(self, text_data_dir: Path):
+        src = text_data_dir / "goodbye.txt"
+        assert not src.exists()
+        dst = text_data_dir / "bye.md"
+        mover = FileMover()
+
+        with pytest.raises(FileNotFoundError) as exc:
+            mover(src, dst)
+        assert exc.match(str(src))
+
+    def test_destination_file_exists(self, text_data_dir: Path):
+        src = text_data_dir / "hello.txt"
+        dst = text_data_dir / "markdown.md"
+        assert dst.exists()
+        mover = FileMover()
+
+        with pytest.raises(FileExistsError) as exc:
+            mover(src, dst)
+        assert exc.match(str(dst))
+
+    def test_destination_is_directory(self, nested_data_dir: Path):
+        src = nested_data_dir / "level-1.file"
+        dst = nested_data_dir / "first"
+        assert dst.is_dir()
+        mover = FileMover()
+
+        with pytest.raises(FileExistsError) as exc:
+            mover(src, dst)
+        assert exc.match(str(dst))
+
+    def test_create_single_directory(self, nested_data_dir: Path):
+        src = nested_data_dir / "level-1.file"
+        nonexistent_dir = nested_data_dir / "nonexistent"
+        dst = nonexistent_dir / "level-1.file"
+        assert not nonexistent_dir.exists()
+        mover = FileMover()
+
+        mover(src, dst)
+
+        assert nonexistent_dir.exists()
+        assert dst.exists()
+
+    def test_create_path_part_directory(self, nested_data_dir: Path):
+        src = nested_data_dir / "second" / "level-2.file"
+        nonexistent_dir = nested_data_dir / "second" / "nonexistent"
+        dst = nonexistent_dir / "level-2.file"
+        assert not nonexistent_dir.exists()
+        mover = FileMover()
+
+        mover(src, dst)
+
+        assert nonexistent_dir.exists()
+        assert dst.exists()
+
+    def test_create_multiple_directories(self, nested_data_dir: Path):
+        src = nested_data_dir / "level-1.file"
+        nonexistent_dir = nested_data_dir / "a" / "b" / "c"
+        dst = nonexistent_dir / "level-1.file"
+        assert not nonexistent_dir.exists()
+        mover = FileMover()
+
+        mover(src, dst)
+
+        assert nonexistent_dir.exists()
+        assert dst.exists()
 
 
 class TestPrintingOnlyRenamer:

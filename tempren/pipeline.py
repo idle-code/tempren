@@ -14,7 +14,7 @@ from tempren.file_filters import (
     TemplateFileFilter,
 )
 from tempren.file_sorters import TemplateFileSorter
-from tempren.filesystem import FileGatherer, PrintingOnlyRenamer, Renamer
+from tempren.filesystem import FileGatherer, FileMover, FileRenamer, PrintingOnlyRenamer
 from tempren.path_generator import File, PathGenerator
 from tempren.template.path_generators import (
     TemplateNameGenerator,
@@ -178,5 +178,10 @@ def build_pipeline(config: RuntimeConfiguration, registry: TagRegistry) -> Pipel
     if config.dry_run:
         pipeline.renamer = PrintingOnlyRenamer()
     else:
-        pipeline.renamer = Renamer()
+        if config.mode == OperationMode.name:
+            pipeline.renamer = FileRenamer()
+        elif config.mode == OperationMode.path:
+            pipeline.renamer = FileMover()
+        else:
+            raise ConfigurationError()
     return pipeline
