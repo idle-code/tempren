@@ -81,6 +81,13 @@ To negate/invert filtering expression you can use `-fi`, `--filter-invert` flag.
 #### Regex filtering
 #### Template filtering
 #### Case sensitiveness and filter inversion
+TODO: **IMPLEMENT**
+
+By default, `glob` and `regex` filtering expressions will match case-sensitive.
+To allow case-insensitive matching use `-fc`, `--filter-case` flag.
+
+`template` filter isn't affected by case-sensitivity flag - you will have to make use of `str.upper` or `str.lower` python methods to simulate that.
+
 ### Sorting
 
 ## Contribution

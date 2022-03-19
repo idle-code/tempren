@@ -4,7 +4,13 @@ from typing import Callable
 
 import pytest
 
-from tempren.filesystem import FileGatherer, FileMover, FileRenamer, PrintingOnlyRenamer
+from tempren.filesystem import (
+    FileGatherer,
+    FileMover,
+    FileRenamer,
+    InvalidDestinationError,
+    PrintingOnlyRenamer,
+)
 
 
 @pytest.fixture
@@ -115,6 +121,16 @@ class TestFileRenamer:
         renamer = FileRenamer()
 
         with pytest.raises(FileExistsError) as exc:
+            renamer(src, dst)
+        assert exc.match(str(dst))
+
+    def test_destination_contains_subdirectory(self, text_data_dir: Path):
+        # CHECK: maybe this directory check could be done on the pipeline level?
+        src = text_data_dir / "hello.txt"
+        dst = text_data_dir / "first" / "markdown.md"
+        renamer = FileRenamer()
+
+        with pytest.raises(InvalidDestinationError) as exc:
             renamer(src, dst)
         assert exc.match(str(dst))
 

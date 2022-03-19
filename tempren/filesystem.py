@@ -5,6 +5,10 @@ from pathlib import Path
 from typing import Generator
 
 
+class InvalidDestinationError(Exception):
+    pass
+
+
 class FileGatherer:
     start_directory: Path
     glob_pattern: str  # CHECK: shouldn't globbing be done at the filtering stage?
@@ -33,6 +37,10 @@ class FileRenamer:
         if destination_path.exists():
             raise FileExistsError(
                 f"Destination file already exists: {destination_path}"
+            )
+        if source_path.parent != destination_path.parent:
+            raise InvalidDestinationError(
+                f"Destination path {destination_path} targets different directory"
             )
         os.rename(source_path, destination_path)
 
