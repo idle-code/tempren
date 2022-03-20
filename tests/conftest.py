@@ -32,10 +32,20 @@ def test_data_dir(tmp_path_factory: TempPathFactory) -> Callable[[str], Path]:
 
 
 @pytest.fixture
-def text_data_dir(test_data_dir: Callable[[str], Path]) -> Path:
-    yield from test_data_dir("text")
+def hidden_data_dir(test_data_dir: Callable[[str], Path]) -> Path:
+    yield from test_data_dir("hidden")
+
+
+@pytest.fixture
+def nested_data_dir(test_data_dir: Callable[[str], Path]) -> Path:
+    yield from test_data_dir("nested")
 
 
 @pytest.fixture
 def tags_data_dir(test_data_dir: Callable[[str], Path]) -> Path:
     yield from test_data_dir("tags")
+
+
+@pytest.fixture
+def text_data_dir(test_data_dir: Callable[[str], Path]) -> Path:
+    yield from test_data_dir("text")

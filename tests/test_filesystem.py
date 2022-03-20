@@ -13,16 +13,6 @@ from tempren.filesystem import (
 )
 
 
-@pytest.fixture
-def nested_data_dir(test_data_dir: Callable[[str], Path]) -> Path:
-    yield from test_data_dir("nested")
-
-
-@pytest.fixture
-def hidden_data_dir(test_data_dir: Callable[[str], Path]) -> Path:
-    yield from test_data_dir("hidden")
-
-
 class TestFileGatherer:
     def test_empty_directory(self, tmp_path: Path):
         gatherer = FileGatherer(tmp_path)
