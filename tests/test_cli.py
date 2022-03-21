@@ -3,7 +3,7 @@ import re
 import sys
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Optional, Tuple
 
 import pytest
 
@@ -88,50 +88,122 @@ class TestVariousFlags:
     def test_version(self, text_data_dir: Path):
         stdout, stderr, error_code = run_tempren("--version")
 
+        assert error_code == 0
         assert re.match(r"\d\.\d\.\d", stdout)
+
+    @pytest.mark.parametrize("option", ["-d", "--dry-run"])
+    def test_dry_run(self, text_data_dir: Path, option: str):
+        stdout, stderr, error_code = run_tempren(
+            option, "%Upper(){%Filename()}", text_data_dir
+        )
+
         assert error_code == 0
-
-    def test_dry_run_long(self, text_data_dir: Path):
-        run_tempren("--dry-run", "%Upper(){%Filename()}", text_data_dir)
-
         assert (text_data_dir / "hello.txt").exists()
         assert not (text_data_dir / "MARKDOWN.MD").exists()
+        assert "HELLO.TXT" in stdout
+        assert "MARKDOWN.MD" in stdout
 
-    def test_dry_run_short(self, text_data_dir: Path):
-        run_tempren("-d", "%Upper(){%Filename()}", text_data_dir)
+    @pytest.mark.parametrize("option", ["-h", "--help"])
+    def test_help(self, text_data_dir: Path, option: str):
+        stdout, stderr, error_code = run_tempren(option)
 
-        assert (text_data_dir / "hello.txt").exists()
-        assert not (text_data_dir / "MARKDOWN.MD").exists()
-
-    def test_help_long(self, text_data_dir: Path):
-        stdout, stderr, error_code = run_tempren("--help")
-
-        assert "usage: tempren" in stdout
         assert error_code == 0
-
-    def test_help_short(self, text_data_dir: Path):
-        stdout, stderr, error_code = run_tempren("-h")
-
         assert "usage: tempren" in stdout
-        assert error_code == 0
 
     def test_missing_template_and_input(self, text_data_dir: Path):
         stdout, stderr, error_code = run_tempren()
 
-        assert "usage: tempren" in stderr
         assert error_code == 2
+        assert "usage: tempren" in stderr
 
     def test_missing_input(self, text_data_dir: Path):
         stdout, stderr, error_code = run_tempren("%Upper(){%Filename()}")
 
-        assert "usage: tempren" in stderr
         assert error_code == 2
+        assert "usage: tempren" in stderr
 
-    def test_default_mode(self, text_data_dir: Path):
-        stdout, stderr, error_code = run_tempren("%Upper(){%Filename()}", text_data_dir)
+    @pytest.mark.parametrize("option", ["-n", "--name", None])
+    def test_name_mode(self, text_data_dir: Path, option: str):
+        if option is None:
+            stdout, stderr, error_code = run_tempren(
+                "%Upper(){%Filename()}", text_data_dir
+            )
+        else:
+            stdout, stderr, error_code = run_tempren(
+                option, "%Upper(){%Filename()}", text_data_dir
+            )
 
         assert error_code == 0
         assert (text_data_dir / "HELLO.TXT").exists()
         assert (text_data_dir / "MARKDOWN.MD").exists()
         assert not (text_data_dir / "hello.txt").exists()
         assert not (text_data_dir / "markdown.md").exists()
+
+
+class TestFilterFlags:
+    @pytest.mark.parametrize("expression_flag", ["-f", "--filter"])
+    def test_default_glob_filter(
+        self,
+        text_data_dir: Path,
+        expression_flag: str,
+    ):
+        stdout, stderr, error_code = run_tempren(
+            expression_flag,
+            "*.txt",
+            "%Upper(){%Filename()}",
+            text_data_dir,
+        )
+
+        assert error_code == 0
+        assert (text_data_dir / "HELLO.TXT").exists()
+        assert not (text_data_dir / "MARKDOWN.MD").exists()
+        assert not (text_data_dir / "hello.txt").exists()
+        assert (text_data_dir / "markdown.md").exists()
+
+    @pytest.mark.parametrize("type_flag", ["-ft", "--filter-type"])
+    @pytest.mark.parametrize(
+        "filter_type,expression",
+        [("glob", "*.txt"), ("regex", r".*\.txt$"), ("template", "%Size() < 50")],
+    )
+    @pytest.mark.parametrize("expression_flag", ["-f", "--filter"])
+    @pytest.mark.parametrize("invert_flag", ["-fi", "--filter-invert", None])
+    def test_filters(
+        self,
+        text_data_dir: Path,
+        type_flag: str,
+        filter_type: str,
+        expression: str,
+        expression_flag: str,
+        invert_flag: Optional[str],
+    ):
+        if invert_flag is None:
+            stdout, stderr, error_code = run_tempren(
+                type_flag,
+                filter_type,
+                expression_flag,
+                expression,
+                "%Upper(){%Filename()}",
+                text_data_dir,
+            )
+        else:
+            stdout, stderr, error_code = run_tempren(
+                type_flag,
+                filter_type,
+                invert_flag,
+                expression_flag,
+                expression,
+                "%Upper(){%Filename()}",
+                text_data_dir,
+            )
+
+        assert error_code == 0
+        if invert_flag is None:
+            assert (text_data_dir / "HELLO.TXT").exists()
+            assert not (text_data_dir / "MARKDOWN.MD").exists()
+            assert not (text_data_dir / "hello.txt").exists()
+            assert (text_data_dir / "markdown.md").exists()
+        else:
+            assert not (text_data_dir / "HELLO.TXT").exists()
+            assert (text_data_dir / "MARKDOWN.MD").exists()
+            assert (text_data_dir / "hello.txt").exists()
+            assert not (text_data_dir / "markdown.md").exists()

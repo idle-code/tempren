@@ -150,7 +150,7 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         "-ft",
         "--filter-type",
         choices=[e.value for e in FilterType],
-        default=FilterType.regex,  # TODO: change to template when available
+        default=FilterType.glob.value,
         help="Type of filter expression",
     )
     parser.add_argument(
@@ -218,7 +218,7 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         template=args.template,
         input_directory=args.input_directory,
         dry_run=args.dry_run,
-        filter_type=args.filter_type,
+        filter_type=FilterType[args.filter_type],
         filter_invert=args.filter_invert,
         filter=args.filter,
         sort_invert=args.sort_invert,
