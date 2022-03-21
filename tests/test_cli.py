@@ -207,3 +207,35 @@ class TestFilterFlags:
             assert (text_data_dir / "MARKDOWN.MD").exists()
             assert (text_data_dir / "hello.txt").exists()
             assert not (text_data_dir / "markdown.md").exists()
+
+
+class TestSortingFlags:
+    @pytest.mark.parametrize("expression_flag", ["-s", "--sort"])
+    def test_sorting(self, text_data_dir: Path, expression_flag: str):
+        stdout, stderr, error_code = run_tempren(
+            expression_flag,
+            "%Size()",
+            "%Count().%Ext()",
+            text_data_dir,
+        )
+
+        assert error_code == 0
+        assert (text_data_dir / "0.txt").exists()
+        assert (text_data_dir / "1.md").exists()
+
+    @pytest.mark.parametrize("invert_flag", ["-si", "--sort-invert"])
+    @pytest.mark.parametrize("expression_flag", ["-s", "--sort"])
+    def test_inverted_sorting(
+        self, text_data_dir: Path, invert_flag: str, expression_flag: str
+    ):
+        stdout, stderr, error_code = run_tempren(
+            invert_flag,
+            expression_flag,
+            "%Size()",
+            "%Count().%Ext()",
+            text_data_dir,
+        )
+
+        assert error_code == 0
+        assert (text_data_dir / "0.md").exists()
+        assert (text_data_dir / "1.txt").exists()
