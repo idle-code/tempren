@@ -85,16 +85,16 @@ def run_tempren(*args) -> Tuple[str, str, int]:
 
 
 class TestVariousFlags:
-    def test_version(self, text_data_dir: Path):
+    def test_version(self):
         stdout, stderr, error_code = run_tempren("--version")
 
         assert error_code == 0
         assert re.match(r"\d\.\d\.\d", stdout)
 
-    @pytest.mark.parametrize("option", ["-d", "--dry-run"])
-    def test_dry_run(self, text_data_dir: Path, option: str):
+    @pytest.mark.parametrize("flag", ["-d", "--dry-run"])
+    def test_dry_run(self, text_data_dir: Path, flag: str):
         stdout, stderr, error_code = run_tempren(
-            option, "%Upper(){%Filename()}", text_data_dir
+            flag, "%Upper(){%Filename()}", text_data_dir
         )
 
         assert error_code == 0
@@ -103,24 +103,34 @@ class TestVariousFlags:
         assert "HELLO.TXT" in stdout
         assert "MARKDOWN.MD" in stdout
 
-    @pytest.mark.parametrize("option", ["-h", "--help"])
-    def test_help(self, text_data_dir: Path, option: str):
-        stdout, stderr, error_code = run_tempren(option)
+    @pytest.mark.parametrize("flag", ["-h", "--help"])
+    def test_help(self, flag: str):
+        stdout, stderr, error_code = run_tempren(flag)
 
         assert error_code == 0
         assert "usage: tempren" in stdout
 
-    def test_missing_template_and_input(self, text_data_dir: Path):
+    def test_missing_template_and_input(self):
         stdout, stderr, error_code = run_tempren()
 
         assert error_code == 2
         assert "usage: tempren" in stderr
 
-    def test_missing_input(self, text_data_dir: Path):
+    def test_missing_input(self):
         stdout, stderr, error_code = run_tempren("%Upper(){%Filename()}")
 
         assert error_code == 2
         assert "usage: tempren" in stderr
+
+    @pytest.mark.parametrize("flag", ["-l", "--list-tags"])
+    def test_list_tags(self, flag: str):
+        stdout, stderr, error_code = run_tempren(flag)
+        stdout_lines = list(map(str.strip, stdout.split("\n")))
+
+        assert error_code == 0
+        assert any(filter(lambda line: re.match(r"^Count", line), stdout_lines))
+        assert any(filter(lambda line: re.match(r"^Upper", line), stdout_lines))
+        assert any(filter(lambda line: re.match(r"^Filename", line), stdout_lines))
 
     @pytest.mark.parametrize("option", ["-n", "--name", None])
     def test_name_mode(self, text_data_dir: Path, option: str):
