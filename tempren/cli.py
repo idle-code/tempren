@@ -27,13 +27,6 @@ def existing_directory(val: str) -> Path:
     return directory_path
 
 
-def existing_file(val: str) -> Path:
-    file_path = Path(val)
-    if not file_path.is_file():
-        raise argparse.ArgumentTypeError(f"File '{val}' doesn't exists")
-    return file_path
-
-
 class SystemExitError(Exception):
     status: int
 
@@ -230,16 +223,22 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
 
 
 def render_template_error(template_error: TagTemplateError, indent_size: int = 4):
-    assert template_error.location.line == 1, "Nu support for multiline templates yet"
+    assert template_error.location.line == 1, "No support for multiline templates yet"
     if template_error.location.length == 1:
         underline = " " * template_error.location.column + "^"
     else:
         underline = (
             " " * template_error.location.column + "~" * template_error.location.length
         )
-    print()
-    print(indent("\n".join((template_error.template, underline)), " " * indent_size))
-    print(f"Template error at {template_error.location}: {template_error.message}")
+    print(file=sys.stderr)
+    print(
+        indent("\n".join((template_error.template, underline)), " " * indent_size),
+        file=sys.stderr,
+    )
+    print(
+        f"Template error at {template_error.location}: {template_error.message}",
+        file=sys.stderr,
+    )
 
 
 def main() -> int:

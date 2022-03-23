@@ -7,6 +7,7 @@ from typing import List, Optional, Tuple
 
 import pytest
 
+import tempren.cli
 from tempren.cli import RuntimeConfiguration, SystemExitError, process_cli_configuration
 from tempren.pipeline import OperationMode
 
@@ -20,68 +21,88 @@ valid_name_template = "%Count().%Ext()"
 valid_path_template = "%DirName()/%Count().%Ext()"
 
 
-class TestCliParser:
-    def test_require_template(self):
-        with pytest.raises(SystemExitError) as exc:
-            process_cli()
+# class TestCliParser:
+#     def test_require_template(self):
+#         with pytest.raises(SystemExitError) as exc:
+#             process_cli()
+#
+#         assert exc.match("arguments are required: template")
+#
+#     def test_nonexistent_input_directory(self, nonexistent_path: Path):
+#         with pytest.raises(SystemExitError) as exc:
+#             process_cli("--name", valid_name_template, nonexistent_path)
+#
+#         assert exc.match("doesn't exists")
+#
+#     def test_require_input_directory(self):
+#         with pytest.raises(SystemExitError) as exc:
+#             process_cli(valid_name_template)
+#
+#         assert exc.match("arguments are required: input_directory")
+#
+#     def test_default_config_name_template(self, text_data_dir: Path):
+#         config = process_cli("--name", valid_name_template, text_data_dir)
+#
+#         assert config.template == valid_name_template
+#         assert config.mode == OperationMode.name
+#         assert config.input_directory == text_data_dir
+#         assert not config.dry_run
+#
+#     def test_default_config_path_template(self, text_data_dir: Path):
+#         config = process_cli("--path", valid_path_template, text_data_dir)
+#
+#         assert config.template == valid_path_template
+#         assert config.mode == OperationMode.path
+#         assert config.input_directory == text_data_dir
+#         assert not config.dry_run
+#
+#     def test_name_and_path_templates_are_mutually_exclusive(self, text_data_dir: Path):
+#         with pytest.raises(SystemExitError) as exc:
+#             process_cli(
+#                 "--name",
+#                 "--path",
+#                 valid_name_template,
+#                 text_data_dir,
+#             )
+#
+#         assert exc.match("not allowed with argument")
 
-        assert exc.match("arguments are required: template")
 
-    def test_nonexistent_input_directory(self, nonexistent_path: Path):
-        with pytest.raises(SystemExitError) as exc:
-            process_cli("--name", valid_name_template, nonexistent_path)
+def run_tempren_process(*args) -> Tuple[str, str, int]:
+    """Run tempren with provided arguments as separate process"""
+    import subprocess
 
-        assert exc.match("doesn't exists")
+    args = list(map(str, args))
+    completed_process = subprocess.run(
+        [tempren.cli.__file__] + args, capture_output=True
+    )
 
-    def test_require_input_directory(self):
-        with pytest.raises(SystemExitError) as exc:
-            process_cli(valid_name_template)
-
-        assert exc.match("arguments are required: input_directory")
-
-    def test_default_config_name_template(self, text_data_dir: Path):
-        config = process_cli("--name", valid_name_template, text_data_dir)
-
-        assert config.template == valid_name_template
-        assert config.mode == OperationMode.name
-        assert config.input_directory == text_data_dir
-        assert not config.dry_run
-
-    def test_default_config_path_template(self, text_data_dir: Path):
-        config = process_cli("--path", valid_path_template, text_data_dir)
-
-        assert config.template == valid_path_template
-        assert config.mode == OperationMode.path
-        assert config.input_directory == text_data_dir
-        assert not config.dry_run
-
-    def test_name_and_path_templates_are_mutually_exclusive(self, text_data_dir: Path):
-        with pytest.raises(SystemExitError) as exc:
-            process_cli(
-                "--name",
-                "--path",
-                valid_name_template,
-                text_data_dir,
-            )
-
-        assert exc.match("not allowed with argument")
+    return (
+        completed_process.stdout.decode("utf-8"),
+        completed_process.stderr.decode("utf-8"),
+        completed_process.returncode,
+    )
 
 
 def run_tempren(*args) -> Tuple[str, str, int]:
-    from tempren.cli import main
+    return run_tempren_process(*args)
 
-    old_sys_argv = sys.argv.copy()
-    sys.argv[1:] = list(map(str, args))
-    try:
-        stdout = io.StringIO()
-        stderr = io.StringIO()
-        with redirect_stdout(stdout):
-            with redirect_stderr(stderr):
-                error_code = main()
-    finally:
-        sys.argv = old_sys_argv
 
-    return stdout.getvalue(), stderr.getvalue(), error_code
+# def run_tempren(*args) -> Tuple[str, str, int]:
+#     """Run tempren's main() function with provided arguments"""
+#     args = list(map(str, args))
+#     old_sys_argv = sys.argv.copy()
+#     sys.argv[1:] = args
+#     try:
+#         stdout = io.StringIO()
+#         stderr = io.StringIO()
+#         with redirect_stdout(stdout):
+#             with redirect_stderr(stderr):
+#                 error_code = tempren.cli.main()
+#     finally:
+#         sys.argv = old_sys_argv
+#
+#     return stdout.getvalue(), stderr.getvalue(), error_code
 
 
 class TestVariousFlags:
@@ -132,33 +153,22 @@ class TestVariousFlags:
         assert any(filter(lambda line: re.match(r"^Upper", line), stdout_lines))
         assert any(filter(lambda line: re.match(r"^Filename", line), stdout_lines))
 
-    @pytest.mark.parametrize("option", ["-n", "--name", None])
-    def test_name_mode(self, text_data_dir: Path, option: str):
-        if option is None:
-            stdout, stderr, error_code = run_tempren(
-                "%Upper(){%Filename()}", text_data_dir
-            )
-        else:
-            stdout, stderr, error_code = run_tempren(
-                option, "%Upper(){%Filename()}", text_data_dir
-            )
+    @pytest.mark.parametrize("flag", ["-v", "--verbose"])
+    def test_verbose_output(self, flag: str):
+        stdout, stderr, error_code = run_tempren_process(flag, "--list-tags")
 
-        assert error_code == 0
-        assert (text_data_dir / "HELLO.TXT").exists()
-        assert (text_data_dir / "MARKDOWN.MD").exists()
-        assert not (text_data_dir / "hello.txt").exists()
-        assert not (text_data_dir / "markdown.md").exists()
+        assert "Building tag registry" in stderr
 
 
+@pytest.mark.parametrize("filter_flag", ["-f", "--filter"])
 class TestFilterFlags:
-    @pytest.mark.parametrize("expression_flag", ["-f", "--filter"])
     def test_default_glob_filter(
         self,
         text_data_dir: Path,
-        expression_flag: str,
+        filter_flag: str,
     ):
         stdout, stderr, error_code = run_tempren(
-            expression_flag,
+            filter_flag,
             "*.txt",
             "%Upper(){%Filename()}",
             text_data_dir,
@@ -175,7 +185,6 @@ class TestFilterFlags:
         "filter_type,expression",
         [("glob", "*.txt"), ("regex", r".*\.txt$"), ("template", "%Size() < 50")],
     )
-    @pytest.mark.parametrize("expression_flag", ["-f", "--filter"])
     @pytest.mark.parametrize("invert_flag", ["-fi", "--filter-invert", None])
     def test_filters(
         self,
@@ -183,14 +192,14 @@ class TestFilterFlags:
         type_flag: str,
         filter_type: str,
         expression: str,
-        expression_flag: str,
+        filter_flag: str,
         invert_flag: Optional[str],
     ):
         if invert_flag is None:
             stdout, stderr, error_code = run_tempren(
                 type_flag,
                 filter_type,
-                expression_flag,
+                filter_flag,
                 expression,
                 "%Upper(){%Filename()}",
                 text_data_dir,
@@ -200,7 +209,7 @@ class TestFilterFlags:
                 type_flag,
                 filter_type,
                 invert_flag,
-                expression_flag,
+                filter_flag,
                 expression,
                 "%Upper(){%Filename()}",
                 text_data_dir,
@@ -218,12 +227,28 @@ class TestFilterFlags:
             assert (text_data_dir / "hello.txt").exists()
             assert not (text_data_dir / "markdown.md").exists()
 
-
-class TestSortingFlags:
-    @pytest.mark.parametrize("expression_flag", ["-s", "--sort"])
-    def test_sorting(self, text_data_dir: Path, expression_flag: str):
+    @pytest.mark.parametrize("filter_expression", ["%UnknownTag()", "%Size"])
+    def test_template_filter_error(
+        self, text_data_dir: Path, filter_flag: str, filter_expression: str
+    ):
         stdout, stderr, error_code = run_tempren(
-            expression_flag,
+            "-ft",
+            "template",
+            filter_flag,
+            filter_expression,
+            "%Count().%Ext()",
+            text_data_dir,
+        )
+
+        assert error_code == 3
+        assert "Template error" in stderr
+
+
+@pytest.mark.parametrize("sort_flag", ["-s", "--sort"])
+class TestSortingFlags:
+    def test_sorting(self, text_data_dir: Path, sort_flag: str):
+        stdout, stderr, error_code = run_tempren(
+            sort_flag,
             "%Size()",
             "%Count().%Ext()",
             text_data_dir,
@@ -234,13 +259,12 @@ class TestSortingFlags:
         assert (text_data_dir / "1.md").exists()
 
     @pytest.mark.parametrize("invert_flag", ["-si", "--sort-invert"])
-    @pytest.mark.parametrize("expression_flag", ["-s", "--sort"])
     def test_inverted_sorting(
-        self, text_data_dir: Path, invert_flag: str, expression_flag: str
+        self, text_data_dir: Path, invert_flag: str, sort_flag: str
     ):
         stdout, stderr, error_code = run_tempren(
             invert_flag,
-            expression_flag,
+            sort_flag,
             "%Size()",
             "%Count().%Ext()",
             text_data_dir,
@@ -249,3 +273,72 @@ class TestSortingFlags:
         assert error_code == 0
         assert (text_data_dir / "0.md").exists()
         assert (text_data_dir / "1.txt").exists()
+
+    @pytest.mark.parametrize("sort_expression", ["%UnknownTag()", "%Size,"])
+    def test_sort_template_error(
+        self, text_data_dir: Path, sort_flag: str, sort_expression: str
+    ):
+        stdout, stderr, error_code = run_tempren(
+            sort_flag,
+            sort_expression,
+            "%Count().%Ext()",
+            text_data_dir,
+        )
+
+        assert error_code == 3
+        assert "Template error" in stderr
+
+
+@pytest.mark.parametrize("name_mode_flag", ["-n", "--name", None])
+class TestNameMode:
+    def test_name_mode(self, text_data_dir: Path, name_mode_flag: str):
+        if name_mode_flag is None:
+            stdout, stderr, error_code = run_tempren(
+                "%Upper(){%Filename()}", text_data_dir
+            )
+        else:
+            stdout, stderr, error_code = run_tempren(
+                name_mode_flag, "%Upper(){%Filename()}", text_data_dir
+            )
+
+        assert error_code == 0
+        assert (text_data_dir / "HELLO.TXT").exists()
+        assert (text_data_dir / "MARKDOWN.MD").exists()
+        assert not (text_data_dir / "hello.txt").exists()
+        assert not (text_data_dir / "markdown.md").exists()
+
+    def test_nonexistent_input(self, nonexistent_path: Path, name_mode_flag: str):
+        if name_mode_flag is None:
+            stdout, stderr, error_code = run_tempren(
+                "%Upper(){%Filename()}", nonexistent_path
+            )
+        else:
+            stdout, stderr, error_code = run_tempren(
+                name_mode_flag, "%Upper(){%Filename()}", nonexistent_path
+            )
+
+        assert error_code != 0
+        assert "doesn't exists" in stderr
+
+    @pytest.mark.parametrize(
+        "name_expression", ["%UnknownTag()", "%MissingArgStart)", "%MissingArgEnd("]
+    )
+    def test_name_template_error(
+        self, text_data_dir: Path, name_mode_flag: str, name_expression: str
+    ):
+        if name_mode_flag is None:
+            stdout, stderr, error_code = run_tempren(name_expression, text_data_dir)
+        else:
+            stdout, stderr, error_code = run_tempren(
+                name_mode_flag, name_expression, text_data_dir
+            )
+
+        assert error_code == 3
+        assert "Template error" in stderr
+
+
+class TestPathMode:
+    pass
+
+
+# TODO: Test for errors

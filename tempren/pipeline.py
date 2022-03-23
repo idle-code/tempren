@@ -63,7 +63,7 @@ class Pipeline:
     def __init__(self):
         self.log = logging.getLogger(__name__)
         self.file_filter: Callable[[File], bool] = lambda file: True
-        self.renamer: Callable[[Path, Path], None] = lambda src, dst: None
+        self.renamer: Callable[[Path, Path], None]
 
     @property
     def input_directory(self) -> Path:
@@ -140,7 +140,7 @@ def build_pipeline(config: RuntimeConfiguration, registry: TagRegistry) -> Pipel
                     template_error.template = config.filter
                     raise template_error
             else:
-                raise ConfigurationError()
+                raise NotImplementedError("Unknown filter type")
     elif config.mode == OperationMode.path:
         pipeline.path_generator = TemplatePathGenerator(bound_pattern)
         if config.filter:
@@ -158,9 +158,9 @@ def build_pipeline(config: RuntimeConfiguration, registry: TagRegistry) -> Pipel
                     template_error.template = config.filter
                     raise template_error
             else:
-                raise ConfigurationError()
+                raise NotImplementedError("Unknown filter type")
     else:
-        raise ConfigurationError()
+        raise NotImplementedError("Unknown operation mode")
 
     if config.filter_invert and config.filter is not None:
         pipeline.file_filter = FileFilterInverter(pipeline.file_filter)
@@ -183,5 +183,5 @@ def build_pipeline(config: RuntimeConfiguration, registry: TagRegistry) -> Pipel
         elif config.mode == OperationMode.path:
             pipeline.renamer = FileMover()
         else:
-            raise ConfigurationError()
+            raise NotImplementedError("Unknown operation mode")
     return pipeline
