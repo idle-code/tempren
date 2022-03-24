@@ -19,7 +19,7 @@ def run_tempren_process(*args) -> Tuple[str, str, int]:
     args = list(map(str, args))
     os.chdir(project_root_path)
     completed_process = subprocess.run(
-        [sys.executable, tempren.cli.__file__] + args,
+        [sys.executable, "-m", "tempren.cli"] + args,
         capture_output=True,
     )
 

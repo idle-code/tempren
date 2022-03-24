@@ -7,14 +7,14 @@ from pathlib import Path
 from textwrap import indent
 from typing import Any, List, NoReturn, Optional, Sequence, Text, Union
 
-from tempren.pipeline import (
+from .pipeline import (
     FilterType,
     OperationMode,
     RuntimeConfiguration,
     build_pipeline,
     build_tag_registry,
 )
-from tempren.template.tree_builder import TagTemplateError
+from .template.tree_builder import TagTemplateError
 
 log = logging.getLogger("CLI")
 logging.basicConfig(level=logging.WARNING)
