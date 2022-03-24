@@ -98,6 +98,7 @@ class _IncreaseLogVerbosity(argparse.Action):
     ):
         root_logger = logging.getLogger()
         root_logger.setLevel(root_logger.level - 10)
+        log.info("Verbosity level set to %d", root_logger.level)
 
 
 # CHECK: use pydantic-cli for argument parsing

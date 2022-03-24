@@ -1,80 +1,26 @@
 import io
+import os
 import re
+import subprocess
 import sys
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import Optional, Tuple
 
 import pytest
 
 import tempren.cli
-from tempren.cli import RuntimeConfiguration, SystemExitError, process_cli_configuration
-from tempren.pipeline import OperationMode
 
-
-def process_cli(*args) -> RuntimeConfiguration:
-    args = list(map(str, args))
-    return process_cli_configuration(args)
-
-
-valid_name_template = "%Count().%Ext()"
-valid_path_template = "%DirName()/%Count().%Ext()"
-
-
-# class TestCliParser:
-#     def test_require_template(self):
-#         with pytest.raises(SystemExitError) as exc:
-#             process_cli()
-#
-#         assert exc.match("arguments are required: template")
-#
-#     def test_nonexistent_input_directory(self, nonexistent_path: Path):
-#         with pytest.raises(SystemExitError) as exc:
-#             process_cli("--name", valid_name_template, nonexistent_path)
-#
-#         assert exc.match("doesn't exists")
-#
-#     def test_require_input_directory(self):
-#         with pytest.raises(SystemExitError) as exc:
-#             process_cli(valid_name_template)
-#
-#         assert exc.match("arguments are required: input_directory")
-#
-#     def test_default_config_name_template(self, text_data_dir: Path):
-#         config = process_cli("--name", valid_name_template, text_data_dir)
-#
-#         assert config.template == valid_name_template
-#         assert config.mode == OperationMode.name
-#         assert config.input_directory == text_data_dir
-#         assert not config.dry_run
-#
-#     def test_default_config_path_template(self, text_data_dir: Path):
-#         config = process_cli("--path", valid_path_template, text_data_dir)
-#
-#         assert config.template == valid_path_template
-#         assert config.mode == OperationMode.path
-#         assert config.input_directory == text_data_dir
-#         assert not config.dry_run
-#
-#     def test_name_and_path_templates_are_mutually_exclusive(self, text_data_dir: Path):
-#         with pytest.raises(SystemExitError) as exc:
-#             process_cli(
-#                 "--name",
-#                 "--path",
-#                 valid_name_template,
-#                 text_data_dir,
-#             )
-#
-#         assert exc.match("not allowed with argument")
+project_root_path = os.getcwd()
 
 
 def run_tempren_process(*args) -> Tuple[str, str, int]:
     """Run tempren with provided arguments as separate process"""
-    import subprocess
-
     args = list(map(str, args))
+    os.chdir(project_root_path)
     completed_process = subprocess.run(
-        [tempren.cli.__file__] + args, capture_output=True
+        [sys.executable, tempren.cli.__file__] + args,
+        capture_output=True,
     )
 
     return (
@@ -85,24 +31,20 @@ def run_tempren_process(*args) -> Tuple[str, str, int]:
 
 
 def run_tempren(*args) -> Tuple[str, str, int]:
-    return run_tempren_process(*args)
+    """Run tempren's main() function with provided arguments"""
+    args = list(map(str, args))
+    old_sys_argv = sys.argv.copy()
+    sys.argv[1:] = args
+    try:
+        stdout = io.StringIO()
+        stderr = io.StringIO()
+        with redirect_stdout(stdout):
+            with redirect_stderr(stderr):
+                error_code = tempren.cli.main()
+    finally:
+        sys.argv = old_sys_argv
 
-
-# def run_tempren(*args) -> Tuple[str, str, int]:
-#     """Run tempren's main() function with provided arguments"""
-#     args = list(map(str, args))
-#     old_sys_argv = sys.argv.copy()
-#     sys.argv[1:] = args
-#     try:
-#         stdout = io.StringIO()
-#         stderr = io.StringIO()
-#         with redirect_stdout(stdout):
-#             with redirect_stderr(stderr):
-#                 error_code = tempren.cli.main()
-#     finally:
-#         sys.argv = old_sys_argv
-#
-#     return stdout.getvalue(), stderr.getvalue(), error_code
+    return stdout.getvalue(), stderr.getvalue(), error_code
 
 
 class TestVariousFlags:
@@ -157,7 +99,7 @@ class TestVariousFlags:
     def test_verbose_output(self, flag: str):
         stdout, stderr, error_code = run_tempren_process(flag, "--list-tags")
 
-        assert "Building tag registry" in stderr
+        assert "Verbosity level set to" in stderr
 
 
 @pytest.mark.parametrize("filter_flag", ["-f", "--filter"])
