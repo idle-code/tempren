@@ -306,6 +306,3 @@ class TestPathMode:
 
         assert error_code == 3
         assert "Template error" in stderr
-
-
-# TODO: Test for errors

@@ -140,22 +140,22 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         const=OperationMode.path,
         help="Use template to generate relative file path",
     )
-    filter_type = parser.add_mutually_exclusive_group()
-    filter_type.add_argument(
+    filter_mode = parser.add_mutually_exclusive_group()
+    filter_mode.add_argument(
         "-fg",
         "--filter-glob",
         type=str,
         metavar="filter_expression",
         help="Globbing filter expression to include individual files",
     )
-    filter_type.add_argument(
+    filter_mode.add_argument(
         "-fr",
         "--filter-regex",
         type=str,
         metavar="filter_expression",
         help="Regex filter expression to include individual files",
     )
-    filter_type.add_argument(
+    filter_mode.add_argument(
         "-ft",
         "--filter-template",
         type=str,
