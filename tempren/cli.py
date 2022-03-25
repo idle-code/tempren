@@ -140,12 +140,27 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         const=OperationMode.path,
         help="Use template to generate relative file path",
     )
-    parser.add_argument(
+    filter_type = parser.add_mutually_exclusive_group()
+    filter_type.add_argument(
+        "-fg",
+        "--filter-glob",
+        type=str,
+        metavar="filter_expression",
+        help="Globbing filter expression to include individual files",
+    )
+    filter_type.add_argument(
+        "-fr",
+        "--filter-regex",
+        type=str,
+        metavar="filter_expression",
+        help="Regex filter expression to include individual files",
+    )
+    filter_type.add_argument(
         "-ft",
-        "--filter-type",
-        choices=[e.value for e in FilterType],
-        default=FilterType.glob.value,
-        help="Type of filter expression",
+        "--filter-template",
+        type=str,
+        metavar="filter_expression",
+        help="Tag template filter expression to include individual files",
     )
     parser.add_argument(
         "-fi",
@@ -153,12 +168,13 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         action="store_true",
         help="Invert (negate) filter expression result",
     )
+
     parser.add_argument(
-        "-f",
-        "--filter",
+        "-s",
+        "--sort",
         type=str,
-        metavar="FILTER_EXPRESSION",
-        help="Filter expression used to include individual files",
+        metavar="sort_expression",
+        help="Sorting expression used to order file list before processing",
     )
     parser.add_argument(
         "-si",
@@ -166,13 +182,7 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         action="store_true",
         help="Reverse sorting order",
     )
-    parser.add_argument(
-        "-s",
-        "--sort",
-        type=str,
-        metavar="SORT_EXPRESSION",
-        help="Sorting expression used to order file list before processing",
-    )
+
     parser.add_argument(
         "template",
         type=str,
@@ -208,13 +218,26 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
 
     args = parser.parse_args(argv)
 
+    if args.filter_glob:
+        filter_type = FilterType.glob
+        filter_expression = args.filter_glob
+    elif args.filter_regex:
+        filter_type = FilterType.regex
+        filter_expression = args.filter_regex
+    elif args.filter_template:
+        filter_type = FilterType.template
+        filter_expression = args.filter_template
+    else:
+        filter_type = FilterType.glob
+        filter_expression = None
+
     configuration = RuntimeConfiguration(
         template=args.template,
         input_directory=args.input_directory,
         dry_run=args.dry_run,
-        filter_type=FilterType[args.filter_type],
+        filter_type=filter_type,
+        filter=filter_expression,
         filter_invert=args.filter_invert,
-        filter=args.filter,
         sort_invert=args.sort_invert,
         sort=args.sort,
         mode=args.mode,

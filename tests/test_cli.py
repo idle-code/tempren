@@ -102,61 +102,48 @@ class TestVariousFlags:
         assert "Verbosity level set to" in stderr
 
 
-@pytest.mark.parametrize("filter_flag", ["-f", "--filter"])
+@pytest.mark.parametrize("invert_flag", ["-fi", "--filter-invert", None])
 class TestFilterFlags:
-    def test_default_glob_filter(
-        self,
-        text_data_dir: Path,
-        filter_flag: str,
+    @pytest.mark.parametrize("flag", ["-fg", "--filter-glob"])
+    def test_glob_filter(
+        self, flag: str, invert_flag: Optional[str], text_data_dir: Path
     ):
-        stdout, stderr, error_code = run_tempren(
-            filter_flag,
-            "*.txt",
-            "%Upper(){%Filename()}",
-            text_data_dir,
-        )
+        self._test_filter_type(flag, "*.txt", invert_flag, text_data_dir)
 
-        assert error_code == 0
-        assert (text_data_dir / "HELLO.TXT").exists()
-        assert not (text_data_dir / "MARKDOWN.MD").exists()
-        assert not (text_data_dir / "hello.txt").exists()
-        assert (text_data_dir / "markdown.md").exists()
+    @pytest.mark.parametrize("flag", ["-fr", "--filter-regex"])
+    def test_regex_filter(
+        self, flag: str, invert_flag: Optional[str], text_data_dir: Path
+    ):
+        self._test_filter_type(flag, r".*\.txt$", invert_flag, text_data_dir)
 
-    @pytest.mark.parametrize("type_flag", ["-ft", "--filter-type"])
-    @pytest.mark.parametrize(
-        "filter_type,expression",
-        [("glob", "*.txt"), ("regex", r".*\.txt$"), ("template", "%Size() < 50")],
-    )
-    @pytest.mark.parametrize("invert_flag", ["-fi", "--filter-invert", None])
-    def test_filters(
+    @pytest.mark.parametrize("flag", ["-ft", "--filter-template"])
+    def test_template_filter(
+        self, flag: str, invert_flag: Optional[str], text_data_dir: Path
+    ):
+        self._test_filter_type(flag, "%Size() < 50", invert_flag, text_data_dir)
+
+    def _test_filter_type(
         self,
-        text_data_dir: Path,
-        type_flag: str,
-        filter_type: str,
+        flag: str,
         expression: str,
-        filter_flag: str,
         invert_flag: Optional[str],
+        text_data_dir: Path,
     ):
         if invert_flag is None:
             stdout, stderr, error_code = run_tempren(
-                type_flag,
-                filter_type,
-                filter_flag,
+                flag,
                 expression,
                 "%Upper(){%Filename()}",
                 text_data_dir,
             )
         else:
             stdout, stderr, error_code = run_tempren(
-                type_flag,
-                filter_type,
-                invert_flag,
-                filter_flag,
+                flag,
                 expression,
+                invert_flag,
                 "%Upper(){%Filename()}",
                 text_data_dir,
             )
-
         assert error_code == 0
         if invert_flag is None:
             assert (text_data_dir / "HELLO.TXT").exists()
@@ -171,16 +158,23 @@ class TestFilterFlags:
 
     @pytest.mark.parametrize("filter_expression", ["%UnknownTag()", "%Size"])
     def test_template_filter_error(
-        self, text_data_dir: Path, filter_flag: str, filter_expression: str
+        self, filter_expression: str, invert_flag: Optional[str], text_data_dir: Path
     ):
-        stdout, stderr, error_code = run_tempren(
-            "-ft",
-            "template",
-            filter_flag,
-            filter_expression,
-            "%Count().%Ext()",
-            text_data_dir,
-        )
+        if invert_flag is None:
+            stdout, stderr, error_code = run_tempren(
+                "--filter-template",
+                filter_expression,
+                "%Count().%Ext()",
+                text_data_dir,
+            )
+        else:
+            stdout, stderr, error_code = run_tempren(
+                "--filter-template",
+                filter_expression,
+                invert_flag,
+                "%Count().%Ext()",
+                text_data_dir,
+            )
 
         assert error_code == 3
         assert "Template error" in stderr
