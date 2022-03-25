@@ -279,8 +279,39 @@ class TestNameMode:
         assert "Template error" in stderr
 
 
+@pytest.mark.parametrize("path_mode_flag", ["-p", "--path"])
 class TestPathMode:
-    pass
+    def test_path_mode(self, text_data_dir: Path, path_mode_flag: str):
+        stdout, stderr, error_code = run_tempren(
+            path_mode_flag, "%Upper(){%Ext()}/%Filename()", text_data_dir
+        )
+
+        assert error_code == 0
+        assert not (text_data_dir / "hello.txt").exists()
+        assert not (text_data_dir / "markdown.md").exists()
+        assert (text_data_dir / "TXT" / "hello.txt").exists()
+        assert (text_data_dir / "MD" / "markdown.md").exists()
+
+    def test_nonexistent_input(self, nonexistent_path: Path, path_mode_flag: str):
+        stdout, stderr, error_code = run_tempren(
+            path_mode_flag, "%Upper(){%Filename()}", nonexistent_path
+        )
+
+        assert error_code != 0
+        assert "doesn't exists" in stderr
+
+    @pytest.mark.parametrize(
+        "path_expression", ["%UnknownTag()", "%MissingArgStart)", "%MissingArgEnd("]
+    )
+    def test_path_template_error(
+        self, text_data_dir: Path, path_mode_flag: str, path_expression: str
+    ):
+        stdout, stderr, error_code = run_tempren(
+            path_mode_flag, path_expression, text_data_dir
+        )
+
+        assert error_code == 3
+        assert "Template error" in stderr
 
 
 # TODO: Test for errors
