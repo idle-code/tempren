@@ -101,6 +101,20 @@ class TestVariousFlags:
 
         assert "Verbosity level set to" in stderr
 
+    @pytest.mark.parametrize("flag", ["-h", "--help"])
+    def test_help_nonexistent_tag_documentation(self, flag: str):
+        stdout, stderr, error_code = run_tempren_process(flag, "NonExistent")
+
+        assert error_code == 1
+        assert "Could not find tag with 'NonExistent' name" in stderr
+
+    @pytest.mark.parametrize("flag", ["-h", "--help"])
+    def test_help_tag_documentation(self, flag: str):
+        stdout, stderr, error_code = run_tempren_process(flag, "Filename")
+
+        assert error_code == 0
+        assert "Count" in stdout
+
 
 @pytest.mark.parametrize("invert_flag", ["-fi", "--filter-invert", None])
 class TestFilterFlags:

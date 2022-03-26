@@ -61,6 +61,26 @@ class _ListAvailableTags(argparse.Action):
         parser.exit()
 
 
+class _ShowHelp(argparse.Action):
+    def __call__(
+        self,
+        parser: ArgumentParser,
+        namespace: Namespace,
+        values: Union[str, Sequence[Any], None],
+        option_string: Optional[Text] = None,
+    ):
+        if values is None:
+            parser.print_help()
+        else:
+            tag_name = values
+            registry = build_tag_registry()
+            tag_factory = registry.find_tag_factory(tag_name)
+            if tag_factory is None:
+                parser.exit(1, f"Could not find tag with '{tag_name}' name")
+            # TODO: print tag documentation (signature + long description)
+        parser.exit()
+
+
 class _ShowVersion(argparse.Action):
     def __call__(
         self,
@@ -105,8 +125,9 @@ class _IncreaseLogVerbosity(argparse.Action):
 def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
     parser = argparse.ArgumentParser(
         prog="tempren",
-        description="Template-based renaming utility.",
+        description="Template-based renaming utility",
         fromfile_prefix_chars="@",
+        add_help=False,
     )
     parser.add_argument(
         "-d",
@@ -122,7 +143,8 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         help="Increase logging verbosity",
     )
 
-    operation_mode = parser.add_mutually_exclusive_group()
+    operation_modes_group = parser.add_argument_group("operation modes")
+    operation_mode = operation_modes_group.add_mutually_exclusive_group()
     # TODO: generate modes based on OperationMode
     operation_mode.add_argument(
         "-n",
@@ -142,7 +164,8 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         help="Use template to generate relative file path",
     )
 
-    filter_mode = parser.add_mutually_exclusive_group()
+    filtering_group = parser.add_argument_group("filtering")
+    filter_mode = filtering_group.add_mutually_exclusive_group()
     filter_mode.add_argument(
         "-fg",
         "--filter-glob",
@@ -164,21 +187,22 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         metavar="filter_expression",
         help="Tag template filter expression to include individual files",
     )
-    parser.add_argument(
+    filtering_group.add_argument(
         "-fi",
         "--filter-invert",
         action="store_true",
         help="Invert (negate) filter expression result",
     )
 
-    parser.add_argument(
+    sorting_group = parser.add_argument_group("sorting")
+    sorting_group.add_argument(
         "-s",
         "--sort",
         type=str,
         metavar="sort_expression",
         help="Sorting expression used to order file list before processing",
     )
-    parser.add_argument(
+    sorting_group.add_argument(
         "-si",
         "--sort-invert",
         action="store_true",
@@ -201,6 +225,15 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         action=_ListAvailableTags,
         nargs=0,
         help="List available tags and exit",
+    )
+    parser.add_argument(
+        "-h",
+        "--help",
+        action=_ShowHelp,
+        type=str,
+        nargs="?",
+        metavar="tag_name",
+        help="Show help message or tag documentation and exit",
     )
     parser.add_argument(
         "--version",
