@@ -121,6 +121,7 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         nargs=0,
         help="Increase logging verbosity",
     )
+
     operation_mode = parser.add_mutually_exclusive_group()
     # TODO: generate modes based on OperationMode
     operation_mode.add_argument(
@@ -140,6 +141,7 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         const=OperationMode.path,
         help="Use template to generate relative file path",
     )
+
     filter_mode = parser.add_mutually_exclusive_group()
     filter_mode.add_argument(
         "-fg",
