@@ -110,10 +110,19 @@ class TestVariousFlags:
 
     @pytest.mark.parametrize("flag", ["-h", "--help"])
     def test_help_tag_documentation(self, flag: str):
-        stdout, stderr, error_code = run_tempren_process(flag, "Filename")
+        stdout, stderr, error_code = run_tempren_process(flag, "Count")
 
         assert error_code == 0
-        assert "Count" in stdout
+        assert "Count(start" in stdout
+        assert "start - " in stdout
+        assert "Generates sequential numbers" in stdout
+
+    @pytest.mark.parametrize("flag", ["-h", "--help"])
+    def test_help_tag_documentation_long_description(self, flag: str):
+        stdout, stderr, error_code = run_tempren_process(flag, "Dirname")
+
+        assert error_code == 0
+        assert "If context is present" in stdout
 
 
 @pytest.mark.parametrize("invert_flag", ["-fi", "--filter-invert", None])

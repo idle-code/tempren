@@ -20,6 +20,7 @@ from .tree_elements import (
     RawText,
     Tag,
     TagFactory,
+    TagFactoryFromClass,
     TagInstance,
     TagPlaceholder,
 )
@@ -279,7 +280,7 @@ class ConfigurationError(TagError):
 
 class TagCategory:
     log: Logger
-    _tag_class_suffix = "Tag"
+
     name: str
     description: Optional[str] = None
     tag_map: Dict[str, TagFactory]
@@ -291,27 +292,17 @@ class TagCategory:
         self.description = description
 
     def register_tag(self, tag_class: Type[Tag], tag_name: Optional[str] = None):
-        if not tag_name:
-            tag_class_name = tag_class.__name__
-            if tag_class_name.endswith(self._tag_class_suffix):
-                tag_name = tag_class_name[: -len(self._tag_class_suffix)]
-            else:
-                raise ValueError(
-                    f"Could not determine tag name from tag class: {tag_class_name}"
-                )
-
-        def _simple_tag_factory(*args, **kwargs):
-            tag = tag_class()
-            tag.configure(*args, **kwargs)
-            return tag
-
-        _simple_tag_factory.__doc__ = tag_class.__doc__
+        _simple_tag_factory = TagFactoryFromClass(tag_class, tag_name)
         self.log.debug(f"Registering class {tag_class} as {tag_name} tag")
         self.register_tag_factory(_simple_tag_factory, tag_name)
 
-    def register_tag_factory(self, tag_factory: TagFactory, tag_name: str):
+    def register_tag_factory(
+        self, tag_factory: TagFactory, tag_name: Optional[str] = None
+    ):
+        if tag_name is None:
+            tag_name = tag_factory.tag_name
         if not tag_name:
-            raise ValueError(f"Invalid tag name '{tag_name}'")
+            raise ValueError(f"Invalid tag name '{repr(tag_name)}'")
         if tag_name in self.tag_map:
             raise ValueError(f"Factory for tag '{tag_name}' already registered")
         self.tag_map[tag_name] = tag_factory

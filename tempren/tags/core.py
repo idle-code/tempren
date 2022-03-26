@@ -15,6 +15,11 @@ class CountTag(Tag):
     width: int
 
     def configure(self, start: int = 0, step: int = 1, width: int = 0):  # type: ignore
+        """
+        :param start: first element of generated sequence
+        :param step: step added to previous element on each invocation
+        :param width: number of characters taken by the number (will be zero-filled)
+        """
         if start < 0:
             raise ValueError("start have to be greater or equal 0")
         self.counter = start
@@ -43,7 +48,7 @@ class ExtTag(Tag):
 
 
 class BasenameTag(Tag):
-    """Renders processed file name without extension"""
+    """Renders processed file name without extension (suffix)"""
 
     require_context = None
 
@@ -54,7 +59,11 @@ class BasenameTag(Tag):
 
 
 class DirnameTag(Tag):
-    """Renders file parent directory path"""
+    """Renders file parent directory path
+
+    If no context is provided, current file path is used to determine the parent directory.
+    If context is present, it is parsed as a path to extract the parent directory.
+    """
 
     require_context = None
 

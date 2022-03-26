@@ -12,7 +12,13 @@ from tempren.template.tree_builder import (
     TagRegistry,
     UnknownTagError,
 )
-from tempren.template.tree_elements import Pattern, RawText, Tag, TagInstance
+from tempren.template.tree_elements import (
+    Pattern,
+    RawText,
+    Tag,
+    TagFactoryFromClass,
+    TagInstance,
+)
 
 from .mocks import MockTag
 from .test_tree_builder import parse
@@ -59,9 +65,7 @@ class TestTagCategory:
 
     def test_register_tag_factory__empty_name(self):
         category = TagCategory("TestCategory")
-
-        def tag_factory(*args, **kwargs):
-            pass
+        tag_factory = TagFactoryFromClass(MockTag)
 
         with pytest.raises(ValueError) as exc:
             category.register_tag_factory(tag_factory, "")

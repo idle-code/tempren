@@ -27,6 +27,7 @@ antlr4-python3-runtime = "^4.9.2"
 Unidecode = "^1.2.0"
 pathvalidate = "^2.4.1"
 mutagen = "^1.45.1"
+docstring-parser = "^0.13"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.1"

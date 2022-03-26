@@ -57,7 +57,9 @@ class _ListAvailableTags(argparse.Action):
                 "Longest tag name: %d in category %s", max_name_length, category_name
             )
             for tag_name, factory in all_category_tags:
-                print(f"  {tag_name.ljust(max_name_length)} - {factory.__doc__}")
+                print(
+                    f"  {tag_name.ljust(max_name_length)} - {factory.short_description}"
+                )
         parser.exit()
 
 
@@ -72,12 +74,18 @@ class _ShowHelp(argparse.Action):
         if values is None:
             parser.print_help()
         else:
-            tag_name = values
+            tag_name = str(values)
             registry = build_tag_registry()
             tag_factory = registry.find_tag_factory(tag_name)
             if tag_factory is None:
                 parser.exit(1, f"Could not find tag with '{tag_name}' name")
-            # TODO: print tag documentation (signature + long description)
+            print(tag_factory.configuration_signature)
+            print()
+            print(tag_factory.short_description)
+            if tag_factory.long_description:
+                print()
+                print(tag_factory.long_description)
+
         parser.exit()
 
 
