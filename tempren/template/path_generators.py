@@ -12,7 +12,7 @@ class TemplateGenerator(PathGenerator, ABC):
 
     def __init__(self, pattern: Pattern):
         self.log = logging.getLogger(__name__)
-        self.log.info("Creating template generator with template: %s", pattern)
+        self.log.debug("Creating template generator with template: %s", pattern)
         self.pattern = pattern
 
     def reset(self):

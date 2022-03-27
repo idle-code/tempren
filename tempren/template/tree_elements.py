@@ -76,7 +76,7 @@ class Tag(ABC):
     # TODO: works_on_directories: bool = False
     # TODO: stateful: bool = False  # Warn if no sorting expression is specified
 
-    def configure(self, *args, **kwargs):
+    def configure(self):
         pass
 
     @abstractmethod
@@ -147,14 +147,7 @@ class TagFactoryFromClass(TagFactory):
     def _create_arguments_description(self) -> Optional[str]:
         argument_description = []
         for argument in self._parsed_configure_docstring.params:
-            if argument.type_name:
-                argument_description.append(
-                    f"{argument.arg_name}: {argument.type_name} - {argument.description}"
-                )
-            else:
-                argument_description.append(
-                    f"{argument.arg_name} - {argument.description}"
-                )
+            argument_description.append(f"{argument.arg_name} - {argument.description}")
         if not argument_description:
             return None
         return textwrap.indent("\n".join(argument_description), "  ")
@@ -190,7 +183,7 @@ class TagFactoryFromClass(TagFactory):
 
     def __call__(self, *args, **kwargs) -> Tag:
         tag = self._tag_class()
-        tag.configure(*args, **kwargs)
+        tag.configure(*args, **kwargs)  # type: ignore
         return tag
 
 
