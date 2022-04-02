@@ -329,3 +329,12 @@ class TestPathMode:
 
         assert error_code == 3
         assert "Template error" in stderr
+
+
+class TestConflictResolution:
+    def test_default_conflict_resolution(self, text_data_dir: Path):
+        stdout, stderr, error_code = run_tempren("StaticFilename", text_data_dir)
+
+        assert error_code != 0
+        assert "Destination file already exists" in stderr
+        assert "StaticFilename" in stderr

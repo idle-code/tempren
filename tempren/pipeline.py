@@ -1,7 +1,7 @@
 import logging
 import os
 from dataclasses import dataclass
-from enum import Enum
+from enum import Enum, auto
 from pathlib import Path
 from typing import Callable, Iterable, Optional
 
@@ -53,6 +53,33 @@ class ConfigurationError(Exception):
     pass
 
 
+class ConflictResolution(Enum):
+    stop = auto
+    """Stop renaming and """
+
+    proceed = auto
+    """Leave conflicting record unchanged and continue with renaming"""
+
+    override = auto
+    """Override destination record with new name"""
+
+
+def always_stop_resolver(src: Path, dst: Path) -> ConflictResolution:
+    return ConflictResolution.stop
+
+
+def always_proceed_resolver(src: Path, dst: Path) -> ConflictResolution:
+    return ConflictResolution.proceed
+
+
+def always_override_resolver(src: Path, dst: Path) -> ConflictResolution:
+    return ConflictResolution.proceed
+
+
+def ask_user_resolver():  # TODO
+    pass
+
+
 class Pipeline:
     log: logging.Logger
     _input_directory: Path
@@ -64,6 +91,7 @@ class Pipeline:
         self.log = logging.getLogger(__name__)
         self.file_filter: Callable[[File], bool] = lambda file: True
         self.renamer: Callable[[Path, Path], None]
+        self.conflict_resolver: Callable[[Path, Path], ConflictResolution]
 
     @property
     def input_directory(self) -> Path:
