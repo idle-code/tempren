@@ -8,6 +8,7 @@ from textwrap import indent
 from typing import Any, List, NoReturn, Optional, Sequence, Text, Union
 
 from .pipeline import (
+    ConflictResolution,
     FilterType,
     OperationMode,
     RuntimeConfiguration,
@@ -137,6 +138,7 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         fromfile_prefix_chars="@",
         add_help=False,
     )
+
     parser.add_argument(
         "-d",
         "--dry-run",
@@ -153,7 +155,6 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
 
     operation_modes_group = parser.add_argument_group("operation modes")
     operation_mode = operation_modes_group.add_mutually_exclusive_group()
-    # TODO: generate modes based on OperationMode
     operation_mode.add_argument(
         "-n",
         "--name",
@@ -170,6 +171,40 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         dest="mode",
         const=OperationMode.path,
         help="Use template to generate relative file path",
+    )
+
+    conflict_resolution_group = parser.add_argument_group("conflict resolution")
+    conflict_resolution = conflict_resolution_group.add_mutually_exclusive_group()
+    conflict_resolution.add_argument(
+        "-cs",
+        "--conflict-stop",
+        action="store_true",
+        help="Keep source file name intact and stop",
+    )
+    conflict_resolution.add_argument(
+        "-ci",
+        "--conflict-ignore",
+        action="store_true",
+        help="Keep source file name intact and continue",
+    )
+    conflict_resolution.add_argument(
+        "-co",
+        "--conflict-override",
+        action="store_true",
+        help="Override destination file",
+    )
+    conflict_resolution.add_argument(
+        "-cf",
+        "--conflict-fallback",
+        type=str,
+        metavar="fallback_expression",
+        help="Generate new name using fallback template",
+    )
+    conflict_resolution.add_argument(
+        "-cm",
+        "--conflict-manual",
+        action="store_true",
+        help="Prompt user to resolve conflict manually (choose an option or provide new filename)",
     )
 
     filtering_group = parser.add_argument_group("filtering")
@@ -208,7 +243,7 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         "--sort",
         type=str,
         metavar="sort_expression",
-        help="Sorting expression used to order file list before processing",
+        help="Sorting tag template used to order file list before processing",
     )
     sorting_group.add_argument(
         "-si",
@@ -274,13 +309,29 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         filter_type = FilterType.glob
         filter_expression = None
 
+    conflict_strategy: ConflictResolution = ConflictResolution.stop
+    fallback_template: Optional[str] = None
+    if args.conflict_stop:
+        conflict_strategy = ConflictResolution.stop
+    elif args.conflict_ignore:
+        conflict_strategy = ConflictResolution.ignore
+    elif args.conflict_override:
+        conflict_strategy = ConflictResolution.override
+    elif args.conflict_manual:
+        conflict_strategy = ConflictResolution.manual
+    elif args.conflict_fallback:
+        conflict_strategy = ConflictResolution.fallback
+        fallback_template = args.conflict_fallback
+
     configuration = RuntimeConfiguration(
         template=args.template,
         input_directory=args.input_directory,
         dry_run=args.dry_run,
         filter_type=filter_type,
-        filter=filter_expression,
         filter_invert=args.filter_invert,
+        filter=filter_expression,
+        conflict_strategy=conflict_strategy,
+        fallback_template=fallback_template,
         sort_invert=args.sort_invert,
         sort=args.sort,
         mode=args.mode,
@@ -330,6 +381,9 @@ def main() -> int:
     except TagTemplateError as template_error:
         render_template_error(template_error)
         return 3
+    except FileExistsError as exc:
+        print("Error:", exc, file=sys.stderr)
+        return 4
 
 
 if __name__ == "__main__":

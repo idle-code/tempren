@@ -332,9 +332,27 @@ class TestPathMode:
 
 
 class TestConflictResolution:
+    def test_transient_conflict_resolution(self, text_data_dir: Path):
+        run_tempren("%Count(start=0)", text_data_dir)
+        assert (text_data_dir / "0").exists()
+        assert (text_data_dir / "1").exists()
+
+        stdout, stderr, error_code = run_tempren(
+            "--sort", "%Filename()", "%Count(start=1)", text_data_dir
+        )
+
+        assert error_code == 0
+        assert (text_data_dir / "1").exists()
+        assert (text_data_dir / "2").exists()
+
     def test_default_conflict_resolution(self, text_data_dir: Path):
         stdout, stderr, error_code = run_tempren("StaticFilename", text_data_dir)
 
         assert error_code != 0
         assert "Destination file already exists" in stderr
         assert "StaticFilename" in stderr
+
+    def test_generated_name_same_as_existing(self, text_data_dir: Path):
+        stdout, stderr, error_code = run_tempren("%Filename()", text_data_dir)
+
+        assert error_code == 0

@@ -1,5 +1,6 @@
 import logging
 import os
+from collections import namedtuple
 from dataclasses import dataclass
 from enum import Enum, auto
 from pathlib import Path
@@ -36,6 +37,24 @@ class OperationMode(Enum):
     path = "path"
 
 
+# TODO: Find a way to keep documentation close to the enum values and use it in argparser/generated help
+class ConflictResolution(Enum):
+    stop = auto
+    """Stop renaming and show an error"""
+
+    ignore = auto
+    """Leave conflicting record unchanged and continue with renaming"""
+
+    override = auto
+    """Override destination record with a new name"""
+
+    fallback = auto
+    """Use fallback template to generate a new name"""
+
+    manual = auto
+    """Prompt user to resolve conflict manually (choose an option or provide new filename)"""
+
+
 @dataclass
 class RuntimeConfiguration:
     template: str
@@ -44,6 +63,8 @@ class RuntimeConfiguration:
     filter_type: FilterType = FilterType.glob  # TODO: update
     filter_invert: bool = False
     filter: Optional[str] = None
+    conflict_strategy: ConflictResolution = ConflictResolution.stop
+    fallback_template: Optional[str] = None
     sort_invert: bool = False
     sort: Optional[str] = None
     mode: OperationMode = OperationMode.name
@@ -53,27 +74,16 @@ class ConfigurationError(Exception):
     pass
 
 
-class ConflictResolution(Enum):
-    stop = auto
-    """Stop renaming and """
-
-    proceed = auto
-    """Leave conflicting record unchanged and continue with renaming"""
-
-    override = auto
-    """Override destination record with new name"""
-
-
 def always_stop_resolver(src: Path, dst: Path) -> ConflictResolution:
     return ConflictResolution.stop
 
 
 def always_proceed_resolver(src: Path, dst: Path) -> ConflictResolution:
-    return ConflictResolution.proceed
+    return ConflictResolution.ignore
 
 
 def always_override_resolver(src: Path, dst: Path) -> ConflictResolution:
-    return ConflictResolution.proceed
+    return ConflictResolution.ignore
 
 
 def ask_user_resolver():  # TODO
@@ -120,12 +130,32 @@ class Pipeline:
             all_files = self.sorter(all_files)
 
         self.log.info("Generating new names")
+        # In case when destination file exists in the first run, we add such name to the
+        # backlog and try again (in reverse order) later. This should mitigate most of
+        # transitional conflicts.
+        backlog = []
         for file in all_files:
             self.log.debug("Generating new name for %s", file)
             new_path = self.path_generator.generate(file)
             # FIXME: check generated new_path for illegal characters (like '*')
             self.log.debug("Generated path: %s", new_path)
-            self.renamer(file.relative_path, new_path)
+            try:
+                self.renamer(file.relative_path, new_path)
+            except FileExistsError:
+                self.log.debug(
+                    "Deffering renaming of %s as destination (%s) already exists",
+                    file.relative_path,
+                    new_path,
+                )
+                backlog.append((file.relative_path, new_path))
+
+        while backlog:
+            relative_name, new_path = backlog.pop()
+            try:
+                self.renamer(relative_name, new_path)
+            except FileExistsError:
+                # FIXME: Use conflict resolution
+                raise
 
 
 def build_tag_registry() -> TagRegistry:
