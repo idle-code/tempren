@@ -8,7 +8,8 @@ from textwrap import indent
 from typing import Any, List, NoReturn, Optional, Sequence, Text, Union
 
 from .pipeline import (
-    ConflictResolution,
+    ConflictResolutionStrategy,
+    FileRenamerType,
     FilterType,
     OperationMode,
     RuntimeConfiguration,
@@ -309,19 +310,20 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         filter_type = FilterType.glob
         filter_expression = None
 
-    conflict_strategy: ConflictResolution = ConflictResolution.stop
     fallback_template: Optional[str] = None
     if args.conflict_stop:
-        conflict_strategy = ConflictResolution.stop
+        conflict_strategy = ConflictResolutionStrategy.stop
     elif args.conflict_ignore:
-        conflict_strategy = ConflictResolution.ignore
+        conflict_strategy = ConflictResolutionStrategy.ignore
     elif args.conflict_override:
-        conflict_strategy = ConflictResolution.override
+        conflict_strategy = ConflictResolutionStrategy.override
     elif args.conflict_manual:
-        conflict_strategy = ConflictResolution.manual
+        conflict_strategy = ConflictResolutionStrategy.manual
     elif args.conflict_fallback:
-        conflict_strategy = ConflictResolution.fallback
+        conflict_strategy = ConflictResolutionStrategy.fallback
         fallback_template = args.conflict_fallback
+    else:
+        conflict_strategy = ConflictResolutionStrategy.stop
 
     configuration = RuntimeConfiguration(
         template=args.template,
@@ -359,6 +361,12 @@ def render_template_error(template_error: TagTemplateError, indent_size: int = 4
     )
 
 
+def user_conflict_resolver(renamer: FileRenamerType, src: Path, dst: Path):
+    # FIXME: Implement
+    # log.debug()
+    pass
+
+
 def main() -> int:
     argv = sys.argv[1:]
     try:
@@ -367,7 +375,9 @@ def main() -> int:
         log.debug("Loading tags")
         registry = build_tag_registry()
         log.debug("Building pipeline")
-        pipeline = build_pipeline(config, registry)
+        pipeline = build_pipeline(
+            config, registry, manual_conflict_resolver=user_conflict_resolver
+        )
 
         log.debug("Executing pipeline")
         log.info("Directory base: %s", config.input_directory)

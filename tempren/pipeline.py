@@ -15,7 +15,13 @@ from tempren.file_filters import (
     TemplateFileFilter,
 )
 from tempren.file_sorters import TemplateFileSorter
-from tempren.filesystem import FileGatherer, FileMover, FileRenamer, PrintingOnlyRenamer
+from tempren.filesystem import (
+    DestinationAlreadyExistsError,
+    FileGatherer,
+    FileMover,
+    FileRenamer,
+    PrintingOnlyRenamer,
+)
 from tempren.path_generator import File, PathGenerator
 from tempren.template.path_generators import (
     TemplateNameGenerator,
@@ -38,20 +44,20 @@ class OperationMode(Enum):
 
 
 # TODO: Find a way to keep documentation close to the enum values and use it in argparser/generated help
-class ConflictResolution(Enum):
-    stop = auto
+class ConflictResolutionStrategy(Enum):
+    stop = "stop"
     """Stop renaming and show an error"""
 
-    ignore = auto
+    ignore = "ignore"
     """Leave conflicting record unchanged and continue with renaming"""
 
-    override = auto
+    override = "override"
     """Override destination record with a new name"""
 
-    fallback = auto
+    fallback = "fallback"
     """Use fallback template to generate a new name"""
 
-    manual = auto
+    manual = "manual"
     """Prompt user to resolve conflict manually (choose an option or provide new filename)"""
 
 
@@ -63,7 +69,7 @@ class RuntimeConfiguration:
     filter_type: FilterType = FilterType.glob  # TODO: update
     filter_invert: bool = False
     filter: Optional[str] = None
-    conflict_strategy: ConflictResolution = ConflictResolution.stop
+    conflict_strategy: ConflictResolutionStrategy = ConflictResolutionStrategy.stop
     fallback_template: Optional[str] = None
     sort_invert: bool = False
     sort: Optional[str] = None
@@ -74,19 +80,29 @@ class ConfigurationError(Exception):
     pass
 
 
-def always_stop_resolver(src: Path, dst: Path) -> ConflictResolution:
-    return ConflictResolution.stop
+FileRenamerType = Callable[[Path, Path], None]
+ConflictResolver = Callable[[FileRenamerType, Path, Path], None]
+
+conflict_resolver_log = logging.getLogger("ConflictResolver")
 
 
-def always_proceed_resolver(src: Path, dst: Path) -> ConflictResolution:
-    return ConflictResolution.ignore
+def stop_resolver(renamer: FileRenamerType, source_path: Path, destination_path: Path):
+    raise DestinationAlreadyExistsError(source_path, destination_path)
 
 
-def always_override_resolver(src: Path, dst: Path) -> ConflictResolution:
-    return ConflictResolution.ignore
+def ignore_resolver(
+    renamer: FileRenamerType, source_path: Path, destination_path: Path
+):
+    # conflict_resolver_log.info("Skipping renaming of %s to %s", source_path, source_path)
+    print(
+        f"Skipping renaming of {source_path} to {destination_path} as destination path already exists"
+    )
 
 
-def ask_user_resolver():  # TODO
+def override_resolver(
+    renamer: FileRenamerType, source_path: Path, destination_path: Path
+):
+    # TODO: Remove destination file and try again
     pass
 
 
@@ -100,8 +116,8 @@ class Pipeline:
     def __init__(self):
         self.log = logging.getLogger(__name__)
         self.file_filter: Callable[[File], bool] = lambda file: True
-        self.renamer: Callable[[Path, Path], None]
-        self.conflict_resolver: Callable[[Path, Path], ConflictResolution]
+        self.renamer: FileRenamerType = PrintingOnlyRenamer()
+        self.conflict_resolver: ConflictResolver = stop_resolver
 
     @property
     def input_directory(self) -> Path:
@@ -143,7 +159,7 @@ class Pipeline:
                 self.renamer(file.relative_path, new_path)
             except FileExistsError:
                 self.log.debug(
-                    "Deffering renaming of %s as destination (%s) already exists",
+                    "Deferring renaming of %s as destination (%s) already exists",
                     file.relative_path,
                     new_path,
                 )
@@ -151,11 +167,11 @@ class Pipeline:
 
         while backlog:
             relative_name, new_path = backlog.pop()
+            self.log.debug("Trying again to rename %s into %s", relative_name, new_path)
             try:
                 self.renamer(relative_name, new_path)
             except FileExistsError:
-                # FIXME: Use conflict resolution
-                raise
+                self.conflict_resolver(self.renamer, relative_name, new_path)
 
 
 def build_tag_registry() -> TagRegistry:
@@ -167,7 +183,11 @@ def build_tag_registry() -> TagRegistry:
     return registry
 
 
-def build_pipeline(config: RuntimeConfiguration, registry: TagRegistry) -> Pipeline:
+def build_pipeline(
+    config: RuntimeConfiguration,
+    registry: TagRegistry,
+    manual_conflict_resolver: ConflictResolver,
+) -> Pipeline:
     log.info("Building pipeline")
     pipeline = Pipeline()
     pipeline.input_directory = config.input_directory
@@ -232,6 +252,19 @@ def build_pipeline(config: RuntimeConfiguration, registry: TagRegistry) -> Pipel
         except TagTemplateError as template_error:
             template_error.template = config.sort
             raise template_error
+
+    # TODO: Map strategy to actual conflict resolver
+    if config.conflict_strategy == ConflictResolutionStrategy.stop:
+        pipeline.conflict_resolver = stop_resolver
+    elif config.conflict_strategy == ConflictResolutionStrategy.ignore:
+        pipeline.conflict_resolver = ignore_resolver
+    elif config.conflict_strategy == ConflictResolutionStrategy.override:
+        pipeline.conflict_resolver = override_resolver
+    elif config.conflict_strategy == ConflictResolutionStrategy.fallback:
+        pass  # FIXME: Implement
+        # pipeline.conflict_resolver =
+    elif config.conflict_strategy == ConflictResolutionStrategy.manual:
+        pipeline.conflict_resolver = manual_conflict_resolver
 
     if config.dry_run:
         pipeline.renamer = PrintingOnlyRenamer()

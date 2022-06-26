@@ -35,6 +35,7 @@ def run_tempren(*args) -> Tuple[str, str, int]:
     args = list(map(str, args))
     old_sys_argv = sys.argv.copy()
     sys.argv[1:] = args
+    print("Running: tempren", " ".join(args))
     try:
         stdout = io.StringIO()
         stderr = io.StringIO()
@@ -345,12 +346,38 @@ class TestConflictResolution:
         assert (text_data_dir / "1").exists()
         assert (text_data_dir / "2").exists()
 
-    def test_default_conflict_resolution(self, text_data_dir: Path):
-        stdout, stderr, error_code = run_tempren("StaticFilename", text_data_dir)
+    @pytest.mark.parametrize("flag", ["-cs", "--conflict-stop", None])
+    def test_stop_conflict_resolution(self, text_data_dir: Path, flag: str):
+        if flag:
+            stdout, stderr, error_code = run_tempren(
+                flag, "--sort", "'%Filename()'", "StaticFilename", text_data_dir
+            )
+        else:
+            stdout, stderr, error_code = run_tempren(
+                "--sort", "'%Filename()'", "StaticFilename", text_data_dir
+            )
 
         assert error_code != 0
-        assert "Destination file already exists" in stderr
+        assert "Could not rename" in stderr
+        assert "as destination path" in stderr
         assert "StaticFilename" in stderr
+        assert not (text_data_dir / "hello.txt").exists()
+        assert (text_data_dir / "StaticFilename").exists()
+        assert (text_data_dir / "markdown.md").exists()
+
+    @pytest.mark.parametrize("flag", ["-ci", "--conflict-ignore"])
+    def test_ignore_conflict_resolution(self, text_data_dir: Path, flag: str):
+        stdout, stderr, error_code = run_tempren(
+            flag, "--sort", "'%Filename()'", "StaticFilename", text_data_dir
+        )
+
+        assert error_code == 0
+        assert "Skipping renaming of" in stdout
+        assert "as destination path" in stdout
+        assert "StaticFilename" in stdout
+        assert not (text_data_dir / "hello.txt").exists()
+        assert (text_data_dir / "StaticFilename").exists()
+        assert (text_data_dir / "markdown.md").exists()
 
     def test_generated_name_same_as_existing(self, text_data_dir: Path):
         stdout, stderr, error_code = run_tempren("%Filename()", text_data_dir)

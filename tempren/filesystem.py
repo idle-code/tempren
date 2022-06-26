@@ -9,9 +9,16 @@ class InvalidDestinationError(Exception):
     pass
 
 
+class DestinationAlreadyExistsError(FileExistsError):
+    def __init__(self, src: Path, dst: Path):
+        super().__init__(
+            f"Could not rename {src} as destination path {dst} already exists"
+        )
+
+
 class FileGatherer:
     start_directory: Path
-    glob_pattern: str  # CHECK: shouldn't globbing be done at the filtering stage?
+    glob_pattern: str  # TODO: globbing should be done at the filtering stage
     # TODO: add an option to include hidden files
 
     def __init__(self, directory_path: Path, glob_pattern: str = "*"):
@@ -31,13 +38,11 @@ class FileGatherer:
 
 
 class FileRenamer:
-    def __call__(self, source_path: Path, destination_path: Path):
+    def __call__(self, source_path: Path, destination_path: Path) -> None:
         if source_path == destination_path:
             return
         if destination_path.exists():
-            raise FileExistsError(
-                f"Destination file already exists: {destination_path}"
-            )
+            raise DestinationAlreadyExistsError(source_path, destination_path)
         if source_path.parent != destination_path.parent:
             raise InvalidDestinationError(
                 f"Destination path {destination_path} targets different directory"
@@ -46,13 +51,11 @@ class FileRenamer:
 
 
 class FileMover:
-    def __call__(self, source_path: Path, destination_path: Path):
+    def __call__(self, source_path: Path, destination_path: Path) -> None:
         if source_path == destination_path:
             return
         if destination_path.exists():
-            raise FileExistsError(
-                f"Destination file already exists: {destination_path}"
-            )
+            raise DestinationAlreadyExistsError(source_path, destination_path)
         destination_path.parent.mkdir(parents=True, exist_ok=True)
         shutil.move(str(source_path), destination_path)
 
@@ -63,7 +66,7 @@ class PrintingOnlyRenamer:
     def __init__(self):
         self.log = logging.getLogger(__name__)
 
-    def __call__(self, source_path: Path, destination_path: Path):
+    def __call__(self, source_path: Path, destination_path: Path) -> None:
         if source_path == destination_path:
             self.log.info("Skipping renaming: source and destination are the same")
             return
