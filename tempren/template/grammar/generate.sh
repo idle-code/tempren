@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 function antlr4() {
-  export CLASSPATH="/usr/local/lib/antlr-4.9.2-complete.jar:$CLASSPATH"
+  export CLASSPATH="/usr/local/lib/antlr-4.10.1-complete.jar:$CLASSPATH"
   java org.antlr.v4.Tool "$@"
 }
 
