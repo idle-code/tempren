@@ -30,6 +30,23 @@ def run_tempren_process(*args) -> Tuple[str, str, int]:
     )
 
 
+def start_tempren_process(*args) -> subprocess.Popen:
+    """Run tempren with provided arguments as separate process"""
+    args = list(map(str, args))
+    # print(" ".join([sys.executable, "-m", "tempren.cli"] + args))
+    # CHECK: Use pexpect?
+    tempren_process = subprocess.Popen(
+        [sys.executable, "-m", "tempren.cli"] + args,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        cwd=project_root_path,
+        bufsize=1,
+        universal_newlines=True,
+    )
+    return tempren_process
+
+
 def run_tempren(*args) -> Tuple[str, str, int]:
     """Run tempren's main() function with provided arguments"""
     args = list(map(str, args))
@@ -379,7 +396,145 @@ class TestConflictResolution:
         assert (text_data_dir / "StaticFilename").exists()
         assert (text_data_dir / "markdown.md").exists()
 
-    def test_generated_name_same_as_existing(self, text_data_dir: Path):
-        stdout, stderr, error_code = run_tempren("%Filename()", text_data_dir)
+    @pytest.mark.parametrize("flag", ["-co", "--conflict-override"])
+    def test_override_conflict_resolution(self, text_data_dir: Path, flag: str):
+        stdout, stderr, error_code = run_tempren(
+            flag, "--sort", "'%Filename()'", "StaticFilename", text_data_dir
+        )
 
         assert error_code == 0
+        assert "Overriding destination" in stderr
+        assert "StaticFilename" in stderr
+        assert not (text_data_dir / "hello.txt").exists()
+        assert not (text_data_dir / "markdown.md").exists()
+        assert (text_data_dir / "StaticFilename").exists()
+
+    @pytest.mark.parametrize("selection", ["stop", "s", "sto", "STOP"])
+    @pytest.mark.parametrize("flag", ["-cm", "--conflict-manual"])
+    def test_manual_conflict_resolution_stop(
+        self, text_data_dir: Path, flag: str, selection: str
+    ):
+        tempren_process = start_tempren_process(
+            flag, "--sort", "'%Filename()'", "StaticFilename", text_data_dir
+        )
+
+        stdout, stderr = tempren_process.communicate(input=selection + "\n", timeout=3)
+        assert "StaticFilename" in stdout
+        assert "already existing file" in stdout
+
+        error_code = tempren_process.wait()
+        assert error_code != 0
+        assert "Could not rename" in stderr
+        assert "as destination path" in stderr
+        assert "StaticFilename" in stderr
+        assert not (text_data_dir / "hello.txt").exists()
+        assert (text_data_dir / "StaticFilename").exists()
+        assert (text_data_dir / "markdown.md").exists()
+
+    @pytest.mark.parametrize("selection", ["override", "o", "over", "OVE"])
+    @pytest.mark.parametrize("flag", ["-cm", "--conflict-manual"])
+    def test_manual_conflict_resolution_override(
+        self, text_data_dir: Path, flag: str, selection: str
+    ):
+        tempren_process = start_tempren_process(
+            flag, "--sort", "'%Filename()'", "StaticFilename", text_data_dir
+        )
+
+        stdout, stderr = tempren_process.communicate(input=selection + "\n", timeout=3)
+        assert "StaticFilename" in stdout
+        assert "already existing file" in stdout
+
+        error_code = tempren_process.wait()
+        assert error_code == 0
+        assert "Overriding destination" in stderr
+        assert "StaticFilename" in stderr
+        assert not (text_data_dir / "hello.txt").exists()
+        assert not (text_data_dir / "markdown.md").exists()
+        assert (text_data_dir / "StaticFilename").exists()
+
+    @pytest.mark.parametrize("selection", ["ignore", "i", "ign", "IGNO", ""])
+    @pytest.mark.parametrize("flag", ["-cm", "--conflict-manual"])
+    def test_manual_conflict_resolution_ignore(
+        self, text_data_dir: Path, flag: str, selection: str
+    ):
+        tempren_process = start_tempren_process(
+            flag, "--sort", "'%Filename()'", "StaticFilename", text_data_dir
+        )
+
+        stdout, stderr = tempren_process.communicate(input=selection + "\n", timeout=3)
+        assert "StaticFilename" in stdout
+        assert "already existing file" in stdout
+
+        error_code = tempren_process.wait()
+        assert error_code == 0
+        assert "Skipping renaming of" in stdout
+        assert "as destination path" in stdout
+        assert "StaticFilename" in stdout
+        assert not (text_data_dir / "hello.txt").exists()
+        assert (text_data_dir / "StaticFilename").exists()
+        assert (text_data_dir / "markdown.md").exists()
+
+    @pytest.mark.parametrize(
+        "selection", ["custom path", "c", "custom", "cus", "CUSTO"]
+    )
+    @pytest.mark.parametrize("flag", ["-cm", "--conflict-manual"])
+    def test_manual_conflict_resolution_custom_name(
+        self, text_data_dir: Path, flag: str, selection: str
+    ):
+        tempren_process = start_tempren_process(
+            flag, "--sort", "'%Filename()'", "StaticFilename", text_data_dir
+        )
+
+        stdout, stderr = tempren_process.communicate(
+            input=selection + "\n" + "UserProvidedName" + "\n", timeout=3
+        )
+        assert "StaticFilename" in stdout
+        assert "already existing file" in stdout
+        assert "Custom path" in stdout
+
+        error_code = tempren_process.wait()
+        assert error_code == 0
+        assert not (text_data_dir / "hello.txt").exists()
+        assert (text_data_dir / "StaticFilename").exists()
+        assert not (text_data_dir / "markdown.md").exists()
+        assert (text_data_dir / "UserProvidedName").exists()
+
+    def test_manual_conflict_resolution_custom_name_already_exists(
+        self, text_data_dir: Path
+    ):
+        tempren_process = start_tempren_process(
+            "--conflict-manual",
+            "--sort",
+            "'%Filename()'",
+            "StaticFilename",
+            text_data_dir,
+        )
+
+        stdout, stderr = tempren_process.communicate(
+            input="custom\n" + "StaticFilename\n", timeout=3
+        )
+        assert "Could not rename" in stderr
+        assert "already exists" in stderr
+
+        error_code = tempren_process.wait()
+        assert error_code != 0
+        assert not (text_data_dir / "hello.txt").exists()
+        assert (text_data_dir / "StaticFilename").exists()
+        assert (text_data_dir / "markdown.md").exists()
+
+    def test_manual_conflict_resolution_invalid_choice(self, text_data_dir: Path):
+        tempren_process = start_tempren_process(
+            "--conflict-manual",
+            "--sort",
+            "'%Filename()'",
+            "StaticFilename",
+            text_data_dir,
+        )
+
+        stdout, stderr = tempren_process.communicate(
+            input="foobar\nignore\n", timeout=3
+        )
+        assert "Invalid choice" in stdout
+        assert "foobar" in stdout
+
+        tempren_process.wait()

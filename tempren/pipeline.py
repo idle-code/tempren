@@ -1,10 +1,9 @@
 import logging
 import os
-from collections import namedtuple
 from dataclasses import dataclass
 from enum import Enum, auto
 from pathlib import Path
-from typing import Callable, Iterable, Optional
+from typing import Callable, Iterable, Optional, Union
 
 from tempren.file_filters import (
     FileFilterInverter,
@@ -54,9 +53,6 @@ class ConflictResolutionStrategy(Enum):
     override = "override"
     """Override destination record with a new name"""
 
-    fallback = "fallback"
-    """Use fallback template to generate a new name"""
-
     manual = "manual"
     """Prompt user to resolve conflict manually (choose an option or provide new filename)"""
 
@@ -70,7 +66,6 @@ class RuntimeConfiguration:
     filter_invert: bool = False
     filter: Optional[str] = None
     conflict_strategy: ConflictResolutionStrategy = ConflictResolutionStrategy.stop
-    fallback_template: Optional[str] = None
     sort_invert: bool = False
     sort: Optional[str] = None
     mode: OperationMode = OperationMode.name
@@ -80,30 +75,14 @@ class ConfigurationError(Exception):
     pass
 
 
-FileRenamerType = Callable[[Path, Path], None]
-ConflictResolver = Callable[[FileRenamerType, Path, Path], None]
-
-conflict_resolver_log = logging.getLogger("ConflictResolver")
+FileRenamerType = Callable[[Path, Path, bool], None]
+ManualConflictResolver = Callable[[Path, Path], Union[ConflictResolutionStrategy, Path]]
 
 
-def stop_resolver(renamer: FileRenamerType, source_path: Path, destination_path: Path):
-    raise DestinationAlreadyExistsError(source_path, destination_path)
-
-
-def ignore_resolver(
-    renamer: FileRenamerType, source_path: Path, destination_path: Path
-):
-    # conflict_resolver_log.info("Skipping renaming of %s to %s", source_path, source_path)
-    print(
-        f"Skipping renaming of {source_path} to {destination_path} as destination path already exists"
-    )
-
-
-def override_resolver(
-    renamer: FileRenamerType, source_path: Path, destination_path: Path
-):
-    # TODO: Remove destination file and try again
-    pass
+def manual_resolver_placeholder(
+    source_path: Path, destination_path: Path
+) -> Union[ConflictResolutionStrategy, Path]:
+    raise NotImplementedError()
 
 
 class Pipeline:
@@ -112,12 +91,15 @@ class Pipeline:
     file_gatherer: Callable[[Path], Iterable[Path]]
     sorter: Optional[Callable[[Iterable[File]], Iterable[File]]] = None
     path_generator: PathGenerator
+    conflict_strategy: ConflictResolutionStrategy = ConflictResolutionStrategy.stop
 
     def __init__(self):
         self.log = logging.getLogger(__name__)
         self.file_filter: Callable[[File], bool] = lambda file: True
         self.renamer: FileRenamerType = PrintingOnlyRenamer()
-        self.conflict_resolver: ConflictResolver = stop_resolver
+        self.manual_conflict_resolver: ManualConflictResolver = (
+            manual_resolver_placeholder
+        )
 
     @property
     def input_directory(self) -> Path:
@@ -171,7 +153,47 @@ class Pipeline:
             try:
                 self.renamer(relative_name, new_path)
             except FileExistsError:
-                self.conflict_resolver(self.renamer, relative_name, new_path)
+                self.resolve_conflict(relative_name, new_path, self.conflict_strategy)
+
+    def resolve_conflict(
+        self,
+        source_path: Path,
+        destination_path: Path,
+        strategy: ConflictResolutionStrategy,
+    ):
+        if strategy == ConflictResolutionStrategy.stop:
+            raise DestinationAlreadyExistsError(source_path, destination_path)
+        elif strategy == ConflictResolutionStrategy.ignore:
+            # conflict_resolver_log.info("Skipping renaming of %s to %s", source_path, source_path)
+            print(
+                f"Skipping renaming of {source_path} to {destination_path} as destination path already exists"
+            )
+        elif strategy == ConflictResolutionStrategy.override:
+            import sys
+
+            # conflict_resolver_log.warning("Overriding destination %s as it already exists", destination_path)
+            print(
+                f"Overriding destination {destination_path} as it already exists",
+                file=sys.stderr,
+            )
+            self.renamer(source_path, destination_path, True)
+        elif strategy == ConflictResolutionStrategy.manual:
+            if self.manual_conflict_resolver is None:
+                raise NotImplementedError("Manual conflict resolver not configured")
+            user_selected_strategy = self.manual_conflict_resolver(
+                source_path, destination_path
+            )
+            if isinstance(user_selected_strategy, Path):
+                user_provided_path: Path = user_selected_strategy
+                self.renamer(source_path, user_provided_path, False)
+            else:
+                self.resolve_conflict(
+                    source_path, destination_path, user_selected_strategy
+                )
+        else:
+            raise NotImplementedError(
+                f"Unknown conflict resolution strategy: {strategy}"
+            )
 
 
 def build_tag_registry() -> TagRegistry:
@@ -186,7 +208,7 @@ def build_tag_registry() -> TagRegistry:
 def build_pipeline(
     config: RuntimeConfiguration,
     registry: TagRegistry,
-    manual_conflict_resolver: ConflictResolver,
+    manual_conflict_resolver: ManualConflictResolver,
 ) -> Pipeline:
     log.info("Building pipeline")
     pipeline = Pipeline()
@@ -253,18 +275,8 @@ def build_pipeline(
             template_error.template = config.sort
             raise template_error
 
-    # TODO: Map strategy to actual conflict resolver
-    if config.conflict_strategy == ConflictResolutionStrategy.stop:
-        pipeline.conflict_resolver = stop_resolver
-    elif config.conflict_strategy == ConflictResolutionStrategy.ignore:
-        pipeline.conflict_resolver = ignore_resolver
-    elif config.conflict_strategy == ConflictResolutionStrategy.override:
-        pipeline.conflict_resolver = override_resolver
-    elif config.conflict_strategy == ConflictResolutionStrategy.fallback:
-        pass  # FIXME: Implement
-        # pipeline.conflict_resolver =
-    elif config.conflict_strategy == ConflictResolutionStrategy.manual:
-        pipeline.conflict_resolver = manual_conflict_resolver
+    pipeline.conflict_strategy = config.conflict_strategy
+    pipeline.manual_conflict_resolver = manual_conflict_resolver
 
     if config.dry_run:
         pipeline.renamer = PrintingOnlyRenamer()

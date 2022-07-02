@@ -9,7 +9,6 @@ from typing import Any, List, NoReturn, Optional, Sequence, Text, Union
 
 from .pipeline import (
     ConflictResolutionStrategy,
-    FileRenamerType,
     FilterType,
     OperationMode,
     RuntimeConfiguration,
@@ -103,7 +102,7 @@ class _ShowVersion(argparse.Action):
         parser.exit()
 
     @staticmethod
-    def find_package_version() -> str:
+    def find_package_version() -> str:  # NOCOVER: hard to test - not worth it
         package_name = "tempren"
         try:
             import importlib.metadata
@@ -193,13 +192,6 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         "--conflict-override",
         action="store_true",
         help="Override destination file",
-    )
-    conflict_resolution.add_argument(
-        "-cf",
-        "--conflict-fallback",
-        type=str,
-        metavar="fallback_expression",
-        help="Generate new name using fallback template",
     )
     conflict_resolution.add_argument(
         "-cm",
@@ -310,7 +302,6 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         filter_type = FilterType.glob
         filter_expression = None
 
-    fallback_template: Optional[str] = None
     if args.conflict_stop:
         conflict_strategy = ConflictResolutionStrategy.stop
     elif args.conflict_ignore:
@@ -319,9 +310,6 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         conflict_strategy = ConflictResolutionStrategy.override
     elif args.conflict_manual:
         conflict_strategy = ConflictResolutionStrategy.manual
-    elif args.conflict_fallback:
-        conflict_strategy = ConflictResolutionStrategy.fallback
-        fallback_template = args.conflict_fallback
     else:
         conflict_strategy = ConflictResolutionStrategy.stop
 
@@ -333,7 +321,6 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         filter_invert=args.filter_invert,
         filter=filter_expression,
         conflict_strategy=conflict_strategy,
-        fallback_template=fallback_template,
         sort_invert=args.sort_invert,
         sort=args.sort,
         mode=args.mode,
@@ -361,10 +348,29 @@ def render_template_error(template_error: TagTemplateError, indent_size: int = 4
     )
 
 
-def user_conflict_resolver(renamer: FileRenamerType, src: Path, dst: Path):
-    # FIXME: Implement
-    # log.debug()
-    pass
+def user_conflict_resolver(
+    source_path: Path, destination_path: Path
+) -> Union[ConflictResolutionStrategy, Path]:
+    print("White processing:")
+    print(f"  {source_path}")
+    print("following path was generated:")
+    print(f"  {destination_path}")
+    print("but it cannot be used as it targets already existing file")
+    while True:
+        selected_option_name = input(
+            "[s]top, [o]verride, [c]ustom path, [I]gnore: "
+        ).lower()
+        if not selected_option_name or "ignore".startswith(selected_option_name):
+            return ConflictResolutionStrategy.ignore
+        if "stop".startswith(selected_option_name):
+            return ConflictResolutionStrategy.stop
+        if "override".startswith(selected_option_name):
+            return ConflictResolutionStrategy.override
+        if "custom path".startswith(selected_option_name):
+            custom_path = Path(input("Custom path: "))
+            return custom_path
+
+        print(f"Invalid choice '{selected_option_name}")
 
 
 def main() -> int:

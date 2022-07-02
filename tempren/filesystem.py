@@ -2,7 +2,7 @@ import logging
 import os
 import shutil
 from pathlib import Path
-from typing import Generator
+from typing import Generator, Optional
 
 
 class InvalidDestinationError(Exception):
@@ -38,10 +38,15 @@ class FileGatherer:
 
 
 class FileRenamer:
-    def __call__(self, source_path: Path, destination_path: Path) -> None:
+    def __call__(
+        self,
+        source_path: Path,
+        destination_path: Path,
+        override: bool = False,
+    ) -> None:
         if source_path == destination_path:
             return
-        if destination_path.exists():
+        if not override and destination_path.exists():
             raise DestinationAlreadyExistsError(source_path, destination_path)
         if source_path.parent != destination_path.parent:
             raise InvalidDestinationError(
@@ -51,10 +56,15 @@ class FileRenamer:
 
 
 class FileMover:
-    def __call__(self, source_path: Path, destination_path: Path) -> None:
+    def __call__(
+        self,
+        source_path: Path,
+        destination_path: Path,
+        override: bool = False,
+    ) -> None:
         if source_path == destination_path:
             return
-        if destination_path.exists():
+        if not override and destination_path.exists():
             raise DestinationAlreadyExistsError(source_path, destination_path)
         destination_path.parent.mkdir(parents=True, exist_ok=True)
         shutil.move(str(source_path), destination_path)
@@ -66,16 +76,25 @@ class PrintingOnlyRenamer:
     def __init__(self):
         self.log = logging.getLogger(__name__)
 
-    def __call__(self, source_path: Path, destination_path: Path) -> None:
+    def __call__(
+        self,
+        source_path: Path,
+        destination_path: Path,
+        override: bool = False,
+    ) -> None:
         if source_path == destination_path:
             self.log.info("Skipping renaming: source and destination are the same")
             return
-        if destination_path.exists():
+        if destination_path.exists() and not override:
             self.log.info("Skipping renaming: destination path exists")
             raise FileExistsError(
                 f"Destination file already exists: {destination_path}"
             )
         if not source_path.exists():
             raise FileNotFoundError(f"No such file or directory: {source_path}")
+
         print(f"\nRenaming: {source_path}")
-        print(f"      to: {destination_path}")
+        if override:
+            print(f"      to: {destination_path} (override)")
+        else:
+            print(f"      to: {destination_path}")
