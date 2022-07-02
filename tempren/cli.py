@@ -8,6 +8,7 @@ from textwrap import indent
 from typing import Any, List, NoReturn, Optional, Sequence, Text, Union
 
 from .pipeline import (
+    ConflictResolutionStrategy,
     FilterType,
     OperationMode,
     RuntimeConfiguration,
@@ -101,7 +102,7 @@ class _ShowVersion(argparse.Action):
         parser.exit()
 
     @staticmethod
-    def find_package_version() -> str:
+    def find_package_version() -> str:  # NOCOVER: hard to test - not worth it
         package_name = "tempren"
         try:
             import importlib.metadata
@@ -137,6 +138,7 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         fromfile_prefix_chars="@",
         add_help=False,
     )
+
     parser.add_argument(
         "-d",
         "--dry-run",
@@ -153,7 +155,6 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
 
     operation_modes_group = parser.add_argument_group("operation modes")
     operation_mode = operation_modes_group.add_mutually_exclusive_group()
-    # TODO: generate modes based on OperationMode
     operation_mode.add_argument(
         "-n",
         "--name",
@@ -170,6 +171,33 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         dest="mode",
         const=OperationMode.path,
         help="Use template to generate relative file path",
+    )
+
+    conflict_resolution_group = parser.add_argument_group("conflict resolution")
+    conflict_resolution = conflict_resolution_group.add_mutually_exclusive_group()
+    conflict_resolution.add_argument(
+        "-cs",
+        "--conflict-stop",
+        action="store_true",
+        help="Keep source file name intact and stop",
+    )
+    conflict_resolution.add_argument(
+        "-ci",
+        "--conflict-ignore",
+        action="store_true",
+        help="Keep source file name intact and continue",
+    )
+    conflict_resolution.add_argument(
+        "-co",
+        "--conflict-override",
+        action="store_true",
+        help="Override destination file",
+    )
+    conflict_resolution.add_argument(
+        "-cm",
+        "--conflict-manual",
+        action="store_true",
+        help="Prompt user to resolve conflict manually (choose an option or provide new filename)",
     )
 
     filtering_group = parser.add_argument_group("filtering")
@@ -208,7 +236,7 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         "--sort",
         type=str,
         metavar="sort_expression",
-        help="Sorting expression used to order file list before processing",
+        help="Sorting tag template used to order file list before processing",
     )
     sorting_group.add_argument(
         "-si",
@@ -274,13 +302,25 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         filter_type = FilterType.glob
         filter_expression = None
 
+    if args.conflict_stop:
+        conflict_strategy = ConflictResolutionStrategy.stop
+    elif args.conflict_ignore:
+        conflict_strategy = ConflictResolutionStrategy.ignore
+    elif args.conflict_override:
+        conflict_strategy = ConflictResolutionStrategy.override
+    elif args.conflict_manual:
+        conflict_strategy = ConflictResolutionStrategy.manual
+    else:
+        conflict_strategy = ConflictResolutionStrategy.stop
+
     configuration = RuntimeConfiguration(
         template=args.template,
         input_directory=args.input_directory,
         dry_run=args.dry_run,
         filter_type=filter_type,
-        filter=filter_expression,
         filter_invert=args.filter_invert,
+        filter=filter_expression,
+        conflict_strategy=conflict_strategy,
         sort_invert=args.sort_invert,
         sort=args.sort,
         mode=args.mode,
@@ -308,6 +348,31 @@ def render_template_error(template_error: TagTemplateError, indent_size: int = 4
     )
 
 
+def user_conflict_resolver(
+    source_path: Path, destination_path: Path
+) -> Union[ConflictResolutionStrategy, Path]:
+    print("White processing:")
+    print(f"  {source_path}")
+    print("following path was generated:")
+    print(f"  {destination_path}")
+    print("but it cannot be used as it targets already existing file")
+    while True:
+        selected_option_name = input(
+            "[s]top, [o]verride, [c]ustom path, [I]gnore: "
+        ).lower()
+        if not selected_option_name or "ignore".startswith(selected_option_name):
+            return ConflictResolutionStrategy.ignore
+        if "stop".startswith(selected_option_name):
+            return ConflictResolutionStrategy.stop
+        if "override".startswith(selected_option_name):
+            return ConflictResolutionStrategy.override
+        if "custom path".startswith(selected_option_name):
+            custom_path = Path(input("Custom path: "))
+            return custom_path
+
+        print(f"Invalid choice '{selected_option_name}")
+
+
 def main() -> int:
     argv = sys.argv[1:]
     try:
@@ -316,7 +381,9 @@ def main() -> int:
         log.debug("Loading tags")
         registry = build_tag_registry()
         log.debug("Building pipeline")
-        pipeline = build_pipeline(config, registry)
+        pipeline = build_pipeline(
+            config, registry, manual_conflict_resolver=user_conflict_resolver
+        )
 
         log.debug("Executing pipeline")
         log.info("Directory base: %s", config.input_directory)
@@ -330,6 +397,9 @@ def main() -> int:
     except TagTemplateError as template_error:
         render_template_error(template_error)
         return 3
+    except FileExistsError as exc:
+        print("Error:", exc, file=sys.stderr)
+        return 4
 
 
 if __name__ == "__main__":

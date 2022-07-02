@@ -37,7 +37,11 @@ class CountTag(Tag):
 
 
 class ExtTag(Tag):
-    """Renders processed file extension"""
+    """Renders processed file extension
+
+    If no context is provided, current file path is used and extension is extracted from it.
+    If context is present, it is parsed as a path and file extension is extracted from it.
+    """
 
     require_context = None
 
@@ -48,7 +52,11 @@ class ExtTag(Tag):
 
 
 class BasenameTag(Tag):
-    """Renders processed file name without extension (suffix)"""
+    """Renders base file name without extension (suffix)
+
+    If no context is provided, current file path is used to determine the base file name.
+    If context is present, it is parsed as a path and file name is extracted from it.
+    """
 
     require_context = None
 
@@ -86,7 +94,7 @@ class FilenameTag(Tag):
 
 
 class SanitizeTag(Tag):
-    """Removes unsafe characters from provided context"""
+    """Removes filesystem-unsafe characters from provided context"""
 
     require_context = True
 

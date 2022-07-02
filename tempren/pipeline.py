@@ -1,9 +1,9 @@
 import logging
 import os
 from dataclasses import dataclass
-from enum import Enum
+from enum import Enum, auto
 from pathlib import Path
-from typing import Callable, Iterable, Optional
+from typing import Callable, Iterable, Optional, Union
 
 from tempren.file_filters import (
     FileFilterInverter,
@@ -14,7 +14,13 @@ from tempren.file_filters import (
     TemplateFileFilter,
 )
 from tempren.file_sorters import TemplateFileSorter
-from tempren.filesystem import FileGatherer, FileMover, FileRenamer, PrintingOnlyRenamer
+from tempren.filesystem import (
+    DestinationAlreadyExistsError,
+    FileGatherer,
+    FileMover,
+    FileRenamer,
+    PrintingOnlyRenamer,
+)
 from tempren.path_generator import File, PathGenerator
 from tempren.template.path_generators import (
     TemplateNameGenerator,
@@ -36,6 +42,21 @@ class OperationMode(Enum):
     path = "path"
 
 
+# TODO: Find a way to keep documentation close to the enum values and use it in argparser/generated help
+class ConflictResolutionStrategy(Enum):
+    stop = "stop"
+    """Stop renaming and show an error"""
+
+    ignore = "ignore"
+    """Leave conflicting record unchanged and continue with renaming"""
+
+    override = "override"
+    """Override destination record with a new name"""
+
+    manual = "manual"
+    """Prompt user to resolve conflict manually (choose an option or provide new filename)"""
+
+
 @dataclass
 class RuntimeConfiguration:
     template: str
@@ -44,6 +65,7 @@ class RuntimeConfiguration:
     filter_type: FilterType = FilterType.glob  # TODO: update
     filter_invert: bool = False
     filter: Optional[str] = None
+    conflict_strategy: ConflictResolutionStrategy = ConflictResolutionStrategy.stop
     sort_invert: bool = False
     sort: Optional[str] = None
     mode: OperationMode = OperationMode.name
@@ -53,17 +75,31 @@ class ConfigurationError(Exception):
     pass
 
 
+FileRenamerType = Callable[[Path, Path, bool], None]
+ManualConflictResolver = Callable[[Path, Path], Union[ConflictResolutionStrategy, Path]]
+
+
+def manual_resolver_placeholder(
+    source_path: Path, destination_path: Path
+) -> Union[ConflictResolutionStrategy, Path]:
+    raise NotImplementedError()
+
+
 class Pipeline:
     log: logging.Logger
     _input_directory: Path
     file_gatherer: Callable[[Path], Iterable[Path]]
     sorter: Optional[Callable[[Iterable[File]], Iterable[File]]] = None
     path_generator: PathGenerator
+    conflict_strategy: ConflictResolutionStrategy = ConflictResolutionStrategy.stop
 
     def __init__(self):
         self.log = logging.getLogger(__name__)
         self.file_filter: Callable[[File], bool] = lambda file: True
-        self.renamer: Callable[[Path, Path], None]
+        self.renamer: FileRenamerType = PrintingOnlyRenamer()
+        self.manual_conflict_resolver: ManualConflictResolver = (
+            manual_resolver_placeholder
+        )
 
     @property
     def input_directory(self) -> Path:
@@ -92,12 +128,72 @@ class Pipeline:
             all_files = self.sorter(all_files)
 
         self.log.info("Generating new names")
+        # In case when destination file exists in the first run, we add such name to the
+        # backlog and try again (in reverse order) later. This should mitigate most of
+        # transitional conflicts.
+        backlog = []
         for file in all_files:
             self.log.debug("Generating new name for %s", file)
             new_path = self.path_generator.generate(file)
             # FIXME: check generated new_path for illegal characters (like '*')
             self.log.debug("Generated path: %s", new_path)
-            self.renamer(file.relative_path, new_path)
+            try:
+                self.renamer(file.relative_path, new_path)
+            except FileExistsError:
+                self.log.debug(
+                    "Deferring renaming of %s as destination (%s) already exists",
+                    file.relative_path,
+                    new_path,
+                )
+                backlog.append((file.relative_path, new_path))
+
+        while backlog:
+            relative_name, new_path = backlog.pop()
+            self.log.debug("Trying again to rename %s into %s", relative_name, new_path)
+            try:
+                self.renamer(relative_name, new_path)
+            except FileExistsError:
+                self.resolve_conflict(relative_name, new_path, self.conflict_strategy)
+
+    def resolve_conflict(
+        self,
+        source_path: Path,
+        destination_path: Path,
+        strategy: ConflictResolutionStrategy,
+    ):
+        if strategy == ConflictResolutionStrategy.stop:
+            raise DestinationAlreadyExistsError(source_path, destination_path)
+        elif strategy == ConflictResolutionStrategy.ignore:
+            # conflict_resolver_log.info("Skipping renaming of %s to %s", source_path, source_path)
+            print(
+                f"Skipping renaming of {source_path} to {destination_path} as destination path already exists"
+            )
+        elif strategy == ConflictResolutionStrategy.override:
+            import sys
+
+            # conflict_resolver_log.warning("Overriding destination %s as it already exists", destination_path)
+            print(
+                f"Overriding destination {destination_path} as it already exists",
+                file=sys.stderr,
+            )
+            self.renamer(source_path, destination_path, True)
+        elif strategy == ConflictResolutionStrategy.manual:
+            if self.manual_conflict_resolver is None:
+                raise NotImplementedError("Manual conflict resolver not configured")
+            user_selected_strategy = self.manual_conflict_resolver(
+                source_path, destination_path
+            )
+            if isinstance(user_selected_strategy, Path):
+                user_provided_path: Path = user_selected_strategy
+                self.renamer(source_path, user_provided_path, False)
+            else:
+                self.resolve_conflict(
+                    source_path, destination_path, user_selected_strategy
+                )
+        else:
+            raise NotImplementedError(
+                f"Unknown conflict resolution strategy: {strategy}"
+            )
 
 
 def build_tag_registry() -> TagRegistry:
@@ -109,7 +205,11 @@ def build_tag_registry() -> TagRegistry:
     return registry
 
 
-def build_pipeline(config: RuntimeConfiguration, registry: TagRegistry) -> Pipeline:
+def build_pipeline(
+    config: RuntimeConfiguration,
+    registry: TagRegistry,
+    manual_conflict_resolver: ManualConflictResolver,
+) -> Pipeline:
     log.info("Building pipeline")
     pipeline = Pipeline()
     pipeline.input_directory = config.input_directory
@@ -174,6 +274,9 @@ def build_pipeline(config: RuntimeConfiguration, registry: TagRegistry) -> Pipel
         except TagTemplateError as template_error:
             template_error.template = config.sort
             raise template_error
+
+    pipeline.conflict_strategy = config.conflict_strategy
+    pipeline.manual_conflict_resolver = manual_conflict_resolver
 
     if config.dry_run:
         pipeline.renamer = PrintingOnlyRenamer()

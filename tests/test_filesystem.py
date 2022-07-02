@@ -1,6 +1,4 @@
-import os
 from pathlib import Path
-from typing import Callable
 
 import pytest
 
@@ -124,6 +122,17 @@ class TestFileRenamer:
             renamer(src, dst)
         assert exc.match(str(dst))
 
+    def test_override_destination_file(self, text_data_dir: Path):
+        src = text_data_dir / "hello.txt"
+        dst = text_data_dir / "markdown.md"
+        assert dst.exists()
+        renamer = FileRenamer()
+
+        renamer(src, dst, True)
+
+        assert not src.exists()
+        assert dst.exists()
+
 
 class TestFileMover:
     def test_same_name(self, text_data_dir: Path):
@@ -224,6 +233,17 @@ class TestFileMover:
         assert existing_dir.exists()
         assert dst.exists()
 
+    def test_override_destination_file(self, text_data_dir: Path):
+        src = text_data_dir / "hello.txt"
+        dst = text_data_dir / "markdown.md"
+        assert dst.exists()
+        mover = FileMover()
+
+        mover(src, dst, True)
+
+        assert not src.exists()
+        assert dst.exists()
+
 
 class TestPrintingOnlyRenamer:
     def test_same_name(self, text_data_dir: Path):
@@ -285,3 +305,14 @@ class TestPrintingOnlyRenamer:
         with pytest.raises(FileExistsError) as exc:
             renamer(src, dst)
         assert exc.match(str(dst))
+
+    def test_override_destination_file(self, text_data_dir: Path):
+        src = text_data_dir / "hello.txt"
+        dst = text_data_dir / "markdown.md"
+        assert dst.exists()
+        renamer = PrintingOnlyRenamer()
+
+        renamer(src, dst, True)
+
+        assert src.exists()
+        assert dst.exists()

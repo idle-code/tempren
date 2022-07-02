@@ -97,7 +97,7 @@ class StripTag(Tag):
     left: bool = False
     right: bool = False
 
-    def configure(self, strip_characters: Optional[str] = None, left: bool = False, right: bool = False):  # type: ignore
+    def configure(self, strip_characters: str = strip_characters, left: bool = False, right: bool = False):  # type: ignore
         if strip_characters:
             self.strip_characters = strip_characters
         self.left = left
