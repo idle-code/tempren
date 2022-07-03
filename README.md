@@ -2,6 +2,7 @@
 
 ![run-tests](https://github.com/idle-code/tempren/actions/workflows/run-tests.yml/badge.svg)
 [![codecov](https://codecov.io/gh/idle-code/tempren/branch/develop/graph/badge.svg?token=1CR2PX6GYB)](https://codecov.io/gh/idle-code/tempren)
+[![PyPI version](https://badge.fury.io/py/tempren.svg)](https://badge.fury.io/py/tempren)
 
 `tempren` is a powerful batch file renamer that can generate filenames based on flexible template expressions.
 It can create new or process existing filenames or sort files into directories based on their attributes (metadata).
@@ -13,6 +14,17 @@ It can create new or process existing filenames or sort files into directories b
 - Configurable file selection (filtering)
 - Metadata-based sorting
 
+
+# Quickstart (5 minutes required)
+People don't have to rename massive amounts of files very often and
+learning new software just to solve the problem you are facing sporadically
+might be daunting.
+
+This quickstart is meant to introduce you to the `tempren` and give you
+enough information to make sure it is up to the task you are facing.
+You will need around 5 minutes total to work through it.
+
+For more comprehensive documentation please refer to the [manual](MANUAL.md).
 
 ## Install
 ```console
