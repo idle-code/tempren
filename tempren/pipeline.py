@@ -1,7 +1,7 @@
 import logging
 import os
 from dataclasses import dataclass
-from enum import Enum, auto
+from enum import Enum
 from pathlib import Path
 from typing import Callable, Iterable, Optional, Union
 
@@ -164,17 +164,14 @@ class Pipeline:
         if strategy == ConflictResolutionStrategy.stop:
             raise DestinationAlreadyExistsError(source_path, destination_path)
         elif strategy == ConflictResolutionStrategy.ignore:
-            # conflict_resolver_log.info("Skipping renaming of %s to %s", source_path, source_path)
-            print(
-                f"Skipping renaming of {source_path} to {destination_path} as destination path already exists"
+            self.log.info(
+                "Skipping renaming of %s to %s as destination path already exists",
+                source_path,
+                destination_path,
             )
         elif strategy == ConflictResolutionStrategy.override:
-            import sys
-
-            # conflict_resolver_log.warning("Overriding destination %s as it already exists", destination_path)
-            print(
-                f"Overriding destination {destination_path} as it already exists",
-                file=sys.stderr,
+            self.log.warning(
+                "Overriding destination %s as it already exists", destination_path
             )
             self.renamer(source_path, destination_path, True)
         elif strategy == ConflictResolutionStrategy.manual:
@@ -197,7 +194,7 @@ class Pipeline:
 
 
 def build_tag_registry() -> TagRegistry:
-    log.info("Building tag registry")
+    log.debug("Building tag registry")
     import tempren.tags
 
     registry = TagRegistry()
@@ -210,7 +207,7 @@ def build_pipeline(
     registry: TagRegistry,
     manual_conflict_resolver: ManualConflictResolver,
 ) -> Pipeline:
-    log.info("Building pipeline")
+    log.debug("Building pipeline")
     pipeline = Pipeline()
     pipeline.input_directory = config.input_directory
     # TODO: specify base_path

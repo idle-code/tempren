@@ -180,7 +180,13 @@ class _TreeVisitor(TagTemplateParserVisitor):
 
 
 class TagTreeBuilder:
+    log: logging.Logger
+
+    def __init__(self):
+        self.log = logging.getLogger(self.__class__.__name__)
+
     def parse(self, text: str) -> Pattern:
+        self.log.debug("Parsing '%s'", text)
         lexer = TagTemplateLexer(InputStream(text))
         token_stream = CommonTokenStream(lexer)
         token_stream.fill()
@@ -286,14 +292,16 @@ class TagCategory:
     tag_map: Dict[str, TagFactory]
 
     def __init__(self, name: str, description: Optional[str] = None):
-        self.log = logging.getLogger(__name__)
+        self.log = logging.getLogger(self.__class__.__name__)
         self.tag_map = {}
         self.name = name
         self.description = description
 
     def register_tag(self, tag_class: Type[Tag], tag_name: Optional[str] = None):
         _simple_tag_factory = TagFactoryFromClass(tag_class, tag_name)
-        self.log.debug(f"Registering class {tag_class} as {tag_name} tag")
+        self.log.debug(
+            f"Registering class {tag_class} as {_simple_tag_factory.tag_name} tag"
+        )
         self.register_tag_factory(_simple_tag_factory, tag_name)
 
     def register_tag_factory(
@@ -317,7 +325,7 @@ class TagRegistry:
     category_map: Dict[str, TagCategory]
 
     def __init__(self):
-        self.log = logging.getLogger(__name__)
+        self.log = logging.getLogger(self.__class__.__name__)
         self.category_map = {}
 
     @property

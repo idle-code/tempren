@@ -3,6 +3,7 @@ import argparse
 import logging
 import sys
 from argparse import ArgumentParser, Namespace
+from logging import LogRecord
 from pathlib import Path
 from textwrap import indent
 from typing import Any, List, NoReturn, Optional, Sequence, Text, Union
@@ -18,7 +19,44 @@ from .pipeline import (
 from .template.tree_builder import TagTemplateError
 
 log = logging.getLogger("CLI")
-logging.basicConfig(level=logging.WARNING)
+
+
+class LogFormatter(logging.Formatter):
+    def __init__(self) -> None:
+        super().__init__()
+
+    def format(self, record: LogRecord) -> str:
+        if logging.root.level <= logging.NOTSET:  # NOCOVER: developer option
+            return f"{record.name}:{record.levelname}: {record.getMessage()}"
+        if record.levelno == logging.INFO:
+            return record.getMessage()
+        else:
+            return f"{record.levelname}: {record.getMessage()}"
+
+
+class LogLevelFilter(logging.Filter):
+    def __init__(self, min_level: int, max_level: int):
+        super().__init__()
+        assert min_level <= max_level
+        self.min_level = min_level
+        self.max_level = max_level
+
+    def filter(self, record: LogRecord) -> bool:
+        return self.min_level <= record.levelno <= self.max_level
+
+
+# TODO: Use dictConfig for more readability
+# CHECK: Move to config module?
+def configure_logging():
+    stdout_handler = logging.StreamHandler(sys.stdout)
+    stdout_handler.addFilter(LogLevelFilter(0, logging.INFO))
+    stdout_handler.setFormatter(LogFormatter())
+    stderr_handler = logging.StreamHandler(sys.stderr)
+    stderr_handler.addFilter(LogLevelFilter(logging.WARNING, 1000))
+    stderr_handler.setFormatter(LogFormatter())
+    logging.root.setLevel(logging.INFO)
+    logging.root.addHandler(stdout_handler)
+    logging.root.addHandler(stderr_handler)
 
 
 def existing_directory(val: str) -> Path:
@@ -45,9 +83,9 @@ class _ListAvailableTags(argparse.Action):
         option_string: Optional[Text] = None,
     ):
         registry = build_tag_registry()
-        print("Available tags:")
+        log.info("Available tags:")
         for category_name in sorted(registry.category_map.keys()):
-            print(f"{category_name.capitalize()}:")
+            log.info(f"{category_name.capitalize()}:")
             category = registry.category_map[category_name]
 
             all_category_tags = sorted(category.tag_map.items())
@@ -58,7 +96,7 @@ class _ListAvailableTags(argparse.Action):
                 "Longest tag name: %d in category %s", max_name_length, category_name
             )
             for tag_name, factory in all_category_tags:
-                print(
+                log.info(
                     f"  {tag_name.ljust(max_name_length)} - {factory.short_description}"
                 )
         parser.exit()
@@ -80,12 +118,12 @@ class _ShowHelp(argparse.Action):
             tag_factory = registry.find_tag_factory(tag_name)
             if tag_factory is None:
                 parser.exit(1, f"Could not find tag with '{tag_name}' name")
-            print(tag_factory.configuration_signature)
-            print()
-            print(tag_factory.short_description)
+            log.info(tag_factory.configuration_signature)
+            log.info("")
+            log.info(tag_factory.short_description)
             if tag_factory.long_description:
-                print()
-                print(tag_factory.long_description)
+                log.info("")
+                log.info(tag_factory.long_description)
 
         parser.exit()
 
@@ -98,7 +136,7 @@ class _ShowVersion(argparse.Action):
         values: Union[Text, Sequence[Any], None],
         option_string: Optional[Text] = None,
     ):
-        print(self.find_package_version())
+        log.info(self.find_package_version())
         parser.exit()
 
     @staticmethod
@@ -127,11 +165,25 @@ class _IncreaseLogVerbosity(argparse.Action):
     ):
         root_logger = logging.getLogger()
         root_logger.setLevel(root_logger.level - 10)
-        log.info("Verbosity level set to %d", root_logger.level)
+        log.debug("Verbosity level set to %d", root_logger.level)
+
+
+class _DecreaseLogVerbosity(argparse.Action):
+    def __call__(
+        self,
+        parser: ArgumentParser,
+        namespace: Namespace,
+        values: Union[Text, Sequence[Any], None],
+        option_string: Optional[Text] = None,
+    ):
+        root_logger = logging.getLogger()
+        root_logger.setLevel(root_logger.level + 10)
+        log.debug("Verbosity level set to %d", root_logger.level)
 
 
 # CHECK: use pydantic-cli for argument parsing
 def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
+    log.debug("Parsing command line arguments")
     parser = argparse.ArgumentParser(
         prog="tempren",
         description="Template-based renaming utility",
@@ -151,6 +203,13 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         action=_IncreaseLogVerbosity,
         nargs=0,
         help="Increase logging verbosity",
+    )
+    parser.add_argument(
+        "-q",
+        "--quiet",
+        action=_DecreaseLogVerbosity,
+        nargs=0,
+        help="Decrease logging verbosity",
     )
 
     operation_modes_group = parser.add_argument_group("operation modes")
@@ -337,25 +396,20 @@ def render_template_error(template_error: TagTemplateError, indent_size: int = 4
         underline = (
             " " * template_error.location.column + "~" * template_error.location.length
         )
-    print(file=sys.stderr)
-    print(
-        indent("\n".join((template_error.template, underline)), " " * indent_size),
-        file=sys.stderr,
-    )
-    print(
-        f"Template error at {template_error.location}: {template_error.message}",
-        file=sys.stderr,
-    )
+    log.error("")
+    log.error(indent(template_error.template, " " * indent_size))
+    log.error(indent(underline, " " * indent_size))
+    log.error(f"Template error at {template_error.location}: {template_error.message}")
 
 
 def user_conflict_resolver(
     source_path: Path, destination_path: Path
 ) -> Union[ConflictResolutionStrategy, Path]:
-    print("White processing:")
-    print(f"  {source_path}")
-    print("following path was generated:")
-    print(f"  {destination_path}")
-    print("but it cannot be used as it targets already existing file")
+    log.warning("White processing:")
+    log.warning(f"  {source_path}")
+    log.warning("following path was generated:")
+    log.warning(f"  {destination_path}")
+    log.warning("but it cannot be used as it targets already existing file")
     while True:
         selected_option_name = input(
             "[s]top, [o]verride, [c]ustom path, [I]gnore: "
@@ -370,35 +424,30 @@ def user_conflict_resolver(
             custom_path = Path(input("Custom path: "))
             return custom_path
 
-        print(f"Invalid choice '{selected_option_name}")
+        log.error(f"Invalid choice '{selected_option_name}")
 
 
 def main() -> int:
+    configure_logging()
     argv = sys.argv[1:]
     try:
-        log.debug("Parsing configuration")
         config = process_cli_configuration(argv)
-        log.debug("Loading tags")
         registry = build_tag_registry()
-        log.debug("Building pipeline")
         pipeline = build_pipeline(
             config, registry, manual_conflict_resolver=user_conflict_resolver
         )
-
-        log.debug("Executing pipeline")
-        log.info("Directory base: %s", config.input_directory)
         pipeline.execute()
         log.info("Done")
         return 0
     except SystemExitError as exc:
         if exc.status != 0:
-            print(exc, file=sys.stderr, end="")
+            log.error(exc)
         return exc.status
     except TagTemplateError as template_error:
         render_template_error(template_error)
         return 3
     except FileExistsError as exc:
-        print("Error:", exc, file=sys.stderr)
+        log.error(f"Error: {exc}")
         return 4
 
 

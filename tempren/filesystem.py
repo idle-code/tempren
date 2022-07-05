@@ -93,8 +93,8 @@ class PrintingOnlyRenamer:
         if not source_path.exists():
             raise FileNotFoundError(f"No such file or directory: {source_path}")
 
-        print(f"\nRenaming: {source_path}")
+        self.log.info(f"\nRenaming: {source_path}")
         if override:
-            print(f"      to: {destination_path} (override)")
+            self.log.info(f"      to: {destination_path} (override)")
         else:
-            print(f"      to: {destination_path}")
+            self.log.info(f"      to: {destination_path}")

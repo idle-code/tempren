@@ -16,7 +16,7 @@ project_root_path = os.getcwd()
 
 def run_tempren_process(*args) -> Tuple[str, str, int]:
     """Run tempren with provided arguments as separate process"""
-    args = list(map(str, args))
+    args = list(map(str, filter(lambda v: v is not None, args)))
     os.chdir(project_root_path)
     completed_process = subprocess.run(
         [sys.executable, "-m", "tempren.cli"] + args,
@@ -32,9 +32,9 @@ def run_tempren_process(*args) -> Tuple[str, str, int]:
 
 def start_tempren_process(*args) -> subprocess.Popen:
     """Run tempren with provided arguments as separate process"""
-    args = list(map(str, args))
-    # print(" ".join([sys.executable, "-m", "tempren.cli"] + args))
+    args = list(map(str, filter(lambda v: v is not None, args)))
     # CHECK: Use pexpect?
+    print("Running: tempren", " ".join(args))
     tempren_process = subprocess.Popen(
         [sys.executable, "-m", "tempren.cli"] + args,
         stdin=subprocess.PIPE,
@@ -49,7 +49,7 @@ def start_tempren_process(*args) -> subprocess.Popen:
 
 def run_tempren(*args) -> Tuple[str, str, int]:
     """Run tempren's main() function with provided arguments"""
-    args = list(map(str, args))
+    args = list(map(str, filter(lambda v: v is not None, args)))
     old_sys_argv = sys.argv.copy()
     sys.argv[1:] = args
     print("Running: tempren", " ".join(args))
@@ -117,7 +117,13 @@ class TestVariousFlags:
     def test_verbose_output(self, flag: str):
         stdout, stderr, error_code = run_tempren_process(flag, "--list-tags")
 
-        assert "Verbosity level set to" in stderr
+        assert "Verbosity level set to" in stdout
+
+    @pytest.mark.parametrize("flag", ["-q", "--quiet"])
+    def test_quiet_output(self, flag: str):
+        stdout, stderr, error_code = run_tempren_process(flag, "--list-tags")
+
+        assert not stdout
 
     @pytest.mark.parametrize("flag", ["-h", "--help"])
     def test_help_nonexistent_tag_documentation(self, flag: str):
@@ -269,14 +275,9 @@ class TestSortingFlags:
 @pytest.mark.parametrize("name_mode_flag", ["-n", "--name", None])
 class TestNameMode:
     def test_name_mode(self, text_data_dir: Path, name_mode_flag: str):
-        if name_mode_flag is None:
-            stdout, stderr, error_code = run_tempren(
-                "%Upper(){%Filename()}", text_data_dir
-            )
-        else:
-            stdout, stderr, error_code = run_tempren(
-                name_mode_flag, "%Upper(){%Filename()}", text_data_dir
-            )
+        stdout, stderr, error_code = run_tempren(
+            name_mode_flag, "%Upper(){%Filename()}", text_data_dir
+        )
 
         assert error_code == 0
         assert (text_data_dir / "HELLO.TXT").exists()
@@ -390,7 +391,7 @@ class TestConflictResolution:
 
         assert error_code == 0
         assert "Skipping renaming of" in stdout
-        assert "as destination path" in stdout
+        assert "as destination path already exists" in stdout
         assert "StaticFilename" in stdout
         assert not (text_data_dir / "hello.txt").exists()
         assert (text_data_dir / "StaticFilename").exists()
@@ -419,8 +420,8 @@ class TestConflictResolution:
         )
 
         stdout, stderr = tempren_process.communicate(input=selection + "\n", timeout=3)
-        assert "StaticFilename" in stdout
-        assert "already existing file" in stdout
+        assert "StaticFilename" in stderr
+        assert "already existing file" in stderr
 
         error_code = tempren_process.wait()
         assert error_code != 0
@@ -441,8 +442,8 @@ class TestConflictResolution:
         )
 
         stdout, stderr = tempren_process.communicate(input=selection + "\n", timeout=3)
-        assert "StaticFilename" in stdout
-        assert "already existing file" in stdout
+        assert "StaticFilename" in stderr
+        assert "already existing file" in stderr
 
         error_code = tempren_process.wait()
         assert error_code == 0
@@ -462,13 +463,13 @@ class TestConflictResolution:
         )
 
         stdout, stderr = tempren_process.communicate(input=selection + "\n", timeout=3)
-        assert "StaticFilename" in stdout
-        assert "already existing file" in stdout
+        assert "StaticFilename" in stderr
+        assert "already existing file" in stderr
 
         error_code = tempren_process.wait()
         assert error_code == 0
         assert "Skipping renaming of" in stdout
-        assert "as destination path" in stdout
+        assert "as destination path already exists" in stdout
         assert "StaticFilename" in stdout
         assert not (text_data_dir / "hello.txt").exists()
         assert (text_data_dir / "StaticFilename").exists()
@@ -488,8 +489,8 @@ class TestConflictResolution:
         stdout, stderr = tempren_process.communicate(
             input=selection + "\n" + "UserProvidedName" + "\n", timeout=3
         )
-        assert "StaticFilename" in stdout
-        assert "already existing file" in stdout
+        assert "StaticFilename" in stderr
+        assert "already existing file" in stderr
         assert "Custom path" in stdout
 
         error_code = tempren_process.wait()
@@ -534,7 +535,7 @@ class TestConflictResolution:
         stdout, stderr = tempren_process.communicate(
             input="foobar\nignore\n", timeout=3
         )
-        assert "Invalid choice" in stdout
-        assert "foobar" in stdout
+        assert "Invalid choice" in stderr
+        assert "foobar" in stderr
 
         tempren_process.wait()
