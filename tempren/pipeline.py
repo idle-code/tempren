@@ -27,6 +27,7 @@ from tempren.template.path_generators import (
     TemplatePathGenerator,
 )
 from tempren.template.tree_builder import TagRegistry, TagTemplateError, TagTreeBuilder
+from tempren.template.tree_elements import Pattern
 
 log = logging.getLogger(__name__)
 
@@ -214,11 +215,15 @@ def build_pipeline(
     pipeline.file_gatherer = FileGatherer  # type: ignore
     tree_builder = TagTreeBuilder()
 
-    try:
-        bound_pattern = registry.bind(tree_builder.parse(config.template))
-    except TagTemplateError as template_error:
-        template_error.template = config.template
-        raise template_error
+    def _compile_template(template_text: str) -> Pattern:
+        log.debug("Compiling template '%s'", template_text)
+        try:
+            return registry.bind(tree_builder.parse(template_text))
+        except TagTemplateError as template_error:
+            template_error.template = template_text
+            raise template_error
+
+    bound_pattern = _compile_template(config.template)
 
     if config.mode == OperationMode.name:
         pipeline.path_generator = TemplateNameGenerator(bound_pattern)
@@ -228,14 +233,8 @@ def build_pipeline(
             elif config.filter_type == FilterType.glob:
                 pipeline.file_filter = GlobFilenameFileFilter(config.filter)
             elif config.filter_type == FilterType.template:
-                try:
-                    bound_filter_pattern = registry.bind(
-                        tree_builder.parse(config.filter)
-                    )
-                    pipeline.file_filter = TemplateFileFilter(bound_filter_pattern)
-                except TagTemplateError as template_error:
-                    template_error.template = config.filter
-                    raise template_error
+                bound_filter_pattern = _compile_template(config.filter)
+                pipeline.file_filter = TemplateFileFilter(bound_filter_pattern)
             else:
                 raise NotImplementedError("Unknown filter type")
     elif config.mode == OperationMode.path:
@@ -246,14 +245,8 @@ def build_pipeline(
             elif config.filter_type == FilterType.glob:
                 pipeline.file_filter = GlobPathFileFilter(config.filter)
             elif config.filter_type == FilterType.template:
-                try:
-                    bound_filter_pattern = registry.bind(
-                        tree_builder.parse(config.filter)
-                    )
-                    pipeline.file_filter = TemplateFileFilter(bound_filter_pattern)
-                except TagTemplateError as template_error:
-                    template_error.template = config.filter
-                    raise template_error
+                bound_filter_pattern = _compile_template(config.filter)
+                pipeline.file_filter = TemplateFileFilter(bound_filter_pattern)
             else:
                 raise NotImplementedError("Unknown filter type")
     else:
@@ -263,14 +256,8 @@ def build_pipeline(
         pipeline.file_filter = FileFilterInverter(pipeline.file_filter)
 
     if config.sort:
-        try:
-            bound_sorter_pattern = registry.bind(tree_builder.parse(config.sort))
-            pipeline.sorter = TemplateFileSorter(
-                bound_sorter_pattern, config.sort_invert
-            )
-        except TagTemplateError as template_error:
-            template_error.template = config.sort
-            raise template_error
+        bound_sorter_pattern = _compile_template(config.sort)
+        pipeline.sorter = TemplateFileSorter(bound_sorter_pattern, config.sort_invert)
 
     pipeline.conflict_strategy = config.conflict_strategy
     pipeline.manual_conflict_resolver = manual_conflict_resolver

@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from pytest import raises
+
 from tempren.template.tree_elements import Pattern, RawText, TagInstance, TagPlaceholder
 
 from .mocks import MockTag
@@ -33,6 +34,12 @@ class TestPattern:
         element = Pattern([RawText("foo"), RawText("bar")])
 
         assert element.process(nonexistent_path) == "foobar"
+
+    def test_escaped_tag_invocation(self, nonexistent_path: Path):
+        mock_tag = MockTag(process_output="foo")
+        element = Pattern([TagInstance(tag=mock_tag), RawText(" == 'bar'")])
+
+        assert element.process_as_expression(nonexistent_path) == "'foo' == 'bar'"
 
 
 class TestTagPlaceholder:

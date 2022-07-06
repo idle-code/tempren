@@ -48,9 +48,27 @@ class Pattern(PatternElement):
 
     @staticmethod
     def _convert_tag_value(tag_value) -> str:
+        """Renders value returned by tag invocation as a string"""
         if isinstance(tag_value, str):
             return tag_value
         return repr(tag_value)
+
+    def process_as_expression(self, path: Path) -> str:
+        return "".join(
+            map(
+                lambda se: Pattern._convert_to_representation(se, path),
+                self.sub_elements,
+            )
+        )
+
+    @staticmethod
+    def _convert_to_representation(element: PatternElement, path: Path) -> str:
+        """Renders value returned by tag invocation as a string representation (as to be used in evaluated
+        expressions)"""
+        tag_value = element.process(path)
+        if isinstance(element, TagInstance):
+            return repr(tag_value)
+        return Pattern._convert_tag_value(tag_value)
 
 
 @dataclass
@@ -67,7 +85,7 @@ class TagPlaceholder(PatternElement):
 
     def process(self, path: Path) -> str:
         raise NotImplementedError(
-            "TagInvocation shouldn't be present in bound tag tree"
+            "TagPlaceholder shouldn't be present in bound tag tree"
         )
 
 
