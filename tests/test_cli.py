@@ -365,15 +365,10 @@ class TestConflictResolution:
         assert (text_data_dir / "2").exists()
 
     @pytest.mark.parametrize("flag", ["-cs", "--conflict-stop", None])
-    def test_stop_conflict_resolution(self, text_data_dir: Path, flag: str):
-        if flag:
-            stdout, stderr, error_code = run_tempren(
-                flag, "--sort", "'%Filename()'", "StaticFilename", text_data_dir
-            )
-        else:
-            stdout, stderr, error_code = run_tempren(
-                "--sort", "'%Filename()'", "StaticFilename", text_data_dir
-            )
+    def test_stop_conflict_resolution(self, text_data_dir: Path, flag: Optional[str]):
+        stdout, stderr, error_code = run_tempren(
+            flag, "--sort", "%Filename()", "StaticFilename", text_data_dir
+        )
 
         assert error_code != 0
         assert "Could not rename" in stderr
@@ -386,7 +381,7 @@ class TestConflictResolution:
     @pytest.mark.parametrize("flag", ["-ci", "--conflict-ignore"])
     def test_ignore_conflict_resolution(self, text_data_dir: Path, flag: str):
         stdout, stderr, error_code = run_tempren(
-            flag, "--sort", "'%Filename()'", "StaticFilename", text_data_dir
+            flag, "--sort", "%Filename()", "StaticFilename", text_data_dir
         )
 
         assert error_code == 0
@@ -400,7 +395,7 @@ class TestConflictResolution:
     @pytest.mark.parametrize("flag", ["-co", "--conflict-override"])
     def test_override_conflict_resolution(self, text_data_dir: Path, flag: str):
         stdout, stderr, error_code = run_tempren(
-            flag, "--sort", "'%Filename()'", "StaticFilename", text_data_dir
+            flag, "--sort", "%Filename()", "StaticFilename", text_data_dir
         )
 
         assert error_code == 0
@@ -416,7 +411,7 @@ class TestConflictResolution:
         self, text_data_dir: Path, flag: str, selection: str
     ):
         tempren_process = start_tempren_process(
-            flag, "--sort", "'%Filename()'", "StaticFilename", text_data_dir
+            flag, "--sort", "%Filename()", "StaticFilename", text_data_dir
         )
 
         stdout, stderr = tempren_process.communicate(input=selection + "\n", timeout=3)
@@ -438,7 +433,7 @@ class TestConflictResolution:
         self, text_data_dir: Path, flag: str, selection: str
     ):
         tempren_process = start_tempren_process(
-            flag, "--sort", "'%Filename()'", "StaticFilename", text_data_dir
+            flag, "--sort", "%Filename()", "StaticFilename", text_data_dir
         )
 
         stdout, stderr = tempren_process.communicate(input=selection + "\n", timeout=3)
@@ -459,7 +454,7 @@ class TestConflictResolution:
         self, text_data_dir: Path, flag: str, selection: str
     ):
         tempren_process = start_tempren_process(
-            flag, "--sort", "'%Filename()'", "StaticFilename", text_data_dir
+            flag, "--sort", "%Filename()", "StaticFilename", text_data_dir
         )
 
         stdout, stderr = tempren_process.communicate(input=selection + "\n", timeout=3)
@@ -483,7 +478,7 @@ class TestConflictResolution:
         self, text_data_dir: Path, flag: str, selection: str
     ):
         tempren_process = start_tempren_process(
-            flag, "--sort", "'%Filename()'", "StaticFilename", text_data_dir
+            flag, "--sort", "%Filename()", "StaticFilename", text_data_dir
         )
 
         stdout, stderr = tempren_process.communicate(
@@ -506,7 +501,7 @@ class TestConflictResolution:
         tempren_process = start_tempren_process(
             "--conflict-manual",
             "--sort",
-            "'%Filename()'",
+            "%Filename()",
             "StaticFilename",
             text_data_dir,
         )
@@ -527,7 +522,7 @@ class TestConflictResolution:
         tempren_process = start_tempren_process(
             "--conflict-manual",
             "--sort",
-            "'%Filename()'",
+            "%Filename()",
             "StaticFilename",
             text_data_dir,
         )
