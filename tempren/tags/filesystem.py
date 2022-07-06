@@ -19,6 +19,8 @@ class SizeTag(Tag):
 class MTimeTag(Tag):
     """Returns file modification time (in ISO 8601 format)"""
 
+    require_context = False
+
     def process(self, path: Path, context: Optional[str]) -> Any:
         assert context is None
         mtime_seconds = os.path.getmtime(path)

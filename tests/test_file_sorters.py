@@ -51,25 +51,38 @@ class TestTemplateFileSorter:
     @pytest.mark.parametrize(
         "tag1_implementation,tag2_implementation",
         [
-            (lambda path, context: path, lambda path, context: "constant"),
-            (lambda path, context: "constant", lambda path, context: path),
+            (lambda path, context: "constant", lambda path, context: str(path)),
             (lambda path, context: int(str(path)), lambda path, context: str(path)),
         ],
     )
-    def test_multiple_tag_output(self, tag1_implementation, tag2_implementation):
-        filepath_tag1 = GeneratorTag(
-            lambda path, context: tag1_implementation(path, context)
-        )
-        filepath_tag2 = GeneratorTag(
-            lambda path, context: tag2_implementation(path, context)
-        )
+    def test_tag_output_rendering(self, tag1_implementation, tag2_implementation):
+        tag1 = GeneratorTag(lambda path, context: tag1_implementation(path, context))
+        tag2 = GeneratorTag(lambda path, context: tag2_implementation(path, context))
         pattern = Pattern(
             [
-                TagInstance(tag=filepath_tag1),
+                TagInstance(tag=tag1),
                 RawText(", "),
-                TagInstance(tag=filepath_tag2),
+                TagInstance(tag=tag2),
             ]
         )
+        file_sorter = TemplateFileSorter(pattern)
+        files = [
+            File(Path("3")),
+            File(Path("1")),
+            File(Path("2")),
+        ]
+
+        sorted_files = file_sorter(files)
+
+        assert sorted_files == [
+            File(Path("1")),
+            File(Path("2")),
+            File(Path("3")),
+        ]
+
+    def test_path_rendering(self, nonexistent_path: Path):
+        filepath_tag = GeneratorTag(lambda path, context: path)
+        pattern = Pattern([TagInstance(tag=filepath_tag)])
         file_sorter = TemplateFileSorter(pattern)
         files = [
             File(Path("3")),

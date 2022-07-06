@@ -2,6 +2,7 @@ import fnmatch
 import logging
 import re
 from abc import ABC, abstractmethod
+from pathlib import PosixPath
 from typing import Callable
 
 from tempren.path_generator import File
@@ -74,6 +75,8 @@ class GlobPathFileFilter(GlobFileFilter):
 class TemplateFileFilter(FileFilter):
     log: logging.Logger
     pattern: Pattern
+    # TODO: Merge following with TemplateFileSorter._evaluation_locals
+    _evaluation_locals = {"PosixPath": PosixPath}
 
     def __init__(self, pattern: Pattern):
         self.log = logging.getLogger(__name__)
@@ -81,8 +84,8 @@ class TemplateFileFilter(FileFilter):
 
     def __call__(self, file: File) -> bool:
         self.log.debug("Rendering filter template for '%s'", file)
-        rendered_expression = self.pattern.process(file.relative_path)
+        rendered_expression = self.pattern.process_as_expression(file.relative_path)
         self.log.debug("Evaluating filter expression '%s'", rendered_expression)
-        evaluation_result = eval(rendered_expression, {}, {})
+        evaluation_result = eval(rendered_expression, {}, self._evaluation_locals)
         self.log.debug("Evaluation result '%s'", repr(evaluation_result))
         return bool(evaluation_result)
