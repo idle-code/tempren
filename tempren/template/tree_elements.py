@@ -6,6 +6,8 @@ from typing import Any, Callable, List, Mapping, Optional, Type
 
 from docstring_parser import parse as parse_docstring
 
+from tempren.path_generator import File
+
 
 @dataclass
 class Location:
@@ -96,7 +98,7 @@ class Tag(ABC):
         pass
 
     @abstractmethod
-    def process(self, path: Path, context: Optional[str]) -> Any:
+    def process(self, file: File, context: Optional[str]) -> Any:
         raise NotImplementedError()
 
 
