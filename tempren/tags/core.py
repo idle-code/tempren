@@ -49,7 +49,7 @@ class ExtTag(Tag):
     def process(self, file: File, context: Optional[str]) -> str:
         if context:
             return str(Path(context).suffix).lstrip(".")
-        return str(file.absolute_path.suffix).lstrip(".")
+        return str(file.relative_path.suffix).lstrip(".")
 
 
 class BasenameTag(Tag):
@@ -65,7 +65,7 @@ class BasenameTag(Tag):
     def process(self, file: File, context: Optional[str]) -> str:
         if context:
             return Path(context).stem
-        return file.absolute_path.stem
+        return file.relative_path.stem
 
 
 class DirnameTag(Tag):

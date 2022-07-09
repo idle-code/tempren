@@ -19,7 +19,7 @@ class TestTemplateNameGenerator:
     def test_replacement_is_used_for_filename(self, text_data_dir: Path):
         generator = TemplateNameGenerator(static_pattern("new_name"))
         os.chdir(text_data_dir)
-        src_file = File(Path("hello.txt"))
+        src_file = File(text_data_dir, Path("hello.txt"))
 
         dst_path = generator.generate(src_file)
 
@@ -29,7 +29,7 @@ class TestTemplateNameGenerator:
     def test_generated_replacement_is_path(self, text_data_dir: Path):
         generator = TemplateNameGenerator(static_pattern("file/path"))
         os.chdir(text_data_dir)
-        src_file = File(Path("hello.txt"))
+        src_file = File(text_data_dir, Path("hello.txt"))
 
         with pytest.raises(ValueError) as exc:
             generator.generate(src_file)
@@ -41,7 +41,7 @@ class TestTemplatePathGenerator:
     def test_replacement_is_used_for_path(self, text_data_dir: Path):
         generator = TemplatePathGenerator(static_pattern("new/file/path"))
         os.chdir(text_data_dir)
-        src_file = File(Path("hello.txt"))
+        src_file = File(text_data_dir, Path("hello.txt"))
 
         dst_path = generator.generate(src_file)
 

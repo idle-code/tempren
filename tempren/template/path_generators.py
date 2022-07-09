@@ -19,8 +19,8 @@ class TemplateGenerator(PathGenerator, ABC):
         pass
 
     def generate_replacement(self, file: File) -> str:
-        self.log.debug("Rendering template for '%s'", file.relative_path)
-        return self.pattern.process(file.relative_path)
+        self.log.debug("Rendering template for '%s'", file)
+        return self.pattern.process(file)
 
 
 class TemplateNameGenerator(TemplateGenerator):

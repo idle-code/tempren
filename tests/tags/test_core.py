@@ -134,17 +134,17 @@ class TestBasenameTag:
 
 
 class TestDirnameTag:
-    def test_no_context(self):
+    def test_no_context(self, nonexistent_absolute_path: Path):
         tag = DirnameTag()
-        file = File(Path("/test"), Path("/test/dir/file.name"))
+        file = File(nonexistent_absolute_path, Path("dir/file.name"))
 
         dirname = tag.process(file, None)
 
         assert dirname == "dir"
 
-    def test_no_parent_dir(self):
+    def test_no_parent_dir(self, nonexistent_absolute_path: Path):
         tag = DirnameTag()
-        file = File(Path("/test"), Path("/test/file.name"))
+        file = File(nonexistent_absolute_path, Path("file.name"))
 
         dirname = tag.process(file, None)
 

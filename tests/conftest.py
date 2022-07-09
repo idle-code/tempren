@@ -14,9 +14,13 @@ def nonexistent_path() -> Path:
 
 
 @pytest.fixture
-def nonexistent_file() -> File:
-    absolute_path = Path("/nonexistent/path")
-    return File(absolute_path.parent, absolute_path)
+def nonexistent_absolute_path() -> Path:
+    return Path("/nonexistent/path")
+
+
+@pytest.fixture
+def nonexistent_file(nonexistent_absolute_path: Path) -> File:
+    return File(nonexistent_absolute_path, Path("some.file"))
 
 
 @pytest.fixture
