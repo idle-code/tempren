@@ -3,6 +3,7 @@ from typing import Optional
 
 import pathvalidate
 
+from tempren.template.path_generators import File
 from tempren.template.tree_elements import Tag
 
 
@@ -30,7 +31,7 @@ class CountTag(Tag):
             raise ValueError("width have to be greater or equal 0")
         self.width = width
 
-    def process(self, path: Path, context: Optional[str]) -> str:
+    def process(self, file: File, context: Optional[str]) -> str:
         value = self.counter
         self.counter += self.step
         return str(value).zfill(self.width)
@@ -45,10 +46,10 @@ class ExtTag(Tag):
 
     require_context = None
 
-    def process(self, path: Path, context: Optional[str]) -> str:
+    def process(self, file: File, context: Optional[str]) -> str:
         if context:
-            path = Path(context)
-        return path.suffix.lstrip(".")
+            return str(Path(context).suffix).lstrip(".")
+        return str(file.absolute_path.suffix).lstrip(".")
 
 
 class BasenameTag(Tag):
@@ -60,10 +61,11 @@ class BasenameTag(Tag):
 
     require_context = None
 
-    def process(self, path: Path, context: Optional[str]) -> str:
+    # TODO: this tag should return `Path` instance
+    def process(self, file: File, context: Optional[str]) -> str:
         if context:
-            path = Path(context)
-        return path.stem
+            return Path(context).stem
+        return file.absolute_path.stem
 
 
 class DirnameTag(Tag):
@@ -75,10 +77,11 @@ class DirnameTag(Tag):
 
     require_context = None
 
-    def process(self, path: Path, context: Optional[str]) -> str:
+    # TODO: this tag should return `Path` instance
+    def process(self, file: File, context: Optional[str]) -> str:
         if context:
-            path = Path(context)
-        return str(path.parent)
+            return str(Path(context).parent)
+        return str(file.relative_path.parent)
 
 
 # TODO: Add option to omit file extension (for compatibility with ExtTag
@@ -87,10 +90,11 @@ class FilenameTag(Tag):
 
     require_context = None
 
-    def process(self, path: Path, context: Optional[str]) -> str:
+    # TODO: this tag should return `Path` instance
+    def process(self, file: File, context: Optional[str]) -> str:
         if context:
-            path = Path(context)
-        return str(path.name)
+            return str(Path(context).name)
+        return str(file.relative_path.name)
 
 
 class SanitizeTag(Tag):
@@ -98,6 +102,6 @@ class SanitizeTag(Tag):
 
     require_context = True
 
-    def process(self, path: Path, context: Optional[str]) -> str:
+    def process(self, file: File, context: Optional[str]) -> str:
         assert context
         return str(pathvalidate.sanitize_filepath(context))

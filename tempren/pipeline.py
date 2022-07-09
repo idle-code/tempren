@@ -117,6 +117,7 @@ class Pipeline:
         for path in self.file_gatherer(self.input_directory):
             self.log.debug("Checking %s", path)
             file = File(path.relative_to(self.input_directory))
+            file = File(self.input_directory, path)
             if not self.file_filter(file):
                 self.log.debug("%s filtered out", file)
                 continue
