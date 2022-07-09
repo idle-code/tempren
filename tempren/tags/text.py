@@ -1,10 +1,10 @@
 import re
-from pathlib import Path
 from re import Pattern
 from typing import List, Optional
 
 from unidecode import unidecode
 
+from tempren.path_generator import File
 from tempren.template.tree_elements import Tag
 
 
@@ -13,7 +13,7 @@ class UnidecodeTag(Tag):
 
     require_context = True
 
-    def process(self, path: Path, context: Optional[str]) -> str:
+    def process(self, file: File, context: Optional[str]) -> str:
         assert context is not None
         return unidecode(context)
 
@@ -30,7 +30,7 @@ class RemoveTag(Tag):
             flags |= re.IGNORECASE  # TODO: make this configurable?
         self.patterns = list(map(lambda p: re.compile(p, flags), patterns))
 
-    def process(self, path: Path, context: Optional[str]) -> str:
+    def process(self, file: File, context: Optional[str]) -> str:
         assert context is not None
         result = context
         for pattern in self.patterns:
@@ -50,7 +50,7 @@ class ReplaceTag(Tag):
         self.pattern = re.compile(pattern)
         self.replacement = replacement
 
-    def process(self, path: Path, context: Optional[str]) -> str:
+    def process(self, file: File, context: Optional[str]) -> str:
         assert context
         return self.pattern.sub(self.replacement, context)
 
@@ -64,7 +64,7 @@ class CollapseTag(Tag):
     def configure(self, characters: str = " "):  # type: ignore
         self.pattern = re.compile(f"(?<=[{characters}])[{characters}]+")
 
-    def process(self, path: Path, context: Optional[str]) -> str:
+    def process(self, file: File, context: Optional[str]) -> str:
         assert context is not None
         return self.pattern.sub("", context)
 
@@ -74,7 +74,7 @@ class UpperTag(Tag):
 
     require_context = True
 
-    def process(self, path: Path, context: Optional[str]) -> str:
+    def process(self, file: File, context: Optional[str]) -> str:
         assert context is not None
         return context.upper()
 
@@ -84,7 +84,7 @@ class LowerTag(Tag):
 
     require_context = True
 
-    def process(self, path: Path, context: Optional[str]) -> str:
+    def process(self, file: File, context: Optional[str]) -> str:
         assert context is not None
         return context.lower()
 
@@ -103,7 +103,7 @@ class StripTag(Tag):
         self.left = left
         self.right = right
 
-    def process(self, path: Path, context: Optional[str]) -> str:
+    def process(self, file: File, context: Optional[str]) -> str:
         assert context is not None
         if self.left and not self.right:
             return context.lstrip(self.strip_characters)
@@ -129,7 +129,7 @@ class TrimTag(Tag):
         self.left = left
         self.right = right
 
-    def process(self, path: Path, context: Optional[str]) -> str:
+    def process(self, file: File, context: Optional[str]) -> str:
         assert context is not None
         if self.left:
             return context[-self.length :]
@@ -141,7 +141,7 @@ class CapitalizeTag(Tag):
 
     require_context = True
 
-    def process(self, path: Path, context: Optional[str]) -> str:
+    def process(self, file: File, context: Optional[str]) -> str:
         assert context is not None
         return context.capitalize()
 
@@ -151,6 +151,6 @@ class TitleTag(Tag):
 
     require_context = True
 
-    def process(self, path: Path, context: Optional[str]) -> str:
+    def process(self, file: File, context: Optional[str]) -> str:
         assert context is not None
         return context.title()

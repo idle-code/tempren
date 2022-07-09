@@ -23,7 +23,7 @@ class Location:
 
 class PatternElement(ABC):
     @abstractmethod
-    def process(self, path: Path) -> Any:
+    def process(self, file: File) -> Any:
         raise NotImplementedError()
 
 
@@ -32,7 +32,7 @@ class RawText(PatternElement):
     location: Location = field(init=False, compare=False)
     text: str
 
-    def process(self, path: Path) -> str:
+    def process(self, file: File) -> str:
         return self.text
 
 
@@ -40,10 +40,10 @@ class RawText(PatternElement):
 class Pattern(PatternElement):
     sub_elements: List[PatternElement] = field(default_factory=list)
 
-    def process(self, path: Path) -> str:
+    def process(self, file: File) -> str:
         return "".join(
             map(
-                lambda se: Pattern._convert_tag_value(se.process(path)),
+                lambda se: Pattern._convert_tag_value(se.process(file)),
                 self.sub_elements,
             )
         )
@@ -55,19 +55,19 @@ class Pattern(PatternElement):
             return tag_value
         return repr(tag_value)
 
-    def process_as_expression(self, path: Path) -> str:
+    def process_as_expression(self, file: File) -> str:
         return "".join(
             map(
-                lambda se: Pattern._convert_to_representation(se, path),
+                lambda se: Pattern._convert_to_representation(se, file),
                 self.sub_elements,
             )
         )
 
     @staticmethod
-    def _convert_to_representation(element: PatternElement, path: Path) -> str:
+    def _convert_to_representation(element: PatternElement, file: File) -> str:
         """Renders value returned by tag invocation as a string representation (as to be used in evaluated
         expressions)"""
-        tag_value = element.process(path)
+        tag_value = element.process(file)
         if isinstance(element, TagInstance):
             return repr(tag_value)
         return Pattern._convert_tag_value(tag_value)
@@ -85,7 +85,7 @@ class TagPlaceholder(PatternElement):
         if len(self.tag_name) < 1:
             raise ValueError(f"Invalid tag name: ${repr(self.tag_name)}")
 
-    def process(self, path: Path) -> str:
+    def process(self, file: File) -> str:
         raise NotImplementedError(
             "TagPlaceholder shouldn't be present in bound tag tree"
         )
@@ -210,6 +210,6 @@ class TagInstance(PatternElement):
     tag: Tag
     context: Optional[Pattern] = None
 
-    def process(self, path: Path) -> Any:
-        context_str = self.context.process(path) if self.context else None
-        return self.tag.process(path, context_str)
+    def process(self, file: File) -> Any:
+        context_str = self.context.process(file) if self.context else None
+        return self.tag.process(file, context_str)

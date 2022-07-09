@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Mapping, Optional, Tuple
 
+from tempren.path_generator import File
 from tempren.template.tree_builder import ArgValue
 from tempren.template.tree_elements import Tag
 
@@ -10,7 +11,7 @@ from tempren.template.tree_elements import Tag
 class MockTag(Tag):
     args: Tuple[ArgValue, ...] = ()
     kwargs: Mapping[str, ArgValue] = field(default_factory=dict)
-    path: Optional[Path] = None
+    file: Optional[File] = None
     context: Optional[str] = None
     process_output: Any = "Mock output"
     configure_invoked: bool = False
@@ -22,9 +23,9 @@ class MockTag(Tag):
         self.args = args
         self.kwargs = kwargs
 
-    def process(self, path: Path, context: Optional[str]) -> Any:
+    def process(self, file: File, context: Optional[str]) -> Any:
         self.process_invoked = True
-        self.path = path
+        self.file = file
         self.context = context
         return self.process_output
 

@@ -29,9 +29,7 @@ class TemplateFileSorter(FileSorter):
 
     def _generate_sort_key(self, file: File) -> Tuple:
         self.log.debug("Rendering sorting value template for '%s'", file)
-        rendered_expression = (
-            "(" + self.pattern.process_as_expression(file.relative_path) + ", )"
-        )
+        rendered_expression = "(" + self.pattern.process_as_expression(file) + ", )"
         self.log.debug("Evaluating sorting value expression '%s'", rendered_expression)
         evaluation_result = eval(rendered_expression, {}, self._evaluation_locals)
         self.log.debug("Evaluation result '%s'", repr(evaluation_result))

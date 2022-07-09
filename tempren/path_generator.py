@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional, TextIO, Union
+from typing import Union
 
 
+@dataclass
 class File:
     input_directory: Path
     relative_path: Path
