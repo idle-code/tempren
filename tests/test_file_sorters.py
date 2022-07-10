@@ -34,9 +34,7 @@ class TestTemplateFileSorter:
     def test_single_tag_output(
         self, tag_implementation, nonexistent_absolute_path: Path
     ):
-        filepath_tag = GeneratorTag(
-            lambda path, context: tag_implementation(path, context)
-        )
+        filepath_tag = GeneratorTag(tag_implementation)
         pattern = Pattern([TagInstance(tag=filepath_tag)])
         file_sorter = TemplateFileSorter(pattern)
         files = [
@@ -69,8 +67,8 @@ class TestTemplateFileSorter:
     def test_tag_output_rendering(
         self, tag1_implementation, tag2_implementation, nonexistent_absolute_path: Path
     ):
-        tag1 = GeneratorTag(lambda path, context: tag1_implementation(path, context))
-        tag2 = GeneratorTag(lambda path, context: tag2_implementation(path, context))
+        tag1 = GeneratorTag(tag1_implementation)
+        tag2 = GeneratorTag(tag2_implementation)
         pattern = Pattern(
             [
                 TagInstance(tag=tag1),

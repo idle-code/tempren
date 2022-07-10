@@ -140,7 +140,7 @@ class TestDirnameTag:
 
         dirname = tag.process(file, None)
 
-        assert dirname == "dir"
+        assert dirname == Path("dir")
 
     def test_no_parent_dir(self, nonexistent_absolute_path: Path):
         tag = DirnameTag()
@@ -148,14 +148,14 @@ class TestDirnameTag:
 
         dirname = tag.process(file, None)
 
-        assert dirname == "."
+        assert dirname == Path(".")
 
     def test_context_extension(self, nonexistent_file: File):
         tag = DirnameTag()
 
         dirname = tag.process(nonexistent_file, "bar/file")
 
-        assert dirname == "bar"
+        assert dirname == Path("bar")
 
 
 class TestFilenameTag:

@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Union
 
 
 @dataclass
@@ -10,8 +9,8 @@ class File:
     relative_path: Path
 
     @classmethod
-    def from_path(cls, path: Union[Path, str]) -> "File":
-        path = Path(path)
+    def from_path(cls, path_representation: str) -> "File":
+        path = Path(path_representation)
         return File(path.parent, Path(path.name))
 
     @property

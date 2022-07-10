@@ -28,15 +28,6 @@ class TestFile:
 
         assert absolute_path == Path("/absolute/subdirectory/file/path")
 
-    def test_from_single_path(self):
-        file_path = Path("/absolute/subdirectory/file/path")
-
-        file = File.from_path(file_path)
-
-        assert file.input_directory == Path("/absolute/subdirectory/file")
-        assert file.absolute_path == Path("/absolute/subdirectory/file/path")
-        assert file.relative_path == Path("path")
-
     def test_from_single_string_path(self):
         file_path = "/absolute/subdirectory/file/path"
 

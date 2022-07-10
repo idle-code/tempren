@@ -10,7 +10,7 @@ from tempren.template.tree_elements import Tag
 class CountTag(Tag):
     """Generates sequential numbers for each invocation"""
 
-    require_context = False  # TODO: use enum for values
+    require_context = False
     counter: int
     step: int
     width: int
@@ -61,7 +61,6 @@ class BasenameTag(Tag):
 
     require_context = None
 
-    # TODO: this tag should return `Path` instance
     def process(self, file: File, context: Optional[str]) -> str:
         if context:
             return Path(context).stem
@@ -77,20 +76,17 @@ class DirnameTag(Tag):
 
     require_context = None
 
-    # TODO: this tag should return `Path` instance
-    def process(self, file: File, context: Optional[str]) -> str:
+    def process(self, file: File, context: Optional[str]) -> Path:
         if context:
-            return str(Path(context).parent)
-        return str(file.relative_path.parent)
+            return Path(context).parent
+        return file.relative_path.parent
 
 
-# TODO: Add option to omit file extension (for compatibility with ExtTag
 class FilenameTag(Tag):
-    """Renders processed file name"""
+    """Renders processed file name (basename with extension)"""
 
     require_context = None
 
-    # TODO: this tag should return `Path` instance
     def process(self, file: File, context: Optional[str]) -> str:
         if context:
             return str(Path(context).name)
