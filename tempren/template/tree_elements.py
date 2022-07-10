@@ -1,10 +1,11 @@
 import textwrap
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Any, Callable, List, Mapping, Optional, Type
+from typing import Any, List, Mapping, Optional, Type
 
 from docstring_parser import parse as parse_docstring
+
+from tempren.path_generator import File
 
 
 @dataclass
@@ -20,28 +21,35 @@ class Location:
 
 
 class PatternElement(ABC):
+    """Represents element of template pattern"""
+
     @abstractmethod
-    def process(self, path: Path) -> Any:
+    def process(self, file: File) -> Any:
         raise NotImplementedError()
 
 
 @dataclass
 class RawText(PatternElement):
+    """Represents constant text (non-tag) part of the template"""
+
     location: Location = field(init=False, compare=False)
     text: str
 
-    def process(self, path: Path) -> str:
+    def process(self, file: File) -> str:
         return self.text
 
 
 @dataclass
 class Pattern(PatternElement):
+    """Represents pattern tree - a chain of text/tag invocations"""
+
     sub_elements: List[PatternElement] = field(default_factory=list)
 
-    def process(self, path: Path) -> str:
+    def process(self, file: File) -> str:
+        """Recursively renders pattern as a string"""
         return "".join(
             map(
-                lambda se: Pattern._convert_tag_value(se.process(path)),
+                lambda se: Pattern._convert_tag_value(se.process(file)),
                 self.sub_elements,
             )
         )
@@ -53,19 +61,24 @@ class Pattern(PatternElement):
             return tag_value
         return repr(tag_value)
 
-    def process_as_expression(self, path: Path) -> str:
+    def process_as_expression(self, file: File) -> str:
+        """Recursively renders pattern as an expression string
+
+        In expression string, values returned by the tags are converted using `repr`
+        rather than `str` to obtain valid python value representation.
+        """
         return "".join(
             map(
-                lambda se: Pattern._convert_to_representation(se, path),
+                lambda se: Pattern._convert_to_representation(se, file),
                 self.sub_elements,
             )
         )
 
     @staticmethod
-    def _convert_to_representation(element: PatternElement, path: Path) -> str:
+    def _convert_to_representation(element: PatternElement, file: File) -> str:
         """Renders value returned by tag invocation as a string representation (as to be used in evaluated
         expressions)"""
-        tag_value = element.process(path)
+        tag_value = element.process(file)
         if isinstance(element, TagInstance):
             return repr(tag_value)
         return Pattern._convert_tag_value(tag_value)
@@ -73,6 +86,8 @@ class Pattern(PatternElement):
 
 @dataclass
 class TagPlaceholder(PatternElement):
+    """Represents unbound tag"""
+
     location: Location = field(init=False, compare=False)
     tag_name: str
     context: Optional[Pattern] = None
@@ -83,7 +98,7 @@ class TagPlaceholder(PatternElement):
         if len(self.tag_name) < 1:
             raise ValueError(f"Invalid tag name: ${repr(self.tag_name)}")
 
-    def process(self, path: Path) -> str:
+    def process(self, file: File) -> str:
         raise NotImplementedError(
             "TagPlaceholder shouldn't be present in bound tag tree"
         )
@@ -91,12 +106,20 @@ class TagPlaceholder(PatternElement):
 
 class Tag(ABC):
     require_context: Optional[bool] = None
+    """Determine if tag requires context
+
+    When set to True - an error is reported if no context is provided.
+    When set to False - an error is reported if context is provided.
+    When set to None - context is optional (tag decides what to do with it).
+    """
 
     def configure(self):
+        """Initialize tag instance with configuration options provided by the user"""
         pass
 
     @abstractmethod
-    def process(self, path: Path, context: Optional[str]) -> Any:
+    def process(self, file: File, context: Optional[str]) -> Any:
+        """Execute tag logic on a single file/context"""
         raise NotImplementedError()
 
 
@@ -205,9 +228,11 @@ class TagFactoryFromClass(TagFactory):
 
 @dataclass
 class TagInstance(PatternElement):
+    """Represents a tag bound to the implementation"""
+
     tag: Tag
     context: Optional[Pattern] = None
 
-    def process(self, path: Path) -> Any:
-        context_str = self.context.process(path) if self.context else None
-        return self.tag.process(path, context_str)
+    def process(self, file: File) -> Any:
+        context_str = self.context.process(file) if self.context else None
+        return self.tag.process(file, context_str)

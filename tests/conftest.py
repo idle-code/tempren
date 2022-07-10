@@ -5,10 +5,22 @@ from typing import Callable
 import pytest
 from _pytest.tmpdir import TempPathFactory
 
+from tempren.path_generator import File
+
 
 @pytest.fixture
 def nonexistent_path() -> Path:
     return Path("nonexistent", "path")
+
+
+@pytest.fixture
+def nonexistent_absolute_path() -> Path:
+    return Path("/nonexistent/path")
+
+
+@pytest.fixture
+def nonexistent_file(nonexistent_absolute_path: Path) -> File:
+    return File(nonexistent_absolute_path, Path("some.file"))
 
 
 @pytest.fixture

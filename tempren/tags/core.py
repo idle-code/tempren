@@ -3,13 +3,14 @@ from typing import Optional
 
 import pathvalidate
 
+from tempren.template.path_generators import File
 from tempren.template.tree_elements import Tag
 
 
 class CountTag(Tag):
     """Generates sequential numbers for each invocation"""
 
-    require_context = False  # TODO: use enum for values
+    require_context = False
     counter: int
     step: int
     width: int
@@ -30,7 +31,7 @@ class CountTag(Tag):
             raise ValueError("width have to be greater or equal 0")
         self.width = width
 
-    def process(self, path: Path, context: Optional[str]) -> str:
+    def process(self, file: File, context: Optional[str]) -> str:
         value = self.counter
         self.counter += self.step
         return str(value).zfill(self.width)
@@ -45,10 +46,10 @@ class ExtTag(Tag):
 
     require_context = None
 
-    def process(self, path: Path, context: Optional[str]) -> str:
+    def process(self, file: File, context: Optional[str]) -> str:
         if context:
-            path = Path(context)
-        return path.suffix.lstrip(".")
+            return str(Path(context).suffix).lstrip(".")
+        return str(file.relative_path.suffix).lstrip(".")
 
 
 class BasenameTag(Tag):
@@ -60,10 +61,10 @@ class BasenameTag(Tag):
 
     require_context = None
 
-    def process(self, path: Path, context: Optional[str]) -> str:
+    def process(self, file: File, context: Optional[str]) -> str:
         if context:
-            path = Path(context)
-        return path.stem
+            return Path(context).stem
+        return file.relative_path.stem
 
 
 class DirnameTag(Tag):
@@ -75,22 +76,21 @@ class DirnameTag(Tag):
 
     require_context = None
 
-    def process(self, path: Path, context: Optional[str]) -> str:
+    def process(self, file: File, context: Optional[str]) -> Path:
         if context:
-            path = Path(context)
-        return str(path.parent)
+            return Path(context).parent
+        return file.relative_path.parent
 
 
-# TODO: Add option to omit file extension (for compatibility with ExtTag
 class FilenameTag(Tag):
-    """Renders processed file name"""
+    """Renders processed file name (basename with extension)"""
 
     require_context = None
 
-    def process(self, path: Path, context: Optional[str]) -> str:
+    def process(self, file: File, context: Optional[str]) -> str:
         if context:
-            path = Path(context)
-        return str(path.name)
+            return str(Path(context).name)
+        return str(file.relative_path.name)
 
 
 class SanitizeTag(Tag):
@@ -98,6 +98,6 @@ class SanitizeTag(Tag):
 
     require_context = True
 
-    def process(self, path: Path, context: Optional[str]) -> str:
+    def process(self, file: File, context: Optional[str]) -> str:
         assert context
         return str(pathvalidate.sanitize_filepath(context))

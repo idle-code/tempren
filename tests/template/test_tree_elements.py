@@ -1,45 +1,44 @@
-from pathlib import Path
-
 from pytest import raises
 
+from tempren.path_generator import File
 from tempren.template.tree_elements import Pattern, RawText, TagInstance, TagPlaceholder
 
 from .mocks import MockTag
 
 
 class TestRawText:
-    def test_text(self, nonexistent_path: Path):
+    def test_text(self, nonexistent_file: File):
         element = RawText("text")
 
-        assert element.process(nonexistent_path) == "text"
+        assert element.process(nonexistent_file) == "text"
 
-    def test_empty(self, nonexistent_path: Path):
+    def test_empty(self, nonexistent_file: File):
         element = RawText("")
 
-        assert element.process(nonexistent_path) == ""
+        assert element.process(nonexistent_file) == ""
 
 
 class TestPattern:
-    def test_no_elements(self, nonexistent_path: Path):
+    def test_no_elements(self, nonexistent_file: File):
         element = Pattern()
 
-        assert element.process(nonexistent_path) == ""
+        assert element.process(nonexistent_file) == ""
 
-    def test_single_element(self, nonexistent_path: Path):
+    def test_single_element(self, nonexistent_file: File):
         element = Pattern([RawText("text")])
 
-        assert element.process(nonexistent_path) == "text"
+        assert element.process(nonexistent_file) == "text"
 
-    def test_concatenate_many(self, nonexistent_path: Path):
+    def test_concatenate_many(self, nonexistent_file: File):
         element = Pattern([RawText("foo"), RawText("bar")])
 
-        assert element.process(nonexistent_path) == "foobar"
+        assert element.process(nonexistent_file) == "foobar"
 
-    def test_escaped_tag_invocation(self, nonexistent_path: Path):
+    def test_escaped_tag_invocation(self, nonexistent_file: File):
         mock_tag = MockTag(process_output="foo")
         element = Pattern([TagInstance(tag=mock_tag), RawText(" == 'bar'")])
 
-        assert element.process_as_expression(nonexistent_path) == "'foo' == 'bar'"
+        assert element.process_as_expression(nonexistent_file) == "'foo' == 'bar'"
 
 
 class TestTagPlaceholder:
@@ -49,32 +48,32 @@ class TestTagPlaceholder:
 
 
 class TestTagInstance:
-    def test_path_is_passed_to_tag_implementation(self, nonexistent_path: Path):
-        path = nonexistent_path
+    def test_file_is_passed_to_tag_implementation(self, nonexistent_file: File):
+        file = nonexistent_file
         mock_tag = MockTag()
         element = TagInstance(tag=mock_tag)
 
-        element.process(path)
+        element.process(file)
 
-        assert mock_tag.path == path
+        assert mock_tag.file == file
 
-    def test_context_is_processed_if_present(self, nonexistent_path: Path):
-        path = nonexistent_path
+    def test_context_is_processed_if_present(self, nonexistent_file: File):
+        file = nonexistent_file
         context_tag = MockTag()
         context_pattern = Pattern([TagInstance(tag=context_tag)])
         element = TagInstance(tag=MockTag(), context=context_pattern)
 
-        element.process(path)
+        element.process(file)
 
         assert context_tag.process_invoked
 
-    def test_context_is_passed_to_tag_implementation(self, nonexistent_path: Path):
-        path = nonexistent_path
+    def test_context_is_passed_to_tag_implementation(self, nonexistent_file: File):
+        file = nonexistent_file
         context_tag = MockTag(process_output="Context output")
         outer_tag = MockTag()
         context_pattern = Pattern([TagInstance(tag=context_tag)])
         element = TagInstance(tag=outer_tag, context=context_pattern)
 
-        element.process(path)
+        element.process(file)
 
         assert outer_tag.context == "Context output"

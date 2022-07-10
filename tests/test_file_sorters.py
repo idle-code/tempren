@@ -11,53 +11,64 @@ from .template.mocks import GeneratorTag
 
 class TestTemplateFileSorter:
     @pytest.mark.parametrize("expression_text", ["", "$%", "1 +", "while True: pass"])
-    def test_invalid_expression(self, expression_text: str, nonexistent_path: Path):
+    def test_invalid_expression(self, expression_text: str, nonexistent_file: File):
         pattern = Pattern([RawText(expression_text)])
         file_sorter = TemplateFileSorter(pattern)
-        file = File(nonexistent_path)
 
         with pytest.raises(SyntaxError):
-            file_sorter([file])
+            file_sorter([nonexistent_file])
 
     @pytest.mark.parametrize(
         "tag_implementation",
         [
-            lambda path, context: path,
-            lambda path, context: str(path),
-            lambda path, context: int(str(path)),
-            lambda path, context: ("constant", str(path), int(str(path))),
+            lambda file, context: file.relative_path,
+            lambda file, context: str(file.relative_path),
+            lambda file, context: int(str(file.relative_path)),
+            lambda file, context: (
+                "constant",
+                str(file.relative_path),
+                int(str(file.relative_path)),
+            ),
         ],
     )
-    def test_single_tag_output(self, tag_implementation):
-        filepath_tag = GeneratorTag(
-            lambda path, context: tag_implementation(path, context)
-        )
+    def test_single_tag_output(
+        self, tag_implementation, nonexistent_absolute_path: Path
+    ):
+        filepath_tag = GeneratorTag(tag_implementation)
         pattern = Pattern([TagInstance(tag=filepath_tag)])
         file_sorter = TemplateFileSorter(pattern)
         files = [
-            File(Path("3")),
-            File(Path("1")),
-            File(Path("2")),
+            File(nonexistent_absolute_path, Path("3")),
+            File(nonexistent_absolute_path, Path("1")),
+            File(nonexistent_absolute_path, Path("2")),
         ]
 
         sorted_files = file_sorter(files)
 
         assert sorted_files == [
-            File(Path("1")),
-            File(Path("2")),
-            File(Path("3")),
+            File(nonexistent_absolute_path, Path("1")),
+            File(nonexistent_absolute_path, Path("2")),
+            File(nonexistent_absolute_path, Path("3")),
         ]
 
     @pytest.mark.parametrize(
         "tag1_implementation,tag2_implementation",
         [
-            (lambda path, context: "constant", lambda path, context: str(path)),
-            (lambda path, context: int(str(path)), lambda path, context: str(path)),
+            (
+                lambda file, context: "constant",
+                lambda file, context: str(file.relative_path),
+            ),
+            (
+                lambda file, context: int(str(file.relative_path)),
+                lambda file, context: str(file.relative_path),
+            ),
         ],
     )
-    def test_tag_output_rendering(self, tag1_implementation, tag2_implementation):
-        tag1 = GeneratorTag(lambda path, context: tag1_implementation(path, context))
-        tag2 = GeneratorTag(lambda path, context: tag2_implementation(path, context))
+    def test_tag_output_rendering(
+        self, tag1_implementation, tag2_implementation, nonexistent_absolute_path: Path
+    ):
+        tag1 = GeneratorTag(tag1_implementation)
+        tag2 = GeneratorTag(tag2_implementation)
         pattern = Pattern(
             [
                 TagInstance(tag=tag1),
@@ -67,33 +78,33 @@ class TestTemplateFileSorter:
         )
         file_sorter = TemplateFileSorter(pattern)
         files = [
-            File(Path("3")),
-            File(Path("1")),
-            File(Path("2")),
+            File(nonexistent_absolute_path, Path("3")),
+            File(nonexistent_absolute_path, Path("1")),
+            File(nonexistent_absolute_path, Path("2")),
         ]
 
         sorted_files = file_sorter(files)
 
         assert sorted_files == [
-            File(Path("1")),
-            File(Path("2")),
-            File(Path("3")),
+            File(nonexistent_absolute_path, Path("1")),
+            File(nonexistent_absolute_path, Path("2")),
+            File(nonexistent_absolute_path, Path("3")),
         ]
 
-    def test_path_rendering(self, nonexistent_path: Path):
-        filepath_tag = GeneratorTag(lambda path, context: path)
+    def test_path_rendering(self, nonexistent_absolute_path: Path):
+        filepath_tag = GeneratorTag(lambda file, context: file.relative_path)
         pattern = Pattern([TagInstance(tag=filepath_tag)])
         file_sorter = TemplateFileSorter(pattern)
         files = [
-            File(Path("3")),
-            File(Path("1")),
-            File(Path("2")),
+            File(nonexistent_absolute_path, Path("3")),
+            File(nonexistent_absolute_path, Path("1")),
+            File(nonexistent_absolute_path, Path("2")),
         ]
 
         sorted_files = file_sorter(files)
 
         assert sorted_files == [
-            File(Path("1")),
-            File(Path("2")),
-            File(Path("3")),
+            File(nonexistent_absolute_path, Path("1")),
+            File(nonexistent_absolute_path, Path("2")),
+            File(nonexistent_absolute_path, Path("3")),
         ]

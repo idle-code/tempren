@@ -23,7 +23,7 @@ classifiers = [
 
 [tool.poetry.dependencies]
 python = "^3.7"
-antlr4-python3-runtime = "^4.9.2"
+antlr4-python3-runtime = "^4.10"
 Unidecode = "^1.2.0"
 pathvalidate = "^2.4.1"
 mutagen = "^1.45.1"

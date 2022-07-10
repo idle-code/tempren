@@ -3,6 +3,7 @@ import zlib
 from pathlib import Path
 from typing import Optional
 
+from tempren.path_generator import File
 from tempren.template.tree_elements import Tag
 
 CHUNK_SIZE = 4096
@@ -20,9 +21,9 @@ class Md5Tag(Tag):
 
     require_context = False
 
-    def process(self, path: Path, context: Optional[str]) -> str:
+    def process(self, file: File, context: Optional[str]) -> str:
         assert context is None
-        return _calculate_hash(hashlib.md5(), path, CHUNK_SIZE)
+        return _calculate_hash(hashlib.md5(), file.absolute_path, CHUNK_SIZE)
 
 
 class Sha1Tag(Tag):
@@ -30,9 +31,9 @@ class Sha1Tag(Tag):
 
     require_context = False
 
-    def process(self, path: Path, context: Optional[str]) -> str:
+    def process(self, file: File, context: Optional[str]) -> str:
         assert context is None
-        return _calculate_hash(hashlib.sha1(), path, CHUNK_SIZE)
+        return _calculate_hash(hashlib.sha1(), file.absolute_path, CHUNK_SIZE)
 
 
 class Sha256Tag(Tag):
@@ -40,9 +41,9 @@ class Sha256Tag(Tag):
 
     require_context = False
 
-    def process(self, path: Path, context: Optional[str]) -> str:
+    def process(self, file: File, context: Optional[str]) -> str:
         assert context is None
-        return _calculate_hash(hashlib.sha256(), path, CHUNK_SIZE)
+        return _calculate_hash(hashlib.sha256(), file.absolute_path, CHUNK_SIZE)
 
 
 class Sha224Tag(Tag):
@@ -50,9 +51,9 @@ class Sha224Tag(Tag):
 
     require_context = False
 
-    def process(self, path: Path, context: Optional[str]) -> str:
+    def process(self, file: File, context: Optional[str]) -> str:
         assert context is None
-        return _calculate_hash(hashlib.sha224(), path, CHUNK_SIZE)
+        return _calculate_hash(hashlib.sha224(), file.absolute_path, CHUNK_SIZE)
 
 
 class Crc32Tag(Tag):
@@ -60,10 +61,10 @@ class Crc32Tag(Tag):
 
     require_context = False
 
-    def process(self, path: Path, context: Optional[str]) -> str:
+    def process(self, file: File, context: Optional[str]) -> str:
         assert context is None
         hash_value = 0
-        with open(path, "rb") as f:
+        with open(file.absolute_path, "rb") as f:
             for chunk in iter(lambda: f.read(CHUNK_SIZE), b""):
                 hash_value = zlib.crc32(chunk, hash_value)
         return f"{hash_value:08x}"
