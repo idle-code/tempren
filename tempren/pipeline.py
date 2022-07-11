@@ -16,10 +16,12 @@ from tempren.file_filters import (
 from tempren.file_sorters import TemplateFileSorter
 from tempren.filesystem import (
     DestinationAlreadyExistsError,
+    DryRunRenamer,
     FileGatherer,
     FileMover,
     FileRenamer,
-    PrintingOnlyRenamer,
+    FileRenamerType,
+    PrintingRenamerWrapper,
 )
 from tempren.path_generator import File, PathGenerator
 from tempren.template.path_generators import (
@@ -76,7 +78,6 @@ class ConfigurationError(Exception):
     pass
 
 
-FileRenamerType = Callable[[Path, Path, bool], None]
 ManualConflictResolver = Callable[[Path, Path], Union[ConflictResolutionStrategy, Path]]
 
 
@@ -97,7 +98,7 @@ class Pipeline:
     def __init__(self):
         self.log = logging.getLogger(__name__)
         self.file_filter: Callable[[File], bool] = lambda file: True
-        self.renamer: FileRenamerType = PrintingOnlyRenamer()
+        self.renamer: FileRenamerType = DryRunRenamer()
         self.manual_conflict_resolver: ManualConflictResolver = (
             manual_resolver_placeholder
         )
@@ -115,7 +116,7 @@ class Pipeline:
         self.log.info(f"Gathering paths in {self.input_directory}")
         os.chdir(self.input_directory)
         for path in self.file_gatherer(self.input_directory):
-            self.log.debug("Checking %s", path)
+            self.log.debug("Checking '%s'", path)
             file = File(self.input_directory, path.relative_to(self.input_directory))
             if not self.file_filter(file):
                 self.log.debug("%s filtered out", file)
@@ -124,25 +125,33 @@ class Pipeline:
             all_files.append(file)
 
         self.log.info("%d files considered for renaming", len(all_files))
-        self.log.info("Sorting files")
         if self.sorter:
+            self.log.info("Sorting files")
             all_files = self.sorter(all_files)
 
-        self.log.info("Generating new names")
+        self.log.debug("Generating new names")
         # In case when destination file exists in the first run, we add such name to the
         # backlog and try again (in reverse order) later. This should mitigate most of
         # transitional conflicts.
         backlog = []
         for file in all_files:
-            self.log.debug("Generating new name for %s", file)
+            self.log.debug("Generating new name for '%s'", file.relative_path)
             new_path = self.path_generator.generate(file)
             # FIXME: check generated new_path for illegal characters (like '*')
-            self.log.debug("Generated path: %s", new_path)
+            self.log.debug("Generated path: '%s'", new_path)
+
+            if new_path == file.relative_path:
+                self.log.info(
+                    "Skipping renaming of: '%s' (source and destination are the same)",
+                    new_path,
+                )
+                continue
+
             try:
                 self.renamer(file.relative_path, new_path)
             except FileExistsError:
                 self.log.debug(
-                    "Deferring renaming of %s as destination (%s) already exists",
+                    "Deferring renaming of '%s' as destination '%s' already exists",
                     file.relative_path,
                     new_path,
                 )
@@ -150,7 +159,9 @@ class Pipeline:
 
         while backlog:
             relative_name, new_path = backlog.pop()
-            self.log.debug("Trying again to rename %s into %s", relative_name, new_path)
+            self.log.debug(
+                "Trying again to rename '%s' into '%s'", relative_name, new_path
+            )
             try:
                 self.renamer(relative_name, new_path)
             except FileExistsError:
@@ -166,13 +177,13 @@ class Pipeline:
             raise DestinationAlreadyExistsError(source_path, destination_path)
         elif strategy == ConflictResolutionStrategy.ignore:
             self.log.info(
-                "Skipping renaming of %s to %s as destination path already exists",
+                "Skipping renaming of '%s' to '%s' as destination path already exists",
                 source_path,
                 destination_path,
             )
         elif strategy == ConflictResolutionStrategy.override:
             self.log.warning(
-                "Overriding destination %s as it already exists", destination_path
+                "Overriding destination '%s' as it already exists", destination_path
             )
             self.renamer(source_path, destination_path, True)
         elif strategy == ConflictResolutionStrategy.manual:
@@ -263,7 +274,8 @@ def build_pipeline(
     pipeline.manual_conflict_resolver = manual_conflict_resolver
 
     if config.dry_run:
-        pipeline.renamer = PrintingOnlyRenamer()
+        pipeline.renamer = DryRunRenamer()
+        # FIXME: Use DryRunMover for path mode?
     else:
         if config.mode == OperationMode.name:
             pipeline.renamer = FileRenamer()
@@ -271,4 +283,6 @@ def build_pipeline(
             pipeline.renamer = FileMover()
         else:
             raise NotImplementedError("Unknown operation mode")
+
+    pipeline.renamer = PrintingRenamerWrapper(pipeline.renamer)  # type: ignore
     return pipeline

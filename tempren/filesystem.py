@@ -2,7 +2,9 @@ import logging
 import os
 import shutil
 from pathlib import Path
-from typing import Generator, Optional
+from typing import Callable, Generator, Set
+
+FileRenamerType = Callable[[Path, Path, bool], None]
 
 
 class InvalidDestinationError(Exception):
@@ -12,7 +14,7 @@ class InvalidDestinationError(Exception):
 class DestinationAlreadyExistsError(FileExistsError):
     def __init__(self, src: Path, dst: Path):
         super().__init__(
-            f"Could not rename {src} as destination path {dst} already exists"
+            f"Could not rename '{src}' as destination path '{dst}' already exists"
         )
 
 
@@ -44,8 +46,6 @@ class FileRenamer:
         destination_path: Path,
         override: bool = False,
     ) -> None:
-        if source_path == destination_path:
-            return
         if not override and destination_path.exists():
             raise DestinationAlreadyExistsError(source_path, destination_path)
         if source_path.parent != destination_path.parent:
@@ -62,19 +62,16 @@ class FileMover:
         destination_path: Path,
         override: bool = False,
     ) -> None:
-        if source_path == destination_path:
-            return
         if not override and destination_path.exists():
             raise DestinationAlreadyExistsError(source_path, destination_path)
         destination_path.parent.mkdir(parents=True, exist_ok=True)
         shutil.move(str(source_path), destination_path)
 
 
-class PrintingOnlyRenamer:
-    log: logging.Logger
-
+class DryRunRenamer:
     def __init__(self):
-        self.log = logging.getLogger(__name__)
+        self.removed_paths: Set[Path] = set()
+        self.created_paths: Set[Path] = set()
 
     def __call__(
         self,
@@ -82,19 +79,50 @@ class PrintingOnlyRenamer:
         destination_path: Path,
         override: bool = False,
     ) -> None:
-        if source_path == destination_path:
-            self.log.info("Skipping renaming: source and destination are the same")
-            return
-        if destination_path.exists() and not override:
-            self.log.info("Skipping renaming: destination path exists")
+        source_exists = (
+            source_path.exists() or source_path in self.created_paths
+        ) and source_path not in self.removed_paths
+        if not source_exists:
+            raise FileNotFoundError(f"No such file or directory: {source_path}")
+
+        destination_exists = (
+            destination_path.exists() or destination_path in self.created_paths
+        ) and destination_path not in self.removed_paths
+        if destination_exists and not override:
             raise FileExistsError(
                 f"Destination file already exists: {destination_path}"
             )
-        if not source_path.exists():
-            raise FileNotFoundError(f"No such file or directory: {source_path}")
 
-        self.log.info(f"\nRenaming: {source_path}")
+        self.removed_paths.add(source_path)
+        self.created_paths.add(destination_path)
+        self.removed_paths.discard(destination_path)
+        self.created_paths.discard(source_path)
+
+
+class PrintingRenamerWrapper:
+    log: logging.Logger
+
+    def __init__(self, renamer_to_wrap: FileRenamerType):
+        assert renamer_to_wrap is not None
+        self.log = logging.getLogger(self.__class__.__name__)
+        self.renamer = renamer_to_wrap
+
+    def __call__(
+        self,
+        source_path: Path,
+        destination_path: Path,
+        override: bool = False,
+    ) -> None:
         if override:
-            self.log.info(f"      to: {destination_path} (override)")
+            self.log.debug(
+                "Trying to override: %s to %s", source_path, destination_path
+            )
         else:
-            self.log.info(f"      to: {destination_path}")
+            self.log.debug("Trying to rename: %s to %s", source_path, destination_path)
+        self.renamer(source_path, destination_path, override)
+
+        self.log.info(f"\nRenamed: {source_path}")
+        if override:
+            self.log.info(f"     to: {destination_path} (override)")
+        else:
+            self.log.info(f"     to: {destination_path}")

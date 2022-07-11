@@ -3,11 +3,11 @@ from pathlib import Path
 import pytest
 
 from tempren.filesystem import (
+    DryRunRenamer,
     FileGatherer,
     FileMover,
     FileRenamer,
     InvalidDestinationError,
-    PrintingOnlyRenamer,
 )
 
 
@@ -52,14 +52,6 @@ class TestFileGatherer:
 
 
 class TestFileRenamer:
-    def test_same_name(self, text_data_dir: Path):
-        src = text_data_dir / "hello.txt"
-        renamer = FileRenamer()
-
-        renamer(src, src)
-
-        assert src.exists()
-
     def test_simple_file(self, text_data_dir: Path):
         src = text_data_dir / "hello.txt"
         assert src.is_file()
@@ -135,14 +127,6 @@ class TestFileRenamer:
 
 
 class TestFileMover:
-    def test_same_name(self, text_data_dir: Path):
-        src = text_data_dir / "hello.txt"
-        mover = FileMover()
-
-        mover(src, src)
-
-        assert src.exists()
-
     def test_simple_file(self, text_data_dir: Path):
         src = text_data_dir / "hello.txt"
         assert src.is_file()
@@ -245,21 +229,13 @@ class TestFileMover:
         assert dst.exists()
 
 
-class TestPrintingOnlyRenamer:
-    def test_same_name(self, text_data_dir: Path):
-        src = text_data_dir / "hello.txt"
-        renamer = PrintingOnlyRenamer()
-
-        renamer(src, src)
-
-        assert src.exists()
-
+class TestDryRunRenamer:
     def test_simple_file(self, text_data_dir: Path):
         src = text_data_dir / "hello.txt"
         assert src.is_file()
         dst = text_data_dir / "hi.txt"
         assert not dst.exists()
-        renamer = PrintingOnlyRenamer()
+        renamer = DryRunRenamer()
 
         renamer(src, dst)
 
@@ -270,7 +246,7 @@ class TestPrintingOnlyRenamer:
         assert src.is_dir()
         dst = nested_data_dir / "fourth"
         assert not dst.exists()
-        renamer = PrintingOnlyRenamer()
+        renamer = DryRunRenamer()
 
         renamer(src, dst)
 
@@ -280,17 +256,56 @@ class TestPrintingOnlyRenamer:
         src = text_data_dir / "goodbye.txt"
         assert not src.exists()
         dst = text_data_dir / "bye.md"
-        renamer = PrintingOnlyRenamer()
+        renamer = DryRunRenamer()
 
         with pytest.raises(FileNotFoundError) as exc:
             renamer(src, dst)
         assert exc.match(str(src))
 
+    def test_source_exists_from_previous_run(self, text_data_dir: Path):
+        src = text_data_dir / "hello.txt"
+        assert src.exists()
+        dst = text_data_dir / "bye.md"
+        renamer = DryRunRenamer()
+
+        renamer(src, dst)
+
+        src = dst
+        dst = text_data_dir / "hi.txt"
+
+        renamer(src, dst)
+
+    def test_transient_state(self, text_data_dir: Path):
+        src = text_data_dir / "hello.txt"
+        assert src.exists()
+        dst = text_data_dir / "bye.md"
+        renamer = DryRunRenamer()
+
+        renamer(src, dst)
+
+        src = dst
+        dst = text_data_dir / "hello.txt"
+
+        renamer(src, dst)
+
     def test_destination_file_exists(self, text_data_dir: Path):
         src = text_data_dir / "hello.txt"
         dst = text_data_dir / "markdown.md"
         assert dst.exists()
-        renamer = PrintingOnlyRenamer()
+        renamer = DryRunRenamer()
+
+        with pytest.raises(FileExistsError) as exc:
+            renamer(src, dst)
+        assert exc.match(str(dst))
+
+    def test_destination_exists_from_previous_run(self, text_data_dir: Path):
+        src = text_data_dir / "hello.txt"
+        dst = text_data_dir / "goodbye.txt"
+        assert not dst.exists()
+        renamer = DryRunRenamer()
+
+        renamer(src, dst)
+        src = text_data_dir / "markdown.md"
 
         with pytest.raises(FileExistsError) as exc:
             renamer(src, dst)
@@ -300,7 +315,7 @@ class TestPrintingOnlyRenamer:
         src = nested_data_dir / "level-1.file"
         dst = nested_data_dir / "first"
         assert dst.is_dir()
-        renamer = PrintingOnlyRenamer()
+        renamer = DryRunRenamer()
 
         with pytest.raises(FileExistsError) as exc:
             renamer(src, dst)
@@ -310,7 +325,7 @@ class TestPrintingOnlyRenamer:
         src = text_data_dir / "hello.txt"
         dst = text_data_dir / "markdown.md"
         assert dst.exists()
-        renamer = PrintingOnlyRenamer()
+        renamer = DryRunRenamer()
 
         renamer(src, dst, True)
 
