@@ -136,13 +136,13 @@ class Pipeline:
         backlog = []
         for file in all_files:
             try:
-                self.log.debug("Generating new name for '%s'", file.relative_path)
+                self.log.debug("Generating new name for %r", file)
                 new_path = self.path_generator.generate(file)
             except InvalidFilenameError as error:
                 # TODO: Introduce flag similar to conflict resolver to take appropriate action
                 self.log.warning(
-                    "Invalid name generated for '%s': %r",
-                    file.relative_path,
+                    "Invalid name generated for %r: %r",
+                    file,
                     error.generated_name,
                 )
                 continue
@@ -161,8 +161,8 @@ class Pipeline:
                 self.renamer(file.relative_path, new_path)
             except FileExistsError:
                 self.log.debug(
-                    "Deferring renaming of '%s' as destination '%s' already exists",
-                    file.relative_path,
+                    "Deferring renaming of %r as destination '%s' already exists",
+                    file,
                     new_path,
                 )
                 backlog.append((file.relative_path, new_path))

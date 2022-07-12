@@ -24,7 +24,10 @@ class File:
         self.relative_path = relative_path
 
     def __str__(self):
-        return f"File({repr(str(self.relative_path))})"
+        return str(self.relative_path)
+
+    def __repr__(self):
+        return repr(str(self))
 
 
 class InvalidFilenameError(Exception):
