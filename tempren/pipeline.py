@@ -23,7 +23,7 @@ from tempren.filesystem import (
     FileRenamerType,
     PrintingRenamerWrapper,
 )
-from tempren.path_generator import File, PathGenerator
+from tempren.path_generator import File, InvalidFilenameError, PathGenerator
 from tempren.template.path_generators import (
     TemplateNameGenerator,
     TemplatePathGenerator,
@@ -135,8 +135,18 @@ class Pipeline:
         # transitional conflicts.
         backlog = []
         for file in all_files:
-            self.log.debug("Generating new name for '%s'", file.relative_path)
-            new_path = self.path_generator.generate(file)
+            try:
+                self.log.debug("Generating new name for '%s'", file.relative_path)
+                new_path = self.path_generator.generate(file)
+            except InvalidFilenameError as error:
+                # TODO: Introduce flag similar to conflict resolver to take appropriate action
+                self.log.warning(
+                    "Invalid name generated for '%s': %r",
+                    file.relative_path,
+                    error.generated_name,
+                )
+                continue
+
             # FIXME: check generated new_path for illegal characters (like '*')
             self.log.debug("Generated path: '%s'", new_path)
 
@@ -227,7 +237,7 @@ def build_pipeline(
     tree_builder = TagTreeBuilder()
 
     def _compile_template(template_text: str) -> Pattern:
-        log.debug("Compiling template '%s'", template_text)
+        log.debug("Compiling template %r", template_text)
         try:
             return registry.bind(tree_builder.parse(template_text))
         except TagTemplateError as template_error:

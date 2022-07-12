@@ -286,14 +286,9 @@ class TestNameMode:
         assert not (text_data_dir / "markdown.md").exists()
 
     def test_nonexistent_input(self, nonexistent_path: Path, name_mode_flag: str):
-        if name_mode_flag is None:
-            stdout, stderr, error_code = run_tempren(
-                "%Upper(){%Filename()}", nonexistent_path
-            )
-        else:
-            stdout, stderr, error_code = run_tempren(
-                name_mode_flag, "%Upper(){%Filename()}", nonexistent_path
-            )
+        stdout, stderr, error_code = run_tempren(
+            name_mode_flag, "%Upper(){%Filename()}", nonexistent_path
+        )
 
         assert error_code != 0
         assert "doesn't exists" in stderr
@@ -304,15 +299,24 @@ class TestNameMode:
     def test_name_template_error(
         self, text_data_dir: Path, name_mode_flag: str, name_expression: str
     ):
-        if name_mode_flag is None:
-            stdout, stderr, error_code = run_tempren(name_expression, text_data_dir)
-        else:
-            stdout, stderr, error_code = run_tempren(
-                name_mode_flag, name_expression, text_data_dir
-            )
+        stdout, stderr, error_code = run_tempren(
+            name_mode_flag, name_expression, text_data_dir
+        )
 
         assert error_code == 3
         assert "Template error" in stderr
+
+    def test_generated_name_contains_separator_error(
+        self, text_data_dir: Path, name_mode_flag: str
+    ):
+        stdout, stderr, error_code = run_tempren(
+            name_mode_flag, "subdir/%Filename()", text_data_dir
+        )
+
+        assert error_code == 0
+        assert "Invalid name generated for" in stderr
+        assert "subdir/hello.txt" in stderr
+        assert "subdir/markdown.md" in stderr
 
 
 @pytest.mark.parametrize("path_mode_flag", ["-p", "--path"])

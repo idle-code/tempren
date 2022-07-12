@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from tempren.path_generator import File
+from tempren.path_generator import File, InvalidFilenameError
 from tempren.template.path_generators import (
     TemplateNameGenerator,
     TemplatePathGenerator,
@@ -31,7 +31,7 @@ class TestTemplateNameGenerator:
         os.chdir(text_data_dir)
         src_file = File(text_data_dir, Path("hello.txt"))
 
-        with pytest.raises(ValueError) as exc:
+        with pytest.raises(InvalidFilenameError) as exc:
             generator.generate(src_file)
 
         assert exc.match("file/path")

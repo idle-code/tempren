@@ -27,11 +27,15 @@ class File:
         return f"File({repr(str(self.relative_path))})"
 
 
-class PathGenerator(ABC):
-    @abstractmethod
-    def reset(self):
-        raise NotImplementedError()
+class InvalidFilenameError(Exception):
+    generated_name: str
 
+    def __init__(self, invalid_name: str):
+        super().__init__(f"Invalid name: '{invalid_name}'")
+        self.generated_name = invalid_name
+
+
+class PathGenerator(ABC):
     @abstractmethod
     def generate(self, file: File) -> Path:
         raise NotImplementedError()
