@@ -5,6 +5,7 @@ from tempren.tags.text import (
     CapitalizeTag,
     CollapseTag,
     LowerTag,
+    PadTag,
     RemoveTag,
     ReplaceTag,
     StripTag,
@@ -216,14 +217,6 @@ class TestStripTag:
 
 
 class TestTrimTag:
-    def test_by_default_trims_right(self, nonexistent_file: File):
-        tag = TrimTag()
-        tag.configure(4)
-
-        result = tag.process(nonexistent_file, "0123456789")
-
-        assert result == "0123"
-
     def test_trims_right(self, nonexistent_file: File):
         tag = TrimTag()
         tag.configure(4, right=True)
@@ -240,20 +233,26 @@ class TestTrimTag:
 
         assert result == "6789"
 
-    def test_both_trims_misconfiguration(self, nonexistent_file: File):
+    def test_no_trim_direction_misconfiguration(self):
+        tag = TrimTag()
+
+        with pytest.raises(AssertionError):
+            tag.configure(4)
+
+    def test_both_trims_misconfiguration(self):
         tag = TrimTag()
 
         with pytest.raises(AssertionError):
             tag.configure(4, left=True, right=True)
 
-    def test_length_misconfiguration(self, nonexistent_file: File):
+    def test_width_misconfiguration(self):
         tag = TrimTag()
 
         with pytest.raises(AssertionError):
-            tag.configure(0)
+            tag.configure(0, left=True)
 
         with pytest.raises(AssertionError):
-            tag.configure(-2)
+            tag.configure(-2, left=True)
 
 
 class TestCapitalizeTag:
@@ -287,3 +286,72 @@ class TestTitleTag:
         result = tag.process(nonexistent_file, "  foo bar SPAM ")
 
         assert result == "  Foo Bar Spam "
+
+
+class TestPadTag:
+    def test_pads_right(self, nonexistent_file: File):
+        tag = PadTag()
+        tag.configure(6, right=True)
+
+        result = tag.process(nonexistent_file, "0123")
+
+        assert result == "0123  "
+
+    def test_pads_left(self, nonexistent_file: File):
+        tag = PadTag()
+        tag.configure(6, left=True)
+
+        result = tag.process(nonexistent_file, "0123")
+
+        assert result == "  0123"
+
+    def test_pads_center(self, nonexistent_file: File):
+        tag = PadTag()
+        tag.configure(6, left=True, right=True)
+
+        result = tag.process(nonexistent_file, "0123")
+
+        assert result == " 0123 "
+
+    def test_pads_larger(self, nonexistent_file: File):
+        tag = PadTag()
+        tag.configure(6, left=True)
+
+        result = tag.process(nonexistent_file, "012345")
+
+        assert result == "012345"
+
+    def test_pads_custom_character(self, nonexistent_file: File):
+        tag = PadTag()
+        tag.configure(6, "_", left=True)
+
+        result = tag.process(nonexistent_file, "0123")
+
+        assert result == "__0123"
+
+    def test_no_custom_characters_misconfiguration(self):
+        tag = PadTag()
+
+        with pytest.raises(AssertionError):
+            tag.configure(6, "_.", left=True)
+
+    def test_too_many_custom_character_misconfiguration(self):
+        tag = PadTag()
+
+        with pytest.raises(AssertionError):
+            tag.configure(6, "", left=True)
+
+    def test_no_padding_direction_misconfiguration(self):
+        tag = PadTag()
+
+        with pytest.raises(AssertionError):
+            tag.configure(4)
+
+    def test_width_misconfiguration(self):
+        tag = PadTag()
+
+        with pytest.raises(AssertionError):
+            tag.configure(0, left=True)
+
+        with pytest.raises(AssertionError):
+            tag.configure(-2, left=True)

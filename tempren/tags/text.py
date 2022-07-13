@@ -1,6 +1,6 @@
 import re
 from re import Pattern
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from unidecode import unidecode
 
@@ -62,6 +62,7 @@ class CollapseTag(Tag):
     pattern: Pattern
 
     def configure(self, characters: str = " "):  # type: ignore
+        # TODO: check characters for empty string?
         self.pattern = re.compile(f"(?<=[{characters}])[{characters}]+")
 
     def process(self, file: File, context: Optional[str]) -> str:
@@ -115,24 +116,25 @@ class TrimTag(Tag):
     """Trims context to specified length"""
 
     require_context = True
-    length: int
+    width: int
     left: bool = False
     right: bool = False
 
-    def configure(self, length: int, left: bool = False, right: bool = False):  # type: ignore
-        assert length > 0, "length have to be positive integer"
-        self.length = length
+    def configure(self, width: int, left: bool = False, right: bool = False):  # type: ignore
+        assert width > 0, "length have to be positive integer"
+        self.width = width
         assert (
             not left or not right
         ), "left and right cannot be specified at the same time"
+        assert left or right, "no trim direction specified - use left or right"
         self.left = left
         self.right = right
 
     def process(self, file: File, context: Optional[str]) -> str:
         assert context is not None
         if self.left:
-            return context[-self.length :]
-        return context[: self.length]
+            return context[-self.width :]
+        return context[: self.width]
 
 
 class CapitalizeTag(Tag):
@@ -153,3 +155,35 @@ class TitleTag(Tag):
     def process(self, file: File, context: Optional[str]) -> str:
         assert context is not None
         return context.title()
+
+
+class PadTag(Tag):
+    """Adds padding to the context to match specified width"""
+
+    require_context = True
+    width: int
+    character: str = " "
+    left: bool = False
+    right: bool = False
+    center: bool = False
+
+    def configure(self, width: int, character: str = character, left: bool = False, right: bool = False):  # type: ignore
+        assert width > 0, "width have to be positive integer"
+        self.width = width
+        assert len(character) == 1, "single character have to be provided for padding"
+        self.character = character
+        assert left or right
+        self.left = left
+        self.right = right
+
+    def process(self, file: File, context: Optional[str]) -> str:
+        assert context is not None
+        if len(context) >= self.width:
+            return context
+
+        if self.left and self.right:
+            return context.center(self.width, self.character)
+        if self.left:
+            return context.rjust(self.width, self.character)
+        else:
+            return context.ljust(self.width, self.character)
