@@ -72,7 +72,7 @@ class TestExtTag:
 
         extension = tag.process(File.from_path("/test/file.foo"), None)
 
-        assert extension == "foo"
+        assert extension == ".foo"
 
     def test_no_extension_on_filename(self):
         tag = ExtTag()
@@ -86,14 +86,14 @@ class TestExtTag:
 
         extension = tag.process(nonexistent_file, "test/file.bar")
 
-        assert extension == "bar"
+        assert extension == ".bar"
 
     def test_multiple_extensions(self, nonexistent_file: File):
         tag = ExtTag()
 
         extension = tag.process(nonexistent_file, "test/file.bar.spam")
 
-        assert extension == "spam"  # TODO: Check if this is desired behaviour
+        assert extension == ".spam"  # TODO: Check if this is desired behaviour
 
 
 class TestBaseTag:

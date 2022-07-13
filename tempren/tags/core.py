@@ -48,8 +48,8 @@ class ExtTag(Tag):
 
     def process(self, file: File, context: Optional[str]) -> str:
         if context:
-            return str(Path(context).suffix).lstrip(".")
-        return str(file.relative_path.suffix).lstrip(".")
+            return str(Path(context).suffix)
+        return str(file.relative_path.suffix)
 
 
 class BaseTag(Tag):

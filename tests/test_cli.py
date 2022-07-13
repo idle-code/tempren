@@ -176,21 +176,14 @@ class TestFilterFlags:
         invert_flag: Optional[str],
         text_data_dir: Path,
     ):
-        if invert_flag is None:
-            stdout, stderr, error_code = run_tempren(
-                flag,
-                expression,
-                "%Upper(){%Name()}",
-                text_data_dir,
-            )
-        else:
-            stdout, stderr, error_code = run_tempren(
-                flag,
-                expression,
-                invert_flag,
-                "%Upper(){%Name()}",
-                text_data_dir,
-            )
+        stdout, stderr, error_code = run_tempren(
+            flag,
+            expression,
+            invert_flag,
+            "%Upper(){%Name()}",
+            text_data_dir,
+        )
+
         assert error_code == 0
         if invert_flag is None:
             assert (text_data_dir / "HELLO.TXT").exists()
@@ -207,21 +200,13 @@ class TestFilterFlags:
     def test_template_filter_error(
         self, filter_expression: str, invert_flag: Optional[str], text_data_dir: Path
     ):
-        if invert_flag is None:
-            stdout, stderr, error_code = run_tempren(
-                "--filter-template",
-                filter_expression,
-                "%Count().%Ext()",
-                text_data_dir,
-            )
-        else:
-            stdout, stderr, error_code = run_tempren(
-                "--filter-template",
-                filter_expression,
-                invert_flag,
-                "%Count().%Ext()",
-                text_data_dir,
-            )
+        stdout, stderr, error_code = run_tempren(
+            "--filter-template",
+            filter_expression,
+            invert_flag,
+            "%Count()%Ext()",
+            text_data_dir,
+        )
 
         assert error_code == 3
         assert "Template error" in stderr
@@ -233,7 +218,7 @@ class TestSortingFlags:
         stdout, stderr, error_code = run_tempren(
             sort_flag,
             "%Size()",
-            "%Count().%Ext()",
+            "%Count()%Ext()",
             text_data_dir,
         )
 
@@ -249,7 +234,7 @@ class TestSortingFlags:
             invert_flag,
             sort_flag,
             "%Size()",
-            "%Count().%Ext()",
+            "%Count()%Ext()",
             text_data_dir,
         )
 
@@ -264,7 +249,7 @@ class TestSortingFlags:
         stdout, stderr, error_code = run_tempren(
             sort_flag,
             sort_expression,
-            "%Count().%Ext()",
+            "%Count()%Ext()",
             text_data_dir,
         )
 
@@ -323,7 +308,7 @@ class TestNameMode:
 class TestPathMode:
     def test_path_mode(self, text_data_dir: Path, path_mode_flag: str):
         stdout, stderr, error_code = run_tempren(
-            path_mode_flag, "%Upper(){%Ext()}/%Name()", text_data_dir
+            path_mode_flag, "%Upper(){%Trim(-1,left){%Ext()}}/%Name()", text_data_dir
         )
 
         assert error_code == 0
