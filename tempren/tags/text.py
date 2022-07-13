@@ -113,7 +113,10 @@ class StripTag(Tag):
 
 
 class TrimTag(Tag):
-    """Trims context to specified length"""
+    """Trims context to a specified width by cropping left/right side off
+
+    If width is less than 0, trims abs(width) number of characters from the side context instead.
+    """
 
     require_context = True
     width: int
@@ -121,7 +124,9 @@ class TrimTag(Tag):
     right: bool = False
 
     def configure(self, width: int, left: bool = False, right: bool = False):  # type: ignore
-        assert width > 0, "length have to be positive integer"
+        assert (
+            width != 0
+        ), "specify positive width or negative number of characters to trim"
         self.width = width
         assert (
             not left or not right

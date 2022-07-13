@@ -233,6 +233,22 @@ class TestTrimTag:
 
         assert result == "6789"
 
+    def test_trims_negative_right(self, nonexistent_file: File):
+        tag = TrimTag()
+        tag.configure(-4, right=True)
+
+        result = tag.process(nonexistent_file, "0123456789")
+
+        assert result == "012345"
+
+    def test_trims_negative_left(self, nonexistent_file: File):
+        tag = TrimTag()
+        tag.configure(-4, left=True)
+
+        result = tag.process(nonexistent_file, "0123456789")
+
+        assert result == "456789"
+
     def test_no_trim_direction_misconfiguration(self):
         tag = TrimTag()
 
@@ -250,9 +266,6 @@ class TestTrimTag:
 
         with pytest.raises(AssertionError):
             tag.configure(0, left=True)
-
-        with pytest.raises(AssertionError):
-            tag.configure(-2, left=True)
 
 
 class TestCapitalizeTag:
