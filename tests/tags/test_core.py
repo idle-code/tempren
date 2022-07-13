@@ -3,14 +3,7 @@ from pathlib import Path
 import pytest
 
 from tempren.path_generator import File
-from tempren.tags.core import (
-    BasenameTag,
-    CountTag,
-    DirnameTag,
-    ExtTag,
-    FilenameTag,
-    SanitizeTag,
-)
+from tempren.tags.core import BaseTag, CountTag, DirTag, ExtTag, NameTag, SanitizeTag
 
 
 class TestCountTag:
@@ -103,39 +96,39 @@ class TestExtTag:
         assert extension == "spam"  # TODO: Check if this is desired behaviour
 
 
-class TestBasenameTag:
+class TestBaseTag:
     def test_without_context_original_basename_is_used(self):
-        tag = BasenameTag()
+        tag = BaseTag()
 
         basename = tag.process(File.from_path("/test/file.foo"), None)
 
         assert basename == "file"
 
     def test_no_extension_on_filename(self):
-        tag = BasenameTag()
+        tag = BaseTag()
 
         basename = tag.process(File.from_path("/test/filename"), None)
 
         assert basename == "filename"
 
     def test_context_basename(self, nonexistent_file: File):
-        tag = BasenameTag()
+        tag = BaseTag()
 
         basename = tag.process(nonexistent_file, "test/file.bar")
 
         assert basename == "file"
 
     def test_multiple_extensions(self, nonexistent_file: File):
-        tag = BasenameTag()
+        tag = BaseTag()
 
         basename = tag.process(nonexistent_file, "test/file.bar.spam")
 
         assert basename == "file.bar"  # TODO: Check if this is desired behaviour
 
 
-class TestDirnameTag:
+class TestDirTag:
     def test_no_context(self, nonexistent_absolute_path: Path):
-        tag = DirnameTag()
+        tag = DirTag()
         file = File(nonexistent_absolute_path, Path("dir/file.name"))
 
         dirname = tag.process(file, None)
@@ -143,7 +136,7 @@ class TestDirnameTag:
         assert dirname == Path("dir")
 
     def test_no_parent_dir(self, nonexistent_absolute_path: Path):
-        tag = DirnameTag()
+        tag = DirTag()
         file = File(nonexistent_absolute_path, Path("file.name"))
 
         dirname = tag.process(file, None)
@@ -151,23 +144,23 @@ class TestDirnameTag:
         assert dirname == Path(".")
 
     def test_context_extension(self, nonexistent_file: File):
-        tag = DirnameTag()
+        tag = DirTag()
 
         dirname = tag.process(nonexistent_file, "bar/file")
 
         assert dirname == Path("bar")
 
 
-class TestFilenameTag:
+class TestNameTag:
     def test_no_context(self):
-        tag = FilenameTag()
+        tag = NameTag()
 
         filename = tag.process(File.from_path("/test/file.name"), None)
 
         assert filename == "file.name"
 
     def test_context_filename(self, nonexistent_file: File):
-        tag = FilenameTag()
+        tag = NameTag()
 
         filename = tag.process(nonexistent_file, "test/file.name")
 

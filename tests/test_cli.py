@@ -75,7 +75,7 @@ class TestVariousFlags:
     @pytest.mark.parametrize("flag", ["-d", "--dry-run"])
     def test_dry_run(self, text_data_dir: Path, flag: str):
         stdout, stderr, error_code = run_tempren(
-            flag, "%Upper(){%Filename()}", text_data_dir
+            flag, "%Upper(){%Name()}", text_data_dir
         )
 
         assert error_code == 0
@@ -98,7 +98,7 @@ class TestVariousFlags:
         assert "usage: tempren" in stderr
 
     def test_missing_input(self):
-        stdout, stderr, error_code = run_tempren("%Upper(){%Filename()}")
+        stdout, stderr, error_code = run_tempren("%Upper(){%Name()}")
 
         assert error_code == 2
         assert "usage: tempren" in stderr
@@ -111,7 +111,7 @@ class TestVariousFlags:
         assert error_code == 0
         assert any(filter(lambda line: re.match(r"^Count", line), stdout_lines))
         assert any(filter(lambda line: re.match(r"^Upper", line), stdout_lines))
-        assert any(filter(lambda line: re.match(r"^Filename", line), stdout_lines))
+        assert any(filter(lambda line: re.match(r"^Name", line), stdout_lines))
 
     @pytest.mark.parametrize("flag", ["-v", "--verbose"])
     def test_verbose_output(self, flag: str):
@@ -143,7 +143,7 @@ class TestVariousFlags:
 
     @pytest.mark.parametrize("flag", ["-h", "--help"])
     def test_help_tag_documentation_long_description(self, flag: str):
-        stdout, stderr, error_code = run_tempren_process(flag, "Dirname")
+        stdout, stderr, error_code = run_tempren_process(flag, "Dir")
 
         assert error_code == 0
         assert "If context is present" in stdout
@@ -180,7 +180,7 @@ class TestFilterFlags:
             stdout, stderr, error_code = run_tempren(
                 flag,
                 expression,
-                "%Upper(){%Filename()}",
+                "%Upper(){%Name()}",
                 text_data_dir,
             )
         else:
@@ -188,7 +188,7 @@ class TestFilterFlags:
                 flag,
                 expression,
                 invert_flag,
-                "%Upper(){%Filename()}",
+                "%Upper(){%Name()}",
                 text_data_dir,
             )
         assert error_code == 0
@@ -276,7 +276,7 @@ class TestSortingFlags:
 class TestNameMode:
     def test_name_mode(self, text_data_dir: Path, name_mode_flag: str):
         stdout, stderr, error_code = run_tempren(
-            name_mode_flag, "%Upper(){%Filename()}", text_data_dir
+            name_mode_flag, "%Upper(){%Name()}", text_data_dir
         )
 
         assert error_code == 0
@@ -287,7 +287,7 @@ class TestNameMode:
 
     def test_nonexistent_input(self, nonexistent_path: Path, name_mode_flag: str):
         stdout, stderr, error_code = run_tempren(
-            name_mode_flag, "%Upper(){%Filename()}", nonexistent_path
+            name_mode_flag, "%Upper(){%Name()}", nonexistent_path
         )
 
         assert error_code != 0
@@ -310,7 +310,7 @@ class TestNameMode:
         self, text_data_dir: Path, name_mode_flag: str
     ):
         stdout, stderr, error_code = run_tempren(
-            name_mode_flag, "subdir/%Filename()", text_data_dir
+            name_mode_flag, "subdir/%Name()", text_data_dir
         )
 
         assert error_code == 0
@@ -323,7 +323,7 @@ class TestNameMode:
 class TestPathMode:
     def test_path_mode(self, text_data_dir: Path, path_mode_flag: str):
         stdout, stderr, error_code = run_tempren(
-            path_mode_flag, "%Upper(){%Ext()}/%Filename()", text_data_dir
+            path_mode_flag, "%Upper(){%Ext()}/%Name()", text_data_dir
         )
 
         assert error_code == 0
@@ -334,7 +334,7 @@ class TestPathMode:
 
     def test_nonexistent_input(self, nonexistent_path: Path, path_mode_flag: str):
         stdout, stderr, error_code = run_tempren(
-            path_mode_flag, "%Upper(){%Filename()}", nonexistent_path
+            path_mode_flag, "%Upper(){%Name()}", nonexistent_path
         )
 
         assert error_code != 0
@@ -361,7 +361,7 @@ class TestConflictResolution:
         assert (text_data_dir / "1").exists()
 
         stdout, stderr, error_code = run_tempren(
-            "--sort", "%Filename()", "%Count(start=1)", text_data_dir
+            "--sort", "%Name()", "%Count(start=1)", text_data_dir
         )
 
         assert error_code == 0
@@ -371,7 +371,7 @@ class TestConflictResolution:
     @pytest.mark.parametrize("flag", ["-cs", "--conflict-stop", None])
     def test_stop_conflict_resolution(self, text_data_dir: Path, flag: Optional[str]):
         stdout, stderr, error_code = run_tempren(
-            flag, "--sort", "%Filename()", "StaticFilename", text_data_dir
+            flag, "--sort", "%Name()", "StaticFilename", text_data_dir
         )
 
         assert error_code != 0
@@ -385,7 +385,7 @@ class TestConflictResolution:
     @pytest.mark.parametrize("flag", ["-ci", "--conflict-ignore"])
     def test_ignore_conflict_resolution(self, text_data_dir: Path, flag: str):
         stdout, stderr, error_code = run_tempren(
-            flag, "--sort", "%Filename()", "StaticFilename", text_data_dir
+            flag, "--sort", "%Name()", "StaticFilename", text_data_dir
         )
 
         assert error_code == 0
@@ -399,7 +399,7 @@ class TestConflictResolution:
     @pytest.mark.parametrize("flag", ["-co", "--conflict-override"])
     def test_override_conflict_resolution(self, text_data_dir: Path, flag: str):
         stdout, stderr, error_code = run_tempren(
-            flag, "--sort", "%Filename()", "StaticFilename", text_data_dir
+            flag, "--sort", "%Name()", "StaticFilename", text_data_dir
         )
 
         assert error_code == 0
@@ -415,7 +415,7 @@ class TestConflictResolution:
         self, text_data_dir: Path, flag: str, selection: str
     ):
         tempren_process = start_tempren_process(
-            flag, "--sort", "%Filename()", "StaticFilename", text_data_dir
+            flag, "--sort", "%Name()", "StaticFilename", text_data_dir
         )
 
         stdout, stderr = tempren_process.communicate(input=selection + "\n", timeout=3)
@@ -437,7 +437,7 @@ class TestConflictResolution:
         self, text_data_dir: Path, flag: str, selection: str
     ):
         tempren_process = start_tempren_process(
-            flag, "--sort", "%Filename()", "StaticFilename", text_data_dir
+            flag, "--sort", "%Name()", "StaticFilename", text_data_dir
         )
 
         stdout, stderr = tempren_process.communicate(input=selection + "\n", timeout=3)
@@ -458,7 +458,7 @@ class TestConflictResolution:
         self, text_data_dir: Path, flag: str, selection: str
     ):
         tempren_process = start_tempren_process(
-            flag, "--sort", "%Filename()", "StaticFilename", text_data_dir
+            flag, "--sort", "%Name()", "StaticFilename", text_data_dir
         )
 
         stdout, stderr = tempren_process.communicate(input=selection + "\n", timeout=3)
@@ -482,7 +482,7 @@ class TestConflictResolution:
         self, text_data_dir: Path, flag: str, selection: str
     ):
         tempren_process = start_tempren_process(
-            flag, "--sort", "%Filename()", "StaticFilename", text_data_dir
+            flag, "--sort", "%Name()", "StaticFilename", text_data_dir
         )
 
         stdout, stderr = tempren_process.communicate(
@@ -505,7 +505,7 @@ class TestConflictResolution:
         tempren_process = start_tempren_process(
             "--conflict-manual",
             "--sort",
-            "%Filename()",
+            "%Name()",
             "StaticFilename",
             text_data_dir,
         )
@@ -526,7 +526,7 @@ class TestConflictResolution:
         tempren_process = start_tempren_process(
             "--conflict-manual",
             "--sort",
-            "%Filename()",
+            "%Name()",
             "StaticFilename",
             text_data_dir,
         )

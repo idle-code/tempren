@@ -52,7 +52,7 @@ class ExtTag(Tag):
         return str(file.relative_path.suffix).lstrip(".")
 
 
-class BasenameTag(Tag):
+class BaseTag(Tag):
     """Renders base file name without extension (suffix)
 
     If no context is provided, current file path is used to determine the base file name.
@@ -67,7 +67,7 @@ class BasenameTag(Tag):
         return file.relative_path.stem
 
 
-class DirnameTag(Tag):
+class DirTag(Tag):
     """Renders file parent directory path
 
     If no context is provided, current file path is used to determine the parent directory.
@@ -82,7 +82,7 @@ class DirnameTag(Tag):
         return file.relative_path.parent
 
 
-class FilenameTag(Tag):
+class NameTag(Tag):
     """Renders processed file name (basename with extension)"""
 
     require_context = None
