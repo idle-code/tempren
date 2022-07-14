@@ -237,10 +237,8 @@ def build_pipeline(
     pipeline.input_directory = config.input_directory
     tree_builder = TagTreeBuilder()
 
-    # TODO: specify base_path
-
     if config.recursive:
-        pipeline.file_gatherer = RecursiveFileGatherer  # type: ignore
+        pipeline.file_gatherer = RecursiveFileGatherer()
     else:
         pipeline.file_gatherer = FlatFileGatherer()
 

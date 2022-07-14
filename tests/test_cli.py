@@ -148,6 +148,25 @@ class TestVariousFlags:
         assert error_code == 0
         assert "If context is present" in stdout
 
+    def test_default_flat_traversal(self, nested_data_dir: Path):
+        stdout, stderr, error_code = run_tempren_process(
+            "--name", "%Upper(){%Name()}", nested_data_dir
+        )
+
+        assert error_code == 0
+        assert (nested_data_dir / "LEVEL-1.FILE").exists()
+        assert not (nested_data_dir / "first" / "LEVEL-2.FILE").exists()
+
+    @pytest.mark.parametrize("flag", ["-r", "--recursive"])
+    def test_recursive_traversal(self, flag: str, nested_data_dir: Path):
+        stdout, stderr, error_code = run_tempren_process(
+            "--name", flag, "%Upper(){%Name()}", nested_data_dir
+        )
+
+        assert error_code == 0
+        assert (nested_data_dir / "LEVEL-1.FILE").exists()
+        assert (nested_data_dir / "first" / "LEVEL-2.FILE").exists()
+
 
 @pytest.mark.parametrize("invert_flag", ["-fi", "--filter-invert", None])
 class TestFilterFlags:
