@@ -61,6 +61,11 @@ class FilesystemFileGathererTests(ABC):
         }
         assert files == test_files
 
+
+class TestFlatFileGatherer(FilesystemFileGathererTests):
+    def create_gatherer(self) -> FileGatherer:
+        return FlatFileGatherer()
+
     def test_hidden_files_can_be_found_with_include_hidden(self, hidden_data_dir: Path):
         gatherer = self.create_gatherer()
         gatherer.include_hidden = True
@@ -72,11 +77,6 @@ class FilesystemFileGathererTests(ABC):
             hidden_data_dir / "visible.txt",
         }
         assert files == test_files
-
-
-class TestFlatFileGatherer(FilesystemFileGathererTests):
-    def create_gatherer(self) -> FileGatherer:
-        return FlatFileGatherer()
 
     def test_nested_files(self, nested_data_dir: Path):
         gatherer = self.create_gatherer()
@@ -92,6 +92,20 @@ class TestFlatFileGatherer(FilesystemFileGathererTests):
 class TestRecursiveFileGatherer(FilesystemFileGathererTests):
     def create_gatherer(self) -> FileGatherer:
         return RecursiveFileGatherer()
+
+    def test_hidden_files_can_be_found_with_include_hidden(self, hidden_data_dir: Path):
+        gatherer = self.create_gatherer()
+        gatherer.include_hidden = True
+
+        files = set(map(file_to_absolute_path, gatherer.gather_in(hidden_data_dir)))
+
+        test_files = {
+            hidden_data_dir / ".hidden.txt",
+            hidden_data_dir / "visible.txt",
+            hidden_data_dir / ".hidden" / ".nested_hidden.txt",
+            hidden_data_dir / ".hidden" / "nested_visible.txt",
+        }
+        assert files == test_files
 
     def test_nested_files(self, nested_data_dir: Path):
         gatherer = self.create_gatherer()

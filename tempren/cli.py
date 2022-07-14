@@ -204,6 +204,12 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         help="Look for files in input directory recursively",
     )
     parser.add_argument(
+        "-ih",
+        "--include-hidden",
+        action="store_true",
+        help="Consider hidden files and directories when scanning for files in input directory",
+    )
+    parser.add_argument(
         "-v",
         "--verbose",
         action=_IncreaseLogVerbosity,
@@ -382,6 +388,7 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         template=args.template,
         input_directory=args.input_directory,
         recursive=args.recursive,
+        include_hidden=args.include_hidden,
         dry_run=args.dry_run,
         filter_type=filter_type,
         filter_invert=args.filter_invert,

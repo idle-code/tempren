@@ -18,6 +18,7 @@ def run_tempren_process(*args) -> Tuple[str, str, int]:
     """Run tempren with provided arguments as separate process"""
     args = list(map(str, filter(lambda v: v is not None, args)))
     os.chdir(project_root_path)
+    print("Running: tempren", " ".join(args))
     completed_process = subprocess.run(
         [sys.executable, "-m", "tempren.cli"] + args,
         capture_output=True,
@@ -34,7 +35,7 @@ def start_tempren_process(*args) -> subprocess.Popen:
     """Run tempren with provided arguments as separate process"""
     args = list(map(str, filter(lambda v: v is not None, args)))
     # CHECK: Use pexpect?
-    print("Running: tempren", " ".join(args))
+    # print("Running: tempren", " ".join(args))
     tempren_process = subprocess.Popen(
         [sys.executable, "-m", "tempren.cli"] + args,
         stdin=subprocess.PIPE,
@@ -166,6 +167,41 @@ class TestVariousFlags:
         assert error_code == 0
         assert (nested_data_dir / "LEVEL-1.FILE").exists()
         assert (nested_data_dir / "first" / "LEVEL-2.FILE").exists()
+
+    def test_default_hidden_files_handling(self, hidden_data_dir: Path):
+        stdout, stderr, error_code = run_tempren_process(
+            "--name", "%Upper(){%Name()}", hidden_data_dir
+        )
+
+        assert error_code == 0
+        assert (hidden_data_dir / "VISIBLE.TXT").exists()
+        assert not (hidden_data_dir / ".HIDDEN.TXT").exists()
+        assert not (hidden_data_dir / ".hidden" / "NESTED_VISIBLE.TXT").exists()
+        assert not (hidden_data_dir / ".hidden" / ".NESTED_HIDDEN.TXT").exists()
+
+    @pytest.mark.parametrize("flag", ["-ih", "--include-hidden"])
+    def test_hidden_files_inclusion(self, flag: str, hidden_data_dir: Path):
+        stdout, stderr, error_code = run_tempren_process(
+            "--name", flag, "%Upper(){%Name()}", hidden_data_dir
+        )
+
+        assert error_code == 0
+        assert (hidden_data_dir / "VISIBLE.TXT").exists()
+        assert (hidden_data_dir / ".HIDDEN.TXT").exists()
+        assert not (hidden_data_dir / ".hidden" / "NESTED_VISIBLE.TXT").exists()
+        assert not (hidden_data_dir / ".hidden" / ".NESTED_HIDDEN.TXT").exists()
+
+    @pytest.mark.parametrize("flag", ["-ih", "--include-hidden"])
+    def test_hidden_directories_inclusion(self, flag: str, hidden_data_dir: Path):
+        stdout, stderr, error_code = run_tempren_process(
+            "--name", "--recursive", flag, "%Upper(){%Name()}", hidden_data_dir
+        )
+
+        assert error_code == 0
+        assert (hidden_data_dir / "VISIBLE.TXT").exists()
+        assert (hidden_data_dir / ".HIDDEN.TXT").exists()
+        assert (hidden_data_dir / ".hidden" / "NESTED_VISIBLE.TXT").exists()
+        assert (hidden_data_dir / ".hidden" / ".NESTED_HIDDEN.TXT").exists()
 
 
 @pytest.mark.parametrize("invert_flag", ["-fi", "--filter-invert", None])

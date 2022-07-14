@@ -71,6 +71,7 @@ class RuntimeConfiguration:
     template: str
     input_directory: Path
     recursive: bool = False
+    include_hidden: bool = False
     dry_run: bool = False
     filter_type: FilterType = FilterType.glob
     filter_invert: bool = False
@@ -241,6 +242,8 @@ def build_pipeline(
         pipeline.file_gatherer = RecursiveFileGatherer()
     else:
         pipeline.file_gatherer = FlatFileGatherer()
+
+    pipeline.file_gatherer.include_hidden = config.include_hidden
 
     def _compile_template(template_text: str) -> Pattern:
         log.debug("Compiling template %r", template_text)

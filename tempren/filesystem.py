@@ -32,8 +32,6 @@ class FileGatherer(ABC):
 
 class FilesystemGatherer(FileGatherer, ABC):
     def _include_path_in_result(self, path: Path) -> bool:
-        if path.is_dir():
-            return False
         if not self.include_hidden:
             return not path.name.startswith(".")
         return True
@@ -46,7 +44,8 @@ class FlatFileGatherer(FilesystemGatherer):
                 start_directory, file_path.relative_to(start_directory)
             ),
             filter(
-                self._include_path_in_result,
+                lambda file_path: self._include_path_in_result(file_path)
+                and not file_path.is_dir(),
                 start_directory.glob("*"),
             ),
         )
@@ -54,15 +53,17 @@ class FlatFileGatherer(FilesystemGatherer):
 
 class RecursiveFileGatherer(FilesystemGatherer):
     def gather_in(self, start_directory: Path) -> Iterable[File]:
-        yield from map(
-            lambda file_path: File(
-                start_directory, file_path.relative_to(start_directory)
-            ),
-            filter(
-                self._include_path_in_result,
-                start_directory.rglob("*"),
-            ),
-        )
+        yield from self._gather_in(start_directory, start_directory)
+
+    def _gather_in(self, directory: Path, start_directory: Path) -> Iterable[File]:
+        for dir_entry in directory.iterdir():
+            if not self._include_path_in_result(dir_entry):
+                continue
+
+            if dir_entry.is_dir():
+                yield from self._gather_in(dir_entry, start_directory)
+            else:
+                yield File(start_directory, dir_entry.relative_to(start_directory))
 
 
 class FileRenamer:
