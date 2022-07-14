@@ -1,5 +1,6 @@
 import logging
 import os
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -21,7 +22,9 @@ from tempren.filesystem import (
     FileMover,
     FileRenamer,
     FileRenamerType,
+    FlatFileGatherer,
     PrintingRenamerWrapper,
+    RecursiveFileGatherer,
 )
 from tempren.path_generator import File, InvalidFilenameError, PathGenerator
 from tempren.template.path_generators import (
@@ -60,12 +63,16 @@ class ConflictResolutionStrategy(Enum):
     """Prompt user to resolve conflict manually (choose an option or provide new filename)"""
 
 
+ManualConflictResolver = Callable[[Path, Path], Union[ConflictResolutionStrategy, Path]]
+
+
 @dataclass
 class RuntimeConfiguration:
     template: str
     input_directory: Path
+    recursive: bool = False
     dry_run: bool = False
-    filter_type: FilterType = FilterType.glob  # TODO: update
+    filter_type: FilterType = FilterType.glob
     filter_invert: bool = False
     filter: Optional[str] = None
     conflict_strategy: ConflictResolutionStrategy = ConflictResolutionStrategy.stop
@@ -78,9 +85,6 @@ class ConfigurationError(Exception):
     pass
 
 
-ManualConflictResolver = Callable[[Path, Path], Union[ConflictResolutionStrategy, Path]]
-
-
 def manual_resolver_placeholder(
     source_path: Path, destination_path: Path
 ) -> Union[ConflictResolutionStrategy, Path]:
@@ -90,7 +94,7 @@ def manual_resolver_placeholder(
 class Pipeline:
     log: logging.Logger
     _input_directory: Path
-    file_gatherer: Callable[[Path], Iterable[Path]]
+    file_gatherer: FileGatherer
     sorter: Optional[Callable[[Iterable[File]], Iterable[File]]] = None
     path_generator: PathGenerator
     conflict_strategy: ConflictResolutionStrategy = ConflictResolutionStrategy.stop
@@ -115,9 +119,8 @@ class Pipeline:
         all_files = []
         self.log.info(f"Gathering paths in {self.input_directory}")
         os.chdir(self.input_directory)
-        for path in self.file_gatherer(self.input_directory):
-            self.log.debug("Checking '%s'", path)
-            file = File(self.input_directory, path.relative_to(self.input_directory))
+        for file in self.file_gatherer.gather_in(self.input_directory):
+            self.log.debug("Checking %s", file)
             if not self.file_filter(file):
                 self.log.debug("%s filtered out", file)
                 continue
@@ -227,14 +230,19 @@ def build_tag_registry() -> TagRegistry:
 def build_pipeline(
     config: RuntimeConfiguration,
     registry: TagRegistry,
-    manual_conflict_resolver: ManualConflictResolver,
+    manual_conflict_resolver: ManualConflictResolver,  # TODO: Move to the RuntimeConfiguration
 ) -> Pipeline:
     log.debug("Building pipeline")
     pipeline = Pipeline()
     pipeline.input_directory = config.input_directory
-    # TODO: specify base_path
-    pipeline.file_gatherer = FileGatherer  # type: ignore
     tree_builder = TagTreeBuilder()
+
+    # TODO: specify base_path
+
+    if config.recursive:
+        pipeline.file_gatherer = RecursiveFileGatherer  # type: ignore
+    else:
+        pipeline.file_gatherer = FlatFileGatherer()
 
     def _compile_template(template_text: str) -> Pattern:
         log.debug("Compiling template %r", template_text)

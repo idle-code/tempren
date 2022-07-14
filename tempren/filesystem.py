@@ -1,8 +1,11 @@
 import logging
 import os
 import shutil
+from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Callable, Generator, Set
+from typing import Callable, Iterable, Set
+
+from tempren.path_generator import File
 
 FileRenamerType = Callable[[Path, Path, bool], None]
 
@@ -18,24 +21,47 @@ class DestinationAlreadyExistsError(FileExistsError):
         )
 
 
-class FileGatherer:
-    start_directory: Path
-    glob_pattern: str  # TODO: globbing should be done at the filtering stage
-    # TODO: add an option to include hidden files
+class FileGatherer(ABC):
+    include_hidden: bool = False
+    """Include hidden files and directories when making the search"""
 
-    def __init__(self, directory_path: Path, glob_pattern: str = "*"):
-        self.start_directory = directory_path
-        self.glob_pattern = glob_pattern
+    @abstractmethod
+    def gather_in(self, start_directory: Path) -> Iterable[File]:
+        raise NotImplementedError()
 
-    def __iter__(self) -> Generator[Path, None, None]:
-        def is_hidden(path: Path) -> bool:
-            return path.name.startswith(".")
 
-        # os.chdir(self.start_directory)  # FIXME: implement
+class FilesystemGatherer(FileGatherer, ABC):
+    def _include_path_in_result(self, path: Path) -> bool:
+        if path.is_dir():
+            return False
+        if not self.include_hidden:
+            return not path.name.startswith(".")
+        return True
 
-        yield from filter(
-            lambda p: not p.is_dir() and not is_hidden(p),
-            self.start_directory.rglob(self.glob_pattern),
+
+class FlatFileGatherer(FilesystemGatherer):
+    def gather_in(self, start_directory: Path) -> Iterable[File]:
+        yield from map(
+            lambda file_path: File(
+                start_directory, file_path.relative_to(start_directory)
+            ),
+            filter(
+                self._include_path_in_result,
+                start_directory.glob("*"),
+            ),
+        )
+
+
+class RecursiveFileGatherer(FilesystemGatherer):
+    def gather_in(self, start_directory: Path) -> Iterable[File]:
+        yield from map(
+            lambda file_path: File(
+                start_directory, file_path.relative_to(start_directory)
+            ),
+            filter(
+                self._include_path_in_result,
+                start_directory.rglob("*"),
+            ),
         )
 
 

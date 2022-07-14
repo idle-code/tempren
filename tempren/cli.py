@@ -198,6 +198,12 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         help="Do not perform any renaming - just show expected operation results",
     )
     parser.add_argument(
+        "-r",
+        "--recursive",
+        action="store_true",
+        help="Look for files in input directory recursively",
+    )
+    parser.add_argument(
         "-v",
         "--verbose",
         action=_IncreaseLogVerbosity,
@@ -375,6 +381,7 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
     configuration = RuntimeConfiguration(
         template=args.template,
         input_directory=args.input_directory,
+        recursive=args.recursive,
         dry_run=args.dry_run,
         filter_type=filter_type,
         filter_invert=args.filter_invert,
