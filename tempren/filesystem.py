@@ -148,8 +148,9 @@ class PrintingRenamerWrapper:
             self.log.debug("Trying to rename: %s to %s", source_path, destination_path)
         self.renamer(source_path, destination_path, override)
 
-        self.log.info(f"\nRenamed: {source_path}")
+        self.log.info(f"Renamed: {source_path}")
         if override:
-            self.log.info(f"     to: {destination_path} (override)")
+            self.log.info(f"         to: {destination_path} (override)")
+            # self.log.info(f"to existing: {destination_path} (override)")
         else:
             self.log.info(f"     to: {destination_path}")

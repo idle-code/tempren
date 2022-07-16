@@ -155,6 +155,7 @@ class Pipeline:
             self.log.debug("Generated path: '%s'", new_path)
 
             if new_path == file.relative_path:
+                # FIXME: Test
                 self.log.info(
                     "Skipping renaming of: '%s' (source and destination are the same)",
                     new_path,

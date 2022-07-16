@@ -34,11 +34,17 @@ class TestPattern:
 
         assert element.process(nonexistent_file) == "foobar"
 
-    def test_escaped_tag_invocation(self, nonexistent_file: File):
+    def test_expression_string_rendering(self, nonexistent_file: File):
         mock_tag = MockTag(process_output="foo")
         element = Pattern([TagInstance(tag=mock_tag), RawText(" == 'bar'")])
 
         assert element.process_as_expression(nonexistent_file) == "'foo' == 'bar'"
+
+    def test_path_value_rendering(self, nonexistent_file: File):
+        mock_tag = MockTag(process_output=nonexistent_file.relative_path)
+        element = Pattern([TagInstance(tag=mock_tag)])
+
+        assert element.process(nonexistent_file) == str(nonexistent_file.relative_path)
 
 
 class TestTagPlaceholder:

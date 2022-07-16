@@ -1,6 +1,7 @@
 import textwrap
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, List, Mapping, Optional, Type
 
 from docstring_parser import parse as parse_docstring
@@ -49,17 +50,10 @@ class Pattern(PatternElement):
         """Recursively renders pattern as a string"""
         return "".join(
             map(
-                lambda se: Pattern._convert_tag_value(se.process(file)),
+                lambda se: str(se.process(file)),
                 self.sub_elements,
             )
         )
-
-    @staticmethod
-    def _convert_tag_value(tag_value) -> str:
-        """Renders value returned by tag invocation as a string"""
-        if isinstance(tag_value, str):
-            return tag_value
-        return repr(tag_value)
 
     def process_as_expression(self, file: File) -> str:
         """Recursively renders pattern as an expression string
@@ -81,7 +75,7 @@ class Pattern(PatternElement):
         tag_value = element.process(file)
         if isinstance(element, TagInstance):
             return repr(tag_value)
-        return Pattern._convert_tag_value(tag_value)
+        return str(tag_value)
 
 
 @dataclass
