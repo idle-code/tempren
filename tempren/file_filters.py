@@ -2,10 +2,14 @@ import fnmatch
 import logging
 import re
 from abc import ABC, abstractmethod
-from pathlib import PosixPath
 from typing import Callable
 
-from tempren.path_generator import File
+from tempren.path_generator import (
+    ExpressionEvaluationError,
+    File,
+    TemplateEvaluationError,
+    evaluate_expression,
+)
 from tempren.template.tree_elements import Pattern
 
 
@@ -75,8 +79,6 @@ class GlobPathFileFilter(GlobFileFilter):
 class TemplateFileFilter(FileFilter):
     log: logging.Logger
     pattern: Pattern
-    # TODO: Merge following with TemplateFileSorter._evaluation_locals
-    _evaluation_locals = {"PosixPath": PosixPath}
 
     def __init__(self, pattern: Pattern):
         self.log = logging.getLogger(__name__)
@@ -86,6 +88,15 @@ class TemplateFileFilter(FileFilter):
         self.log.debug("Rendering filter template for '%s'", file)
         rendered_expression = self.pattern.process_as_expression(file)
         self.log.debug("Evaluating filter expression '%s'", rendered_expression)
-        evaluation_result = eval(rendered_expression, {}, self._evaluation_locals)
-        self.log.debug("Evaluation result '%s'", repr(evaluation_result))
-        return bool(evaluation_result)
+        try:
+            evaluation_result = evaluate_expression(rendered_expression)
+            self.log.debug("Evaluation result '%s'", repr(evaluation_result))
+            return bool(evaluation_result)
+        except ExpressionEvaluationError as evaluation_error:
+            assert self.pattern.source_representation is not None
+            raise TemplateEvaluationError(
+                file,
+                self.pattern.source_representation,
+                evaluation_error.expression,
+                evaluation_error.message,
+            )

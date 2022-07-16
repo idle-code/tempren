@@ -45,6 +45,9 @@ class Pattern(PatternElement):
     """Represents pattern tree - a chain of text/tag invocations"""
 
     sub_elements: List[PatternElement] = field(default_factory=list)
+    source_representation: Optional[str] = field(
+        init=False, default=None, compare=False
+    )
 
     def process(self, file: File) -> str:
         """Recursively renders pattern as a string"""

@@ -26,12 +26,18 @@ from tempren.filesystem import (
     PrintingRenamerWrapper,
     RecursiveFileGatherer,
 )
-from tempren.path_generator import File, InvalidFilenameError, PathGenerator
+from tempren.path_generator import (
+    ExpressionEvaluationError,
+    File,
+    InvalidFilenameError,
+    PathGenerator,
+    TemplateEvaluationError,
+)
 from tempren.template.path_generators import (
     TemplateNameGenerator,
     TemplatePathGenerator,
 )
-from tempren.template.tree_builder import TagRegistry, TagTemplateError, TagTreeBuilder
+from tempren.template.tree_builder import TagRegistry, TagTreeBuilder, TemplateError
 from tempren.template.tree_elements import Pattern
 
 log = logging.getLogger(__name__)
@@ -250,7 +256,7 @@ def build_pipeline(
         log.debug("Compiling template %r", template_text)
         try:
             return registry.bind(tree_builder.parse(template_text))
-        except TagTemplateError as template_error:
+        except TemplateError as template_error:
             template_error.template = template_text
             raise template_error
 

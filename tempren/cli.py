@@ -13,10 +13,11 @@ from .pipeline import (
     FilterType,
     OperationMode,
     RuntimeConfiguration,
+    TemplateEvaluationError,
     build_pipeline,
     build_tag_registry,
 )
-from .template.tree_builder import TagTemplateError
+from .template.tree_builder import TemplateError
 
 log = logging.getLogger("CLI")
 
@@ -64,6 +65,12 @@ def existing_directory(val: str) -> Path:
     if not directory_path.is_dir():
         raise argparse.ArgumentTypeError(f"Directory '{val}' doesn't exists")
     return directory_path
+
+
+def nonempty_string(val: str) -> str:
+    if not val:
+        raise argparse.ArgumentTypeError(f"Non-empty argument required")
+    return val
 
 
 class SystemExitError(Exception):
@@ -290,7 +297,7 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
     filter_mode.add_argument(
         "-ft",
         "--filter-template",
-        type=str,
+        type=nonempty_string,
         metavar="filter_expression",
         help="Tag template filter expression to include individual files",
     )
@@ -305,7 +312,7 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
     sorting_group.add_argument(
         "-s",
         "--sort",
-        type=str,
+        type=nonempty_string,
         metavar="sort_expression",
         help="Sorting tag template used to order file list before processing",
     )
@@ -318,7 +325,7 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
 
     parser.add_argument(
         "template",
-        type=str,
+        type=nonempty_string,
         help="Template used to generate new filename/path",
     )
     parser.add_argument(
@@ -402,7 +409,7 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
     return configuration
 
 
-def render_template_error(template_error: TagTemplateError, indent_size: int = 4):
+def render_template_error(template_error: TemplateError, indent_size: int = 4):
     assert template_error.location.line == 1, "No support for multiline templates yet"
     if template_error.location.length == 1:
         underline = " " * template_error.location.column + "^"
@@ -414,6 +421,20 @@ def render_template_error(template_error: TagTemplateError, indent_size: int = 4
     log.error(indent(template_error.template, " " * indent_size))
     log.error(indent(underline, " " * indent_size))
     log.error(f"Template error at {template_error.location}: {template_error.message}")
+
+
+def render_template_evaluation_error(
+    template_error: TemplateEvaluationError, indent_size: int = 4
+):
+    assert template_error.template
+    assert template_error.expression
+
+    log.error("While processing file %r with template:", template_error.file)
+    log.error(indent(template_error.template, " " * indent_size))
+    log.error("which has been rendered to:")
+    log.error(indent(repr(template_error.expression), " " * indent_size))
+    log.error("an evaluation error occurred:")
+    log.error(indent(template_error.message, " " * indent_size))
 
 
 def user_conflict_resolver(
@@ -457,7 +478,10 @@ def main() -> int:
         if exc.status != 0:
             log.error(exc)
         return exc.status
-    except TagTemplateError as template_error:
+    except TemplateEvaluationError as template_evaluation_error:
+        render_template_evaluation_error(template_evaluation_error)
+        return 5
+    except TemplateError as template_error:
         render_template_error(template_error)
         return 3
     except FileExistsError as exc:

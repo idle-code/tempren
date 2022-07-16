@@ -304,26 +304,25 @@ class TestPathFilterFlags:
             assert (nested_data_dir / "first" / "LEVEL-2.FILE").exists()
 
 
+@pytest.mark.parametrize("flag", ["-ft", "--filter-template"])
 class TestFilterTemplateErrors:
-    @pytest.mark.parametrize("filter_expression", ["%UnknownTag()", "%Size"])
-    def test_template_filter_error(self, filter_expression: str, text_data_dir: Path):
+    def test_empty_filtering_template(self, flag: str, nonexistent_path: Path):
         stdout, stderr, error_code = run_tempren(
-            "--filter-template",
-            filter_expression,
+            flag,
+            "",
             "%Count()%Ext()",
-            text_data_dir,
+            nonexistent_path,
         )
 
-        assert error_code == 3
-        assert "Template error" in stderr
+        assert error_code == 2
+        assert "Non-empty argument required" in stderr
 
-    @pytest.mark.skip("Not ready yet")
-    @pytest.mark.parametrize("filter_expression", ["%Size() + 'foobar'", ""])
-    def test_template_filter_evaluation_error(
-        self, filter_expression: str, text_data_dir: Path
+    @pytest.mark.parametrize("filter_expression", ["%UnknownTag()", "%Size"])
+    def test_filter_template_error(
+        self, flag: str, filter_expression: str, text_data_dir: Path
     ):
         stdout, stderr, error_code = run_tempren(
-            "--filter-template",
+            flag,
             filter_expression,
             "%Count()%Ext()",
             text_data_dir,
@@ -331,10 +330,35 @@ class TestFilterTemplateErrors:
 
         assert error_code == 3
         assert "Template error" in stderr
+
+    @pytest.mark.parametrize("filter_expression", ["%Size() + 'foobar'"])
+    def test_filter_template_evaluation_error(
+        self, flag: str, filter_expression: str, text_data_dir: Path
+    ):
+        stdout, stderr, error_code = run_tempren(
+            flag,
+            filter_expression,
+            "%Count()%Ext()",
+            text_data_dir,
+        )
+
+        assert error_code == 5
+        assert "evaluation error occurred" in stderr
 
 
 @pytest.mark.parametrize("sort_flag", ["-s", "--sort"])
 class TestSortingFlags:
+    def test_empty_sorting_template(self, nonexistent_path: Path, sort_flag: str):
+        stdout, stderr, error_code = run_tempren(
+            sort_flag,
+            "",
+            "%Count()%Ext()",
+            nonexistent_path,
+        )
+
+        assert error_code == 2
+        assert "Non-empty argument required" in stderr
+
     def test_sorting(self, text_data_dir: Path, sort_flag: str):
         stdout, stderr, error_code = run_tempren(
             sort_flag,
@@ -376,6 +400,20 @@ class TestSortingFlags:
 
         assert error_code == 3
         assert "Template error" in stderr
+
+    @pytest.mark.parametrize("sort_expression", ["%Size() + 'foobar'", ","])
+    def test_sort_template_evaluation_error(
+        self, sort_flag: str, sort_expression: str, text_data_dir: Path
+    ):
+        stdout, stderr, error_code = run_tempren(
+            sort_flag,
+            sort_expression,
+            "%Count()%Ext()",
+            text_data_dir,
+        )
+
+        assert error_code == 5
+        assert "evaluation error occurred" in stderr
 
 
 @pytest.mark.parametrize("name_mode_flag", ["-n", "--name", None])

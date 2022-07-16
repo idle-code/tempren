@@ -195,6 +195,7 @@ class TagTreeBuilder:
 
         visitor = _TreeVisitor()
         root_pattern = visitor.visitRootPattern(parser.rootPattern())
+        root_pattern.source_representation = text
         return root_pattern
 
 
@@ -236,7 +237,7 @@ class TagTemplateErrorListener(ErrorListener):
         )
 
 
-class TagTemplateError(Exception):
+class TemplateError(Exception):
     location: Location
     message: str
     template: str
@@ -247,11 +248,11 @@ class TagTemplateError(Exception):
         self.message = message
 
 
-class TagTemplateSyntaxError(TagTemplateError):
+class TagTemplateSyntaxError(TemplateError):
     pass
 
 
-class TagTemplateSemanticError(TagTemplateError):
+class TagTemplateSemanticError(TemplateError):
     pass
 
 
@@ -352,7 +353,9 @@ class TagRegistry:
                 new_elements.append(self._rewrite_tag_placeholder(element))
             else:
                 new_elements.append(element)
-        return Pattern(new_elements)
+        bound_pattern = Pattern(new_elements)
+        bound_pattern.source_representation = pattern.source_representation
+        return bound_pattern
 
     def _rewrite_tag_placeholder(self, tag_placeholder: TagPlaceholder) -> TagInstance:
         tag_factory: Optional[TagFactory] = self.find_tag_factory(

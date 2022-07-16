@@ -3,7 +3,7 @@ from pathlib import Path
 import pytest
 
 from tempren.file_sorters import TemplateFileSorter
-from tempren.path_generator import File
+from tempren.path_generator import File, TemplateEvaluationError
 from tempren.template.tree_elements import Pattern, RawText, TagInstance
 
 from .template.mocks import GeneratorTag
@@ -13,9 +13,10 @@ class TestTemplateFileSorter:
     @pytest.mark.parametrize("expression_text", ["", "$%", "1 +", "while True: pass"])
     def test_invalid_expression(self, expression_text: str, nonexistent_file: File):
         pattern = Pattern([RawText(expression_text)])
+        pattern.source_representation = expression_text
         file_sorter = TemplateFileSorter(pattern)
 
-        with pytest.raises(SyntaxError):
+        with pytest.raises(TemplateEvaluationError):
             file_sorter([nonexistent_file])
 
     @pytest.mark.parametrize(
