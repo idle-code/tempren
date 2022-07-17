@@ -23,6 +23,7 @@ from tempren.filesystem import (
     FileRenamer,
     FileRenamerType,
     FlatFileGatherer,
+    InvalidDestinationError,
     PrintingRenamerWrapper,
     RecursiveFileGatherer,
 )
@@ -147,7 +148,8 @@ class Pipeline:
         for file in all_files:
             try:
                 self.log.debug("Generating new name for %r", file)
-                new_path = self.path_generator.generate(file)
+                new_relative_path = self.path_generator.generate(file)
+                self.log.debug("Generated path: '%s'", new_relative_path)
             except InvalidFilenameError as error:
                 # TODO: Introduce flag similar to conflict resolver to take appropriate action
                 self.log.warning(
@@ -157,36 +159,43 @@ class Pipeline:
                 )
                 continue
 
-            # FIXME: check generated new_path for illegal characters (like '*')
-            self.log.debug("Generated path: '%s'", new_path)
+            # FIXME: check generated new_relative_path for illegal characters (like '*')
 
-            if new_path == file.relative_path:
+            if new_relative_path == file.relative_path:
                 # FIXME: Test
                 self.log.info(
                     "Skipping renaming of: '%s' (source and destination are the same)",
-                    new_path,
+                    new_relative_path,
                 )
                 continue
 
+            new_absolute_path = (file.input_directory / new_relative_path).resolve()
+            if not str(new_absolute_path).startswith(str(file.input_directory)):
+                raise InvalidDestinationError(
+                    f"Path generated for {file!r}: {new_relative_path} is not relative to the input directory",
+                )
+
             try:
-                self.renamer(file.relative_path, new_path)
+                self.renamer(file.relative_path, new_relative_path)
             except FileExistsError:
                 self.log.debug(
                     "Deferring renaming of %r as destination '%s' already exists",
                     file,
-                    new_path,
+                    new_relative_path,
                 )
-                backlog.append((file.relative_path, new_path))
+                backlog.append((file.relative_path, new_relative_path))
 
         while backlog:
-            relative_name, new_path = backlog.pop()
+            source_path, destination_path = backlog.pop()
             self.log.debug(
-                "Trying again to rename '%s' into '%s'", relative_name, new_path
+                "Trying again to rename '%s' into '%s'", source_path, destination_path
             )
             try:
-                self.renamer(relative_name, new_path)
+                self.renamer(source_path, destination_path)
             except FileExistsError:
-                self.resolve_conflict(relative_name, new_path, self.conflict_strategy)
+                self.resolve_conflict(
+                    source_path, destination_path, self.conflict_strategy
+                )
 
     def resolve_conflict(
         self,

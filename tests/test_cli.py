@@ -497,6 +497,18 @@ class TestPathMode:
         assert error_code == 3
         assert "Template error" in stderr
 
+    @pytest.mark.parametrize("path_expression", ["../../%Name()", "/some/dir/%Name()"])
+    def test_generated_path_outside_input_directory_error(
+        self, text_data_dir: Path, path_mode_flag: str, path_expression: str
+    ):
+        stdout, stderr, error_code = run_tempren(
+            path_mode_flag, path_expression, text_data_dir
+        )
+
+        assert error_code == 6
+        assert "Path generated for" in stderr
+        assert "is not relative to the input directory" in stderr
+
 
 class TestConflictResolution:
     def test_transient_conflict_resolution(self, text_data_dir: Path):

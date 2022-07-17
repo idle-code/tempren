@@ -238,6 +238,8 @@ class TagTemplateErrorListener(ErrorListener):
 
 
 class TemplateError(Exception):
+    """Represents an error in the template itself"""
+
     location: Location
     message: str
     template: str

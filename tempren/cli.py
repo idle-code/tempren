@@ -11,6 +11,7 @@ from typing import Any, List, NoReturn, Optional, Sequence, Text, Union
 from .pipeline import (
     ConflictResolutionStrategy,
     FilterType,
+    InvalidDestinationError,
     OperationMode,
     RuntimeConfiguration,
     TemplateEvaluationError,
@@ -480,13 +481,16 @@ def main() -> int:
         return exc.status
     except TemplateEvaluationError as template_evaluation_error:
         render_template_evaluation_error(template_evaluation_error)
-        return 5
+        return 5  # TODO: cleanup error codes
     except TemplateError as template_error:
         render_template_error(template_error)
         return 3
-    except FileExistsError as exc:
+    except OSError as exc:
         log.error(f"Error: {exc}")
         return 4
+    except InvalidDestinationError as exc:
+        log.error(f"Error: {exc}")
+        return 6
 
 
 if __name__ == "__main__":
