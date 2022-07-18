@@ -1,5 +1,6 @@
+from collections import defaultdict
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 import pathvalidate
 
@@ -11,30 +12,49 @@ class CountTag(Tag):
     """Generates sequential numbers for each invocation"""
 
     require_context = False
-    counter: int
     step: int
     width: int
+    _common_counter: Optional[int] = None
+    _per_directory_counters: defaultdict
 
-    def configure(self, start: int = 0, step: int = 1, width: int = 0):  # type: ignore
+    def configure(self, start: int = 0, step: int = 1, width: int = 0, common: bool = False):  # type: ignore
         """
         :param start: first element of generated sequence
         :param step: step added to previous element on each invocation
         :param width: number of characters taken by the number (will be zero-filled)
+        :param common: use a single, global counter instead of per-directory ones
+
+        If width is greater than zero, output will be a string value.
         """
         if start < 0:
             raise ValueError("start have to be greater or equal 0")
-        self.counter = start
         if step == 0:
             raise ValueError("step cannot be equal 0")
         self.step = step
         if width < 0:
             raise ValueError("width have to be greater or equal 0")
         self.width = width
+        if common:
+            self._common_counter = start
+        self._per_directory_counters = defaultdict(lambda: start)
 
-    def process(self, file: File, context: Optional[str]) -> str:
-        value = self.counter
-        self.counter += self.step
-        return str(value).zfill(self.width)
+    def process(self, file: File, context: Optional[str]) -> Union[str, int]:
+        value = self._get_counter_value_for(file)
+        if self.width != 0:
+            return str(value).zfill(self.width)
+        return value
+
+    def _get_counter_value_for(self, file: File) -> int:
+        directory = file.absolute_path.parent
+        if self._common_counter is not None:
+            value = self._common_counter
+            self._common_counter += self.step
+        else:
+            value = self._per_directory_counters[directory]
+            self._per_directory_counters[directory] += self.step
+        if value < 0:
+            raise ValueError(f"Invalid counter value generated: {value}")
+        return value
 
 
 class ExtTag(Tag):

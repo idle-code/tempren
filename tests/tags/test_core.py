@@ -30,13 +30,29 @@ class TestCountTag:
         with pytest.raises(ValueError):
             tag.configure(width=-1)
 
+    def test_zero_width_results_in_integer(self, nonexistent_file: File):
+        tag = CountTag()
+        tag.configure(width=0)
+
+        result = tag.process(nonexistent_file, None)
+
+        assert isinstance(result, int)
+
+    def test_positive_width_results_in_string(self, nonexistent_file: File):
+        tag = CountTag()
+        tag.configure(width=3)
+
+        result = tag.process(nonexistent_file, None)
+
+        assert isinstance(result, str)
+
     def test_first_result_is_start(self, nonexistent_file: File):
         tag = CountTag()
         tag.configure(start=123)
 
         result = tag.process(nonexistent_file, None)
 
-        assert result == "123"
+        assert result == 123
 
     def test_second_result_differs_by_step(self, nonexistent_file: File):
         tag = CountTag()
@@ -45,7 +61,7 @@ class TestCountTag:
         tag.process(nonexistent_file, None)
         result = tag.process(nonexistent_file, None)
 
-        assert result == "3"
+        assert result == 3
 
     def test_width_control_leading_zeros(self, nonexistent_file: File):
         tag = CountTag()
@@ -64,6 +80,40 @@ class TestCountTag:
 
         result = tag.process(nonexistent_file, None)
         assert result == "123"
+
+    def test_step_below_zero(self, nonexistent_file: File):
+        tag = CountTag()
+        tag.configure(start=0, step=-1)
+
+        result = tag.process(nonexistent_file, None)
+        assert result == 0
+
+        with pytest.raises(ValueError):
+            tag.process(nonexistent_file, None)
+
+    def test_per_directory_counters(self, nonexistent_absolute_path: Path):
+        tag = CountTag()
+        tag.configure()
+        dir1_file = File(nonexistent_absolute_path, Path("dir1") / "file1")
+        dir2_file = File(nonexistent_absolute_path, Path("dir2") / "file2")
+
+        result = tag.process(dir1_file, None)
+        assert result == 0
+
+        result = tag.process(dir2_file, None)
+        assert result == 0
+
+    def test_global_counter(self, nonexistent_absolute_path: Path):
+        tag = CountTag()
+        tag.configure(common=True)
+        dir1_file = File(nonexistent_absolute_path, Path("dir1") / "file1")
+        dir2_file = File(nonexistent_absolute_path, Path("dir2") / "file2")
+
+        result = tag.process(dir1_file, None)
+        assert result == 0
+
+        result = tag.process(dir2_file, None)
+        assert result == 1
 
 
 class TestExtTag:
