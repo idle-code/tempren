@@ -407,15 +407,15 @@ class TagRegistry:
     def register_tags_in_module(self, module: ModuleType):
         self.log.debug(f"Discovering tags in module '{module}'")
 
-        def is_tag_class(klass: type):
-            if not inspect.isclass(klass) or not issubclass(klass, Tag) or klass == Tag:
-                return False
-            return klass.__name__.endswith(self._tag_class_suffix)
-
         if module.__package__:
             category_name = module.__name__[len(module.__package__) + 1 :]
         else:
             category_name = module.__name__
+
+        def is_tag_class(klass: type):
+            if not inspect.isclass(klass) or not issubclass(klass, Tag) or klass == Tag:
+                return False
+            return klass.__name__.endswith(self._tag_class_suffix)
 
         # TODO: do not register empty modules
         module_category = self.register_category(category_name)

@@ -101,6 +101,18 @@ class TagPlaceholder(PatternElement):
         )
 
 
+class FileNotSupportedError(Exception):  # FIXME: use
+    """Tag cannot extract value due to invalid file type"""
+
+    pass
+
+
+class MissingMetadataError(Exception):
+    """Tag cannot extract value due to missing metadata"""
+
+    pass
+
+
 class Tag(ABC):
     require_context: Optional[bool] = None
     """Determine if tag requires context

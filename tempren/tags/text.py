@@ -1,6 +1,6 @@
 import re
 from re import Pattern
-from typing import Any, List, Optional
+from typing import List, Optional
 
 from unidecode import unidecode
 
