@@ -8,6 +8,7 @@ from tempren.tags.core import (
     CountTag,
     DirTag,
     ExtTag,
+    IsMimeTag,
     MimeExtTag,
     MimeTag,
     NameTag,
@@ -318,3 +319,41 @@ class TestMimeExtTag:
         extension = tag.process(file, None)
 
         assert extension == ".mp3"
+
+
+class TestIsMimeTag:
+    def test_text_type(self, text_data_dir: Path):
+        tag = IsMimeTag()
+        tag.configure("text")
+        file = File(text_data_dir, Path("hello.txt"))
+
+        is_text = tag.process(file, None)
+
+        assert is_text
+
+    def test_not_text_type(self, audio_data_dir: Path):
+        tag = IsMimeTag()
+        tag.configure("text")
+        file = File(audio_data_dir, Path("sample.mp3"))
+
+        is_text = tag.process(file, None)
+
+        assert not is_text
+
+    def test_audio_type(self, audio_data_dir: Path):
+        tag = IsMimeTag()
+        tag.configure("audio")
+        file = File(audio_data_dir, Path("sample.flac"))
+
+        is_audio = tag.process(file, None)
+
+        assert is_audio
+
+    def test_audio_type_full_match(self, audio_data_dir: Path):
+        tag = IsMimeTag()
+        tag.configure("audio/flac")
+        file = File(audio_data_dir, Path("sample.flac"))
+
+        is_flac = tag.process(file, None)
+
+        assert is_flac

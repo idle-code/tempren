@@ -134,7 +134,7 @@ class MimeTag(Tag):
     select_type: bool = False
     select_subtype: bool = False
 
-    def configure(self, type: bool = False, subtype: bool = False):
+    def configure(self, type: bool = False, subtype: bool = False):  # type: ignore
         """
         :param type: return just type section of the mime type
         :param subtype: return just subtype section of the mime type
@@ -158,4 +158,22 @@ class MimeExtTag(Tag):
 
     def process(self, file: File, context: Optional[str]) -> str:
         mime_type = magic.from_file(file.absolute_path, mime=True)
-        return mimetypes.guess_extension(mime_type, False)
+        return str(mimetypes.guess_extension(mime_type, False))
+
+
+class IsMimeTag(Tag):
+    """Checks if processed file MIME type matches provided value"""
+
+    require_context = False
+    expected_type: str
+
+    def configure(self, type: str):  # type: ignore
+        """
+        :param type: expected MIME type
+        :returns: True if file MIME type starts with expected value, False otherwise
+        """
+        self.expected_type = type
+
+    def process(self, file: File, context: Optional[str]) -> Any:
+        mime_type = magic.from_file(file.absolute_path, mime=True)
+        return mime_type.startswith(self.expected_type)
