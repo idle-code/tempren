@@ -1,11 +1,15 @@
+import mimetypes
 from collections import defaultdict
 from pathlib import Path
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
+import magic
 import pathvalidate
 
 from tempren.template.path_generators import File
 from tempren.template.tree_elements import Tag
+
+mimetypes.init()
 
 
 class CountTag(Tag):
@@ -121,3 +125,37 @@ class SanitizeTag(Tag):
     def process(self, file: File, context: Optional[str]) -> str:
         assert context
         return str(pathvalidate.sanitize_filepath(context))
+
+
+class MimeTag(Tag):
+    """Guess MIME type of processed file"""
+
+    require_context = False
+    select_type: bool = False
+    select_subtype: bool = False
+
+    def configure(self, type: bool = False, subtype: bool = False):
+        """
+        :param type: return just type section of the mime type
+        :param subtype: return just subtype section of the mime type
+        """
+        self.select_type = type
+        self.select_subtype = subtype
+
+    def process(self, file: File, context: Optional[str]) -> str:
+        mime_type = magic.from_file(file.absolute_path, mime=True)
+        if self.select_type and not self.select_subtype:
+            return mime_type.split("/")[0]
+        elif not self.select_type and self.select_subtype:
+            return mime_type.split("/")[1]
+        return mime_type
+
+
+class MimeExtTag(Tag):
+    """Guess file extension from its MIME type"""
+
+    require_context = False
+
+    def process(self, file: File, context: Optional[str]) -> str:
+        mime_type = magic.from_file(file.absolute_path, mime=True)
+        return mimetypes.guess_extension(mime_type, False)

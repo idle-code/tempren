@@ -3,7 +3,16 @@ from pathlib import Path
 import pytest
 
 from tempren.path_generator import File
-from tempren.tags.core import BaseTag, CountTag, DirTag, ExtTag, NameTag, SanitizeTag
+from tempren.tags.core import (
+    BaseTag,
+    CountTag,
+    DirTag,
+    ExtTag,
+    MimeExtTag,
+    MimeTag,
+    NameTag,
+    SanitizeTag,
+)
 
 
 class TestCountTag:
@@ -238,3 +247,74 @@ class TestSanitizeTag:
         filename = tag.process(nonexistent_file, "path\\to/file")
 
         assert filename == "path/to/file"
+
+
+class TestMimeTag:
+    def test_mp3_mime_type(self, audio_data_dir: Path):
+        tag = MimeTag()
+        file = File(audio_data_dir, Path("sample.mp3"))
+
+        mime_type = tag.process(file, None)
+
+        assert mime_type == "audio/mpeg"
+
+    def test_text_mime_type(self, text_data_dir: Path):
+        tag = MimeTag()
+        file = File(text_data_dir, Path("hello.txt"))
+
+        mime_type = tag.process(file, None)
+
+        assert mime_type == "text/plain"
+
+    def test_just_type(self, text_data_dir: Path):
+        tag = MimeTag()
+        tag.configure(type=True)
+        file = File(text_data_dir, Path("hello.txt"))
+
+        mime_type = tag.process(file, None)
+
+        assert mime_type == "text"
+
+    def test_just_subtype(self, text_data_dir: Path):
+        tag = MimeTag()
+        tag.configure(subtype=True)
+        file = File(text_data_dir, Path("hello.txt"))
+
+        mime_type = tag.process(file, None)
+
+        assert mime_type == "plain"
+
+    def test_just_type_and_subtype(self, text_data_dir: Path):
+        tag = MimeTag()
+        tag.configure(type=True, subtype=True)
+        file = File(text_data_dir, Path("hello.txt"))
+
+        mime_type = tag.process(file, None)
+
+        assert mime_type == "text/plain"
+
+
+class TestMimeExtTag:
+    def test_text_plain_extension(self, text_data_dir: Path):
+        tag = MimeExtTag()
+        file = File(text_data_dir, Path("hello.txt"))
+
+        extension = tag.process(file, None)
+
+        assert extension == ".txt"
+
+    def test_audio_flac_extension(self, audio_data_dir: Path):
+        tag = MimeExtTag()
+        file = File(audio_data_dir, Path("sample.flac"))
+
+        extension = tag.process(file, None)
+
+        assert extension == ".flac"
+
+    def test_audio_mpeg_extension(self, audio_data_dir: Path):
+        tag = MimeExtTag()
+        file = File(audio_data_dir, Path("sample.mp3"))
+
+        extension = tag.process(file, None)
+
+        assert extension == ".mp3"

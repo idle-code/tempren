@@ -28,6 +28,7 @@ Unidecode = "^1.2.0"
 pathvalidate = "^2.4.1"
 mutagen = "^1.45.1"
 docstring-parser = "^0.13"
+python-magic = "^0.4.27"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.1"
