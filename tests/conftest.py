@@ -66,3 +66,8 @@ def text_data_dir(test_data_dir: Callable[[str], Path]) -> Path:
 @pytest.fixture
 def audio_data_dir(test_data_dir: Callable[[str], Path]) -> Path:
     yield from test_data_dir("audio")
+
+
+@pytest.fixture
+def image_data_dir(test_data_dir: Callable[[str], Path]) -> Path:
+    yield from test_data_dir("image")

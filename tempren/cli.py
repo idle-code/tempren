@@ -97,6 +97,10 @@ class _ListAvailableTags(argparse.Action):
             category = registry.category_map[category_name]
 
             all_category_tags = sorted(category.tag_map.items())
+            if not all_category_tags:
+                # There is no tags in the category
+                # TODO: Remove such category from listing
+                continue
             max_name_length = max(
                 [len(tag_name) for tag_name, factory in all_category_tags]
             )
