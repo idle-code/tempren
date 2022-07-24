@@ -413,7 +413,12 @@ class TagRegistry:
             category_name = module.__name__
 
         def is_tag_class(klass: type):
-            if not inspect.isclass(klass) or not issubclass(klass, Tag) or klass == Tag:
+            if (
+                not inspect.isclass(klass)
+                or not issubclass(klass, Tag)
+                or inspect.isabstract(klass)
+                or klass == Tag
+            ):
                 return False
             return klass.__name__.endswith(self._tag_class_suffix)
 

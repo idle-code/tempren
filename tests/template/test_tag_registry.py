@@ -263,6 +263,15 @@ class TestTagRegistry:
         first_level_tag_factory = registry.find_tag_factory("FirstLevel")
         assert first_level_tag_factory
 
+    def test_register_tags_in_module__excludes_abstract_tags(self):
+        registry = TagRegistry()
+        from .test_module import first_level
+
+        registry.register_tags_in_module(first_level)
+
+        abstract_tag_factory = registry.find_tag_factory("Abstract")
+        assert abstract_tag_factory is None
+
     @staticmethod
     def _load_module_from_path(module_path: Path) -> ModuleType:
         module_name = module_path.stem

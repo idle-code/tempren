@@ -9,7 +9,7 @@ from tempren.path_generator import File
 from tempren.template.tree_elements import MissingMetadataError, Tag
 
 
-class MutagenTag(Tag, ABC):
+class MutagenTagBase(Tag, ABC):
     """Extract audio metadata (tags) using mutagen library"""
 
     require_context = False
@@ -43,73 +43,73 @@ class MutagenTag(Tag, ABC):
         return metadata_dict
 
 
-class TitleTag(MutagenTag):
+class TitleTag(MutagenTagBase):
     """Extract track title"""
 
     tag_key = "title"
 
 
-class AlbumTag(MutagenTag):
+class AlbumTag(MutagenTagBase):
     """Extract album name"""
 
     tag_key = "album"
 
 
-class ArtistTag(MutagenTag):
+class ArtistTag(MutagenTagBase):
     """Extract name of the artist"""
 
     tag_key = "artist"
 
 
-class CommentTag(MutagenTag):
+class CommentTag(MutagenTagBase):
     """Extract comment"""
 
     tag_key = "comments"
 
 
-class YearTag(MutagenTag):
+class YearTag(MutagenTagBase):
     """Extract year of the release"""
 
     tag_key = "date"
 
 
-class GenreTag(MutagenTag):
+class GenreTag(MutagenTagBase):
     """Extract genre type"""
 
     tag_key = "genre"
 
 
-class TrackTag(MutagenTag):
+class TrackTag(MutagenTagBase):
     """Extract track number"""
 
     tag_key = "tracknumber"
 
 
-class DurationTag(MutagenTag):
+class DurationTag(MutagenTagBase):
     """Extract track duration in seconds"""
 
     tag_key = "duration"
 
 
-class ChannelsTag(MutagenTag):
+class ChannelsTag(MutagenTagBase):
     """Extract number of channels"""
 
     tag_key = "channels"
 
 
-class SampleRateTag(MutagenTag):
+class SampleRateTag(MutagenTagBase):
     """Extract sample rate"""
 
     tag_key = "sample_rate"
 
 
-class BitRateTag(MutagenTag):
+class BitRateTag(MutagenTagBase):
     """Extract bit rate"""
 
     tag_key = "bitrate"
 
 
-class BitsPerSampleTag(MutagenTag):
+class BitsPerSampleTag(MutagenTagBase):
     """Extract bit rate"""
 
     tag_key = "bits_per_sample"

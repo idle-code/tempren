@@ -12,7 +12,7 @@ from tempren.template.tree_elements import (
 )
 
 
-class PillowTag(Tag, ABC):
+class PillowTagBase(Tag, ABC):
     """Base for tags extracting metadata from images using Pillow library"""
 
     require_context = False
@@ -29,14 +29,14 @@ class PillowTag(Tag, ABC):
         raise NotImplementedError()
 
 
-class WidthTag(PillowTag):
+class WidthTag(PillowTagBase):
     """Image width in pixels"""
 
     def extract_metadata(self, image: Image) -> Any:
         return image.width
 
 
-class HeightTag(PillowTag):
+class HeightTag(PillowTagBase):
     """Image height in pixels"""
 
     def extract_metadata(self, image: Image) -> Any:
