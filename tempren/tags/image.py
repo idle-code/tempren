@@ -47,6 +47,20 @@ class HeightTag(PillowTagBase):
         return image.height
 
 
+class FormatTag(PillowTagBase):
+    """Image format ('JPG', 'PNG', ...)"""
+
+    def extract_metadata(self, image: Image) -> Any:
+        return image.format
+
+
+class ColorModeTag(PillowTagBase):
+    """Color mode ('RGB', 'RGBA', ...)"""
+
+    def extract_metadata(self, image: Image) -> Any:
+        return image.mode
+
+
 class ExifTag(Tag):
     """Extract value of any EXIF tag"""
 
