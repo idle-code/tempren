@@ -97,6 +97,34 @@ class MPxTag(PillowTagBase):
         return round(image.width * image.height / 1_000_000, self.ndigits)
 
 
+class IsOrientationTag(PillowTagBase):
+    """Checks image orientation"""
+
+    check_for_landscape: bool
+    check_for_portrait: bool
+
+    def configure(self, landscape: bool = False, portrait: bool = False):
+        """
+        :param landscape: check if image height is greater than width
+        :param portrait: check if image width is greater than height
+        :returns: True if image have expected orientation
+        If both landscape and portrait are specified - check for squareness
+        """
+        # TODO: check for rotation information in EXIF data?
+        assert landscape or portrait, "No orientation specified"
+        self.check_for_landscape = landscape
+        self.check_for_portrait = portrait
+
+    def extract_metadata(self, image: Image) -> bool:
+        if self.check_for_landscape and self.check_for_portrait:
+            return image.width == image.height
+        if self.check_for_landscape:
+            return image.width > image.height
+        if self.check_for_portrait:
+            return image.width < image.height
+        raise NotImplementedError()
+
+
 class ExifTag(Tag):
     """Extract value of any EXIF tag"""
 

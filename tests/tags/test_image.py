@@ -9,6 +9,7 @@ from tempren.tags.image import (
     ExifTag,
     FormatTag,
     HeightTag,
+    IsOrientationTag,
     MPxTag,
     WidthTag,
 )
@@ -177,6 +178,49 @@ class TestMPxTag(PillowTagTests):
         megapixels = tag.process(image_file, None)
 
         assert abs(megapixels - 0.5715) < 0.0001
+
+
+class TestIsOrientationTag(PillowTagTests):
+    @pytest.fixture
+    def tag(self):
+        return IsOrientationTag()
+
+    def test_no_orientation_specified(
+        self, tag: IsOrientationTag, image_data_dir: Path
+    ):
+        with pytest.raises(AssertionError):
+            tag.configure()
+
+    def test_both_orientations_requested(
+        self, tag: IsOrientationTag, image_data_dir: Path
+    ):
+        tag.configure(landscape=True, portrait=True)
+        square_image_file = File(image_data_dir, Path("park.png"))
+        landscape_image_file = File(image_data_dir, Path("photo.jpg"))
+
+        square_is_square = tag.process(square_image_file, None)
+
+        assert square_is_square
+
+        landscape_is_square = tag.process(landscape_image_file, None)
+
+        assert not landscape_is_square
+
+    def test_portrait_orientation(self, tag: IsOrientationTag, image_data_dir: Path):
+        tag.configure(portrait=True)
+        image_file = File(image_data_dir, Path("photo.jpg"))
+
+        is_portrait = tag.process(image_file, None)
+
+        assert not is_portrait
+
+    def test_landscape_orientation(self, tag: IsOrientationTag, image_data_dir: Path):
+        tag.configure(landscape=True)
+        image_file = File(image_data_dir, Path("photo.jpg"))
+
+        is_landscape = tag.process(image_file, None)
+
+        assert is_landscape
 
 
 class TestExifTag:
