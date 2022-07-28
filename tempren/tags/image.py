@@ -1,5 +1,6 @@
 import itertools
 from abc import ABC, abstractmethod
+from fractions import Fraction
 from typing import Any, Iterator, Optional, Tuple
 
 import piexif
@@ -59,6 +60,25 @@ class ColorModeTag(PillowTagBase):
 
     def extract_metadata(self, image: Image) -> Any:
         return image.mode
+
+
+class AspectRatioTag(PillowTagBase):
+    """Image aspect ratio (in fractional W:H or decimal format)"""
+
+    use_decimal: bool
+
+    def configure(self, decimal: bool = False):
+        """
+        :param decimal: use decimal notation
+        """
+        self.use_decimal = decimal
+
+    def extract_metadata(self, image: Image) -> Any:
+        if self.use_decimal:
+            return image.width / image.height
+        else:
+            aspect_ratio = Fraction(image.width, image.height)
+            return f"{aspect_ratio.numerator}:{aspect_ratio.denominator}"
 
 
 class ExifTag(Tag):

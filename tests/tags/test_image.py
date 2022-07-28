@@ -3,7 +3,14 @@ from pathlib import Path
 import pytest
 
 from tempren.path_generator import File
-from tempren.tags.image import ColorModeTag, ExifTag, FormatTag, HeightTag, WidthTag
+from tempren.tags.image import (
+    AspectRatioTag,
+    ColorModeTag,
+    ExifTag,
+    FormatTag,
+    HeightTag,
+    WidthTag,
+)
 from tempren.template.tree_elements import FileNotSupportedError, MissingMetadataError
 
 
@@ -107,6 +114,51 @@ class TestModeTag:
             tag.process(text_file, None)
 
 
+class TestAspectRatioTag:
+    def test_16_to_9_fraction(self, image_data_dir: Path):
+        tag = AspectRatioTag()
+        tag.configure()
+        image_file = File(image_data_dir, Path("photo.jpg"))
+
+        ratio = tag.process(image_file, None)
+
+        assert ratio == "16:9"
+
+    def test_1_to_1_fraction(self, image_data_dir: Path):
+        tag = AspectRatioTag()
+        tag.configure()
+        image_file = File(image_data_dir, Path("park.png"))
+
+        ratio = tag.process(image_file, None)
+
+        assert ratio == "1:1"
+
+    def test_16_to_9_decimal(self, image_data_dir: Path):
+        tag = AspectRatioTag()
+        tag.configure(decimal=True)
+        image_file = File(image_data_dir, Path("photo.jpg"))
+
+        ratio = tag.process(image_file, None)
+
+        assert abs(ratio - 1.77) < 0.01
+
+    def test_1_to_1_decimal(self, image_data_dir: Path):
+        tag = AspectRatioTag()
+        tag.configure(decimal=True)
+        image_file = File(image_data_dir, Path("park.png"))
+
+        ratio = tag.process(image_file, None)
+
+        assert abs(ratio - 1.0) < 0.01
+
+    def test_invalid_file_type(self, text_data_dir: Path):
+        tag = AspectRatioTag()
+        text_file = File(text_data_dir, Path("hello.txt"))
+
+        with pytest.raises(FileNotSupportedError):
+            tag.process(text_file, None)
+
+
 class TestExifTag:
     def test_no_tag_name_provided(self, image_data_dir: Path):
         tag = ExifTag()
@@ -153,7 +205,7 @@ class TestExifTag:
 
         focal_length = tag.process(image_file, None)
 
-        assert round(focal_length, 1) == 4.2
+        assert abs(focal_length - 4.2) < 0.01
 
     def test_focal_length_mm_short(self, image_data_dir: Path):
         tag = ExifTag()
