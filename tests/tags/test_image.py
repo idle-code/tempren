@@ -9,114 +9,110 @@ from tempren.tags.image import (
     ExifTag,
     FormatTag,
     HeightTag,
+    MPxTag,
     WidthTag,
 )
-from tempren.template.tree_elements import FileNotSupportedError, MissingMetadataError
+from tempren.template.tree_elements import (
+    FileNotSupportedError,
+    MissingMetadataError,
+    Tag,
+)
 
 
-class TestWidthTag:
-    def test_jpg_width(self, image_data_dir: Path):
-        tag = WidthTag()
+class PillowTagTests:
+    def test_invalid_file_type(self, tag: Tag, text_data_dir: Path):
+        text_file = File(text_data_dir, Path("hello.txt"))
+
+        with pytest.raises(FileNotSupportedError):
+            tag.process(text_file, None)
+
+
+class TestWidthTag(PillowTagTests):
+    @pytest.fixture
+    def tag(self):
+        return WidthTag()
+
+    def test_jpg_width(self, tag: WidthTag, image_data_dir: Path):
         image_file = File(image_data_dir, Path("photo.jpg"))
 
         width = tag.process(image_file, None)
 
         assert width == 1008
 
-    def test_png_width(self, image_data_dir: Path):
-        tag = WidthTag()
+    def test_png_width(self, tag: WidthTag, image_data_dir: Path):
         image_file = File(image_data_dir, Path("park.png"))
 
         width = tag.process(image_file, None)
 
         assert width == 480
 
-    def test_invalid_file_type(self, text_data_dir: Path):
-        tag = WidthTag()
-        text_file = File(text_data_dir, Path("hello.txt"))
 
-        with pytest.raises(FileNotSupportedError):
-            tag.process(text_file, None)
+class TestHeightTag(PillowTagTests):
+    @pytest.fixture
+    def tag(self):
+        return HeightTag()
 
-
-class TestHeightTag:
-    def test_jpg_height(self, image_data_dir: Path):
-        tag = HeightTag()
+    def test_jpg_height(self, tag: HeightTag, image_data_dir: Path):
         image_file = File(image_data_dir, Path("photo.jpg"))
 
         height = tag.process(image_file, None)
 
         assert height == 567
 
-    def test_png_height(self, image_data_dir: Path):
-        tag = HeightTag()
+    def test_png_height(self, tag: HeightTag, image_data_dir: Path):
         image_file = File(image_data_dir, Path("park.png"))
 
         height = tag.process(image_file, None)
 
         assert height == 480
 
-    def test_invalid_file_type(self, text_data_dir: Path):
-        tag = HeightTag()
-        text_file = File(text_data_dir, Path("hello.txt"))
 
-        with pytest.raises(FileNotSupportedError):
-            tag.process(text_file, None)
+class TestFormatTag(PillowTagTests):
+    @pytest.fixture
+    def tag(self):
+        return FormatTag()
 
-
-class TestFormatTag:
-    def test_jpg_format(self, image_data_dir: Path):
-        tag = FormatTag()
+    def test_jpg_format(self, tag: FormatTag, image_data_dir: Path):
         image_file = File(image_data_dir, Path("photo.jpg"))
 
         image_format = tag.process(image_file, None)
 
         assert image_format == "JPEG"
 
-    def test_png_format(self, image_data_dir: Path):
-        tag = FormatTag()
+    def test_png_format(self, tag: FormatTag, image_data_dir: Path):
         image_file = File(image_data_dir, Path("park.png"))
 
         image_format = tag.process(image_file, None)
 
         assert image_format == "PNG"
 
-    def test_invalid_file_type(self, text_data_dir: Path):
-        tag = FormatTag()
-        text_file = File(text_data_dir, Path("hello.txt"))
 
-        with pytest.raises(FileNotSupportedError):
-            tag.process(text_file, None)
+class TestModeTag(PillowTagTests):
+    @pytest.fixture
+    def tag(self):
+        return ColorModeTag()
 
-
-class TestModeTag:
-    def test_rgb_mode(self, image_data_dir: Path):
-        tag = ColorModeTag()
+    def test_rgb_mode(self, tag: ColorModeTag, image_data_dir: Path):
         image_file = File(image_data_dir, Path("photo.jpg"))
 
         image_mode = tag.process(image_file, None)
 
         assert image_mode == "RGB"
 
-    def test_rgba_format(self, image_data_dir: Path):
-        tag = ColorModeTag()
+    def test_rgba_format(self, tag: ColorModeTag, image_data_dir: Path):
         image_file = File(image_data_dir, Path("park.png"))
 
         image_mode = tag.process(image_file, None)
 
         assert image_mode == "RGBA"
 
-    def test_invalid_file_type(self, text_data_dir: Path):
-        tag = ColorModeTag()
-        text_file = File(text_data_dir, Path("hello.txt"))
 
-        with pytest.raises(FileNotSupportedError):
-            tag.process(text_file, None)
+class TestAspectRatioTag(PillowTagTests):
+    @pytest.fixture
+    def tag(self):
+        return AspectRatioTag()
 
-
-class TestAspectRatioTag:
-    def test_16_to_9_fraction(self, image_data_dir: Path):
-        tag = AspectRatioTag()
+    def test_16_to_9_fraction(self, tag: AspectRatioTag, image_data_dir: Path):
         tag.configure()
         image_file = File(image_data_dir, Path("photo.jpg"))
 
@@ -124,8 +120,7 @@ class TestAspectRatioTag:
 
         assert ratio == "16:9"
 
-    def test_1_to_1_fraction(self, image_data_dir: Path):
-        tag = AspectRatioTag()
+    def test_1_to_1_fraction(self, tag: AspectRatioTag, image_data_dir: Path):
         tag.configure()
         image_file = File(image_data_dir, Path("park.png"))
 
@@ -133,8 +128,7 @@ class TestAspectRatioTag:
 
         assert ratio == "1:1"
 
-    def test_16_to_9_decimal(self, image_data_dir: Path):
-        tag = AspectRatioTag()
+    def test_16_to_9_decimal(self, tag: AspectRatioTag, image_data_dir: Path):
         tag.configure(decimal=True)
         image_file = File(image_data_dir, Path("photo.jpg"))
 
@@ -142,8 +136,7 @@ class TestAspectRatioTag:
 
         assert abs(ratio - 1.77) < 0.01
 
-    def test_1_to_1_decimal(self, image_data_dir: Path):
-        tag = AspectRatioTag()
+    def test_1_to_1_decimal(self, tag: AspectRatioTag, image_data_dir: Path):
         tag.configure(decimal=True)
         image_file = File(image_data_dir, Path("park.png"))
 
@@ -151,12 +144,39 @@ class TestAspectRatioTag:
 
         assert abs(ratio - 1.0) < 0.01
 
-    def test_invalid_file_type(self, text_data_dir: Path):
-        tag = AspectRatioTag()
-        text_file = File(text_data_dir, Path("hello.txt"))
 
-        with pytest.raises(FileNotSupportedError):
-            tag.process(text_file, None)
+class TestMPxTag(PillowTagTests):
+    @pytest.fixture
+    def tag(self):
+        return MPxTag()
+
+    def test_invalid_precision(self, tag: MPxTag, image_data_dir: Path):
+        with pytest.raises(AssertionError):
+            tag.configure(-3)
+
+    def test_zero_precision(self, tag: MPxTag, image_data_dir: Path):
+        tag.configure(0)
+        image_file = File(image_data_dir, Path("photo.jpg"))
+
+        megapixels = tag.process(image_file, None)
+
+        assert abs(megapixels - 1) < 0.1
+
+    def test_default_precision(self, tag: MPxTag, image_data_dir: Path):
+        tag.configure()
+        image_file = File(image_data_dir, Path("park.png"))
+
+        megapixels = tag.process(image_file, None)
+
+        assert abs(megapixels - 0.23) < 0.01
+
+    def test_custom_precision(self, tag: MPxTag, image_data_dir: Path):
+        tag.configure(4)
+        image_file = File(image_data_dir, Path("photo.jpg"))
+
+        megapixels = tag.process(image_file, None)
+
+        assert abs(megapixels - 0.5715) < 0.0001
 
 
 class TestExifTag:

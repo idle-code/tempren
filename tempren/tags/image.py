@@ -81,6 +81,22 @@ class AspectRatioTag(PillowTagBase):
             return f"{aspect_ratio.numerator}:{aspect_ratio.denominator}"
 
 
+class MPxTag(PillowTagBase):
+    """Image resolution in megapixels"""
+
+    ndigits: int
+
+    def configure(self, ndigits: int = 2):
+        """
+        :param ndigits: number of decimal digits
+        """
+        assert ndigits >= 0, "Precision cannot be negative"
+        self.ndigits = ndigits
+
+    def extract_metadata(self, image: Image) -> Any:
+        return round(image.width * image.height / 1_000_000, self.ndigits)
+
+
 class ExifTag(Tag):
     """Extract value of any EXIF tag"""
 
