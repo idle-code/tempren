@@ -6,6 +6,7 @@ from tempren.path_generator import File
 from tempren.tags.core import (
     BaseTag,
     CountTag,
+    DefaultTag,
     DirTag,
     ExtTag,
     IsMimeTag,
@@ -357,3 +358,35 @@ class TestIsMimeTag:
         is_flac = tag.process(file, None)
 
         assert is_flac
+
+
+class TestDefaultTag:
+    def test_no_default_value_provided(self):
+        tag = DefaultTag()
+
+        with pytest.raises(TypeError):
+            tag.configure()
+
+    def test_non_empty_context(self, nonexistent_file: File):
+        tag = DefaultTag()
+        tag.configure("default")
+
+        result = tag.process(nonexistent_file, "value")
+
+        assert result == "value"
+
+    def test_empty_context(self, nonexistent_file: File):
+        tag = DefaultTag()
+        tag.configure("default")
+
+        result = tag.process(nonexistent_file, "")
+
+        assert result == "default"
+
+    def test_whitespace_context(self, nonexistent_file: File):
+        tag = DefaultTag()
+        tag.configure("default")
+
+        result = tag.process(nonexistent_file, "  \t")
+
+        assert result == "default"

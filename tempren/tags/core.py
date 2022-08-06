@@ -177,3 +177,22 @@ class IsMimeTag(Tag):
     def process(self, file: File, context: Optional[str]) -> Any:
         mime_type = magic.from_file(file.absolute_path, mime=True)
         return mime_type.startswith(self.expected_type)
+
+
+class DefaultTag(Tag):
+    """Returns default value if context is empty"""
+
+    require_context = True
+
+    default_value: Any
+
+    def configure(self, default_value):
+        """
+        :param default_value: value to be used if the context is empty or consists only of whitespace
+        """
+        self.default_value = default_value
+
+    def process(self, file: File, context: Optional[str]) -> Any:
+        if context and not context.isspace():
+            return context
+        return self.default_value
