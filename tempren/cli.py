@@ -3,10 +3,14 @@ import argparse
 import logging
 import sys
 from argparse import ArgumentParser, Namespace
+from enum import IntEnum
 from logging import LogRecord
 from pathlib import Path
 from textwrap import indent
 from typing import Any, List, NoReturn, Optional, Sequence, Text, Union
+
+from tempren.filesystem import DestinationAlreadyExistsError
+from tempren.path_generator import TemplateEvaluationError
 
 from .pipeline import (
     ConflictResolutionStrategy,
@@ -14,7 +18,6 @@ from .pipeline import (
     InvalidDestinationError,
     OperationMode,
     RuntimeConfiguration,
-    TemplateEvaluationError,
     build_pipeline,
     build_tag_registry,
 )
@@ -129,7 +132,9 @@ class _ShowHelp(argparse.Action):
             registry = build_tag_registry()
             tag_factory = registry.find_tag_factory(tag_name)
             if tag_factory is None:
-                parser.exit(1, f"Could not find tag with '{tag_name}' name")
+                parser.exit(
+                    ErrorCode.USAGE_ERROR, f"Could not find tag with '{tag_name}' name"
+                )
             log.info(tag_factory.configuration_signature)
             log.info("")
             log.info(tag_factory.short_description)
@@ -385,6 +390,7 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         filter_type = FilterType.glob
         filter_expression = None
 
+    # TODO: User action='store_const' (as with mode) in parser.add_argument to simplify this
     if args.conflict_stop:
         conflict_strategy = ConflictResolutionStrategy.stop
     elif args.conflict_ignore:
@@ -442,7 +448,7 @@ def render_template_evaluation_error(
     log.error(indent(template_error.message, " " * indent_size))
 
 
-def user_conflict_resolver(
+def cli_prompt_conflict_resolver(
     source_path: Path, destination_path: Path
 ) -> Union[ConflictResolutionStrategy, Path]:
     log.warning("White processing:")
@@ -467,6 +473,26 @@ def user_conflict_resolver(
         log.error(f"Invalid choice '{selected_option_name}")
 
 
+class ErrorCode(IntEnum):
+    SUCCESS = 0
+    """Everything went as it should have"""
+
+    INVALID_DESTINATION_ERROR = 1
+    """Something is wrong with generated destination path"""
+
+    USAGE_ERROR = 2
+    """User tried to use program not as it should be used"""
+
+    TEMPLATE_SYNTAX_ERROR = 3
+    """Syntax error detected in one of provided templates"""
+
+    TEMPLATE_EVALUATION_ERROR = 4
+    """Python evaluation of filtering/sorting template failed"""
+
+    UNKNOWN_ERROR = 126
+    """This should not happen"""
+
+
 def main() -> int:
     configure_logging()
     argv = sys.argv[1:]
@@ -474,28 +500,36 @@ def main() -> int:
         config = process_cli_configuration(argv)
         registry = build_tag_registry()
         pipeline = build_pipeline(
-            config, registry, manual_conflict_resolver=user_conflict_resolver
+            config, registry, manual_conflict_resolver=cli_prompt_conflict_resolver
         )
         pipeline.execute()
         log.info("Done")
-        return 0
+        return ErrorCode.SUCCESS
+    # TODO: Clean up exception hierarchy
     except SystemExitError as exc:
         if exc.status != 0:
             log.error(exc)
         return exc.status
     except TemplateEvaluationError as template_evaluation_error:
         render_template_evaluation_error(template_evaluation_error)
-        return 5  # TODO: cleanup error codes
+        return ErrorCode.TEMPLATE_EVALUATION_ERROR
     except TemplateError as template_error:
         render_template_error(template_error)
-        return 3
-    except OSError as exc:
+        return ErrorCode.TEMPLATE_SYNTAX_ERROR
+    except DestinationAlreadyExistsError as exc:
         log.error(f"Error: {exc}")
-        return 4
+        return ErrorCode.INVALID_DESTINATION_ERROR
     except InvalidDestinationError as exc:
         log.error(f"Error: {exc}")
-        return 6
+        return ErrorCode.INVALID_DESTINATION_ERROR
+    except Exception as exc:
+        log.error(f"Unknown error: {exc}")
+        return ErrorCode.UNKNOWN_ERROR
+
+
+def throwing_main():
+    sys.exit(main())
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    throwing_main()

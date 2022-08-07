@@ -1,6 +1,5 @@
 import logging
 import os
-from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
@@ -27,13 +26,7 @@ from tempren.filesystem import (
     PrintingRenamerWrapper,
     RecursiveFileGatherer,
 )
-from tempren.path_generator import (
-    ExpressionEvaluationError,
-    File,
-    InvalidFilenameError,
-    PathGenerator,
-    TemplateEvaluationError,
-)
+from tempren.path_generator import File, InvalidFilenameError, PathGenerator
 from tempren.template.path_generators import (
     TemplateNameGenerator,
     TemplatePathGenerator,
@@ -157,12 +150,17 @@ class Pipeline:
                     file,
                     error.generated_name,
                 )
-                continue
-
-            # FIXME: check generated new_relative_path for illegal characters (like '*')
+                raise InvalidDestinationError()
+            except Exception as error:
+                # TODO: Test
+                self.log.error(
+                    "Error generated when renaming %r: %r",
+                    file,
+                    error,
+                )
+                raise
 
             if new_relative_path == file.relative_path:
-                # FIXME: Test
                 self.log.info(
                     "Skipping renaming of: '%s' (source and destination are the same)",
                     new_relative_path,

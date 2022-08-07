@@ -10,6 +10,7 @@ from typing import Optional, Tuple
 import pytest
 
 import tempren.cli
+from tempren.cli import ErrorCode
 
 project_root_path = os.getcwd()
 
@@ -70,7 +71,7 @@ class TestVariousFlags:
     def test_version(self):
         stdout, stderr, error_code = run_tempren("--version")
 
-        assert error_code == 0
+        assert error_code == ErrorCode.SUCCESS
         assert re.match(r"\d\.\d\.\d", stdout)
 
     @pytest.mark.parametrize("flag", ["-d", "--dry-run"])
@@ -79,7 +80,7 @@ class TestVariousFlags:
             flag, "%Upper(){%Name()}", text_data_dir
         )
 
-        assert error_code == 0
+        assert error_code == ErrorCode.SUCCESS
         assert (text_data_dir / "hello.txt").exists()
         assert not (text_data_dir / "MARKDOWN.MD").exists()
         assert "HELLO.TXT" in stdout
@@ -89,19 +90,19 @@ class TestVariousFlags:
     def test_help(self, flag: str):
         stdout, stderr, error_code = run_tempren(flag)
 
-        assert error_code == 0
+        assert error_code == ErrorCode.SUCCESS
         assert "usage: tempren" in stdout
 
     def test_missing_template_and_input(self):
         stdout, stderr, error_code = run_tempren()
 
-        assert error_code == 2
+        assert error_code == ErrorCode.USAGE_ERROR
         assert "usage: tempren" in stderr
 
     def test_missing_input(self):
         stdout, stderr, error_code = run_tempren("%Upper(){%Name()}")
 
-        assert error_code == 2
+        assert error_code == ErrorCode.USAGE_ERROR
         assert "usage: tempren" in stderr
 
     @pytest.mark.parametrize("flag", ["-l", "--list-tags"])
@@ -109,7 +110,7 @@ class TestVariousFlags:
         stdout, stderr, error_code = run_tempren(flag)
         stdout_lines = list(map(str.strip, stdout.split("\n")))
 
-        assert error_code == 0
+        assert error_code == ErrorCode.SUCCESS
         assert any(filter(lambda line: re.match(r"^Count", line), stdout_lines))
         assert any(filter(lambda line: re.match(r"^Upper", line), stdout_lines))
         assert any(filter(lambda line: re.match(r"^Name", line), stdout_lines))
@@ -130,14 +131,14 @@ class TestVariousFlags:
     def test_help_nonexistent_tag_documentation(self, flag: str):
         stdout, stderr, error_code = run_tempren_process(flag, "NonExistent")
 
-        assert error_code == 1
+        assert error_code == ErrorCode.USAGE_ERROR
         assert "Could not find tag with 'NonExistent' name" in stderr
 
     @pytest.mark.parametrize("flag", ["-h", "--help"])
     def test_help_tag_documentation(self, flag: str):
         stdout, stderr, error_code = run_tempren_process(flag, "Count")
 
-        assert error_code == 0
+        assert error_code == ErrorCode.SUCCESS
         assert "Count(start" in stdout
         assert "start - " in stdout
         assert "Generates sequential numbers" in stdout
@@ -146,7 +147,7 @@ class TestVariousFlags:
     def test_help_tag_documentation_long_description(self, flag: str):
         stdout, stderr, error_code = run_tempren_process(flag, "Dir")
 
-        assert error_code == 0
+        assert error_code == ErrorCode.SUCCESS
         assert "If context is present" in stdout
 
     def test_default_flat_traversal(self, nested_data_dir: Path):
@@ -154,7 +155,7 @@ class TestVariousFlags:
             "--name", "%Upper(){%Name()}", nested_data_dir
         )
 
-        assert error_code == 0
+        assert error_code == ErrorCode.SUCCESS
         assert (nested_data_dir / "LEVEL-1.FILE").exists()
         assert not (nested_data_dir / "first" / "LEVEL-2.FILE").exists()
 
@@ -164,7 +165,7 @@ class TestVariousFlags:
             "--name", flag, "%Upper(){%Name()}", nested_data_dir
         )
 
-        assert error_code == 0
+        assert error_code == ErrorCode.SUCCESS
         assert (nested_data_dir / "LEVEL-1.FILE").exists()
         assert (nested_data_dir / "first" / "LEVEL-2.FILE").exists()
 
@@ -173,7 +174,7 @@ class TestVariousFlags:
             "--name", "%Upper(){%Name()}", hidden_data_dir
         )
 
-        assert error_code == 0
+        assert error_code == ErrorCode.SUCCESS
         assert (hidden_data_dir / "VISIBLE.TXT").exists()
         assert not (hidden_data_dir / ".HIDDEN.TXT").exists()
         assert not (hidden_data_dir / ".hidden" / "NESTED_VISIBLE.TXT").exists()
@@ -185,7 +186,7 @@ class TestVariousFlags:
             "--name", flag, "%Upper(){%Name()}", hidden_data_dir
         )
 
-        assert error_code == 0
+        assert error_code == ErrorCode.SUCCESS
         assert (hidden_data_dir / "VISIBLE.TXT").exists()
         assert (hidden_data_dir / ".HIDDEN.TXT").exists()
         assert not (hidden_data_dir / ".hidden" / "NESTED_VISIBLE.TXT").exists()
@@ -197,7 +198,7 @@ class TestVariousFlags:
             "--name", "--recursive", flag, "%Upper(){%Name()}", hidden_data_dir
         )
 
-        assert error_code == 0
+        assert error_code == ErrorCode.SUCCESS
         assert (hidden_data_dir / "VISIBLE.TXT").exists()
         assert (hidden_data_dir / ".HIDDEN.TXT").exists()
         assert (hidden_data_dir / ".hidden" / "NESTED_VISIBLE.TXT").exists()
@@ -239,7 +240,7 @@ class TestNameFilterFlags:
             text_data_dir,
         )
 
-        assert error_code == 0
+        assert error_code == ErrorCode.SUCCESS
         if invert_flag is None:
             assert (text_data_dir / "HELLO.TXT").exists()
             assert not (text_data_dir / "MARKDOWN.MD").exists()
@@ -291,7 +292,7 @@ class TestPathFilterFlags:
             nested_data_dir,
         )
 
-        assert error_code == 0
+        assert error_code == ErrorCode.SUCCESS
         if invert_flag is None:
             assert not (nested_data_dir / "second" / "third" / "level-3.file").exists()
             assert (nested_data_dir / "second" / "third" / "LEVEL-3.FILE").exists()
@@ -314,7 +315,7 @@ class TestFilterTemplateErrors:
             nonexistent_path,
         )
 
-        assert error_code == 2
+        assert error_code == ErrorCode.USAGE_ERROR
         assert "Non-empty argument required" in stderr
 
     @pytest.mark.parametrize("filter_expression", ["%UnknownTag()", "%Size"])
@@ -328,7 +329,7 @@ class TestFilterTemplateErrors:
             text_data_dir,
         )
 
-        assert error_code == 3
+        assert error_code == ErrorCode.TEMPLATE_SYNTAX_ERROR
         assert "Template error" in stderr
 
     @pytest.mark.parametrize("filter_expression", ["%Size() + 'foobar'"])
@@ -342,7 +343,7 @@ class TestFilterTemplateErrors:
             text_data_dir,
         )
 
-        assert error_code == 5
+        assert error_code == ErrorCode.TEMPLATE_EVALUATION_ERROR
         assert "evaluation error occurred" in stderr
 
 
@@ -356,7 +357,7 @@ class TestSortingFlags:
             nonexistent_path,
         )
 
-        assert error_code == 2
+        assert error_code == ErrorCode.USAGE_ERROR
         assert "Non-empty argument required" in stderr
 
     def test_sorting(self, text_data_dir: Path, sort_flag: str):
@@ -367,7 +368,7 @@ class TestSortingFlags:
             text_data_dir,
         )
 
-        assert error_code == 0
+        assert error_code == ErrorCode.SUCCESS
         assert (text_data_dir / "0.txt").exists()
         assert (text_data_dir / "1.md").exists()
 
@@ -383,7 +384,7 @@ class TestSortingFlags:
             text_data_dir,
         )
 
-        assert error_code == 0
+        assert error_code == ErrorCode.SUCCESS
         assert (text_data_dir / "0.md").exists()
         assert (text_data_dir / "1.txt").exists()
 
@@ -398,7 +399,7 @@ class TestSortingFlags:
             text_data_dir,
         )
 
-        assert error_code == 3
+        assert error_code == ErrorCode.TEMPLATE_SYNTAX_ERROR
         assert "Template error" in stderr
 
     @pytest.mark.parametrize("sort_expression", ["%Size() + 'foobar'", ","])
@@ -412,7 +413,7 @@ class TestSortingFlags:
             text_data_dir,
         )
 
-        assert error_code == 5
+        assert error_code == ErrorCode.TEMPLATE_EVALUATION_ERROR
         assert "evaluation error occurred" in stderr
 
 
@@ -423,7 +424,7 @@ class TestNameMode:
             name_mode_flag, "%Upper(){%Name()}", text_data_dir
         )
 
-        assert error_code == 0
+        assert error_code == ErrorCode.SUCCESS
         assert (text_data_dir / "HELLO.TXT").exists()
         assert (text_data_dir / "MARKDOWN.MD").exists()
         assert not (text_data_dir / "hello.txt").exists()
@@ -434,7 +435,7 @@ class TestNameMode:
             name_mode_flag, "%Upper(){%Name()}", nonexistent_path
         )
 
-        assert error_code != 0
+        assert error_code == ErrorCode.USAGE_ERROR
         assert "doesn't exists" in stderr
 
     @pytest.mark.parametrize(
@@ -447,20 +448,29 @@ class TestNameMode:
             name_mode_flag, name_expression, text_data_dir
         )
 
-        assert error_code == 3
+        assert error_code == ErrorCode.TEMPLATE_SYNTAX_ERROR
         assert "Template error" in stderr
 
     def test_generated_name_contains_separator_error(
         self, text_data_dir: Path, name_mode_flag: str
     ):
         stdout, stderr, error_code = run_tempren(
-            name_mode_flag, "subdir/%Name()", text_data_dir
+            name_mode_flag, "-s", "%Name()", "subdir/%Name()", text_data_dir
         )
 
-        assert error_code == 0
+        assert error_code == ErrorCode.INVALID_DESTINATION_ERROR
         assert "Invalid name generated for" in stderr
         assert "subdir/hello.txt" in stderr
-        assert "subdir/markdown.md" in stderr
+
+    def test_same_name_generated(self, text_data_dir, name_mode_flag: str):
+        stdout, stderr, error_code = run_tempren(
+            name_mode_flag, "-s", "%Name()", "%Name()", text_data_dir
+        )
+
+        assert error_code == ErrorCode.SUCCESS
+        assert "Skipping renaming" in stdout
+        assert "hello.txt" in stdout
+        assert "source and destination are the same" in stdout
 
 
 @pytest.mark.parametrize("path_mode_flag", ["-p", "--path"])
@@ -470,7 +480,7 @@ class TestPathMode:
             path_mode_flag, "%Upper(){%Trim(-1,left){%Ext()}}/%Name()", text_data_dir
         )
 
-        assert error_code == 0
+        assert error_code == ErrorCode.SUCCESS
         assert not (text_data_dir / "hello.txt").exists()
         assert not (text_data_dir / "markdown.md").exists()
         assert (text_data_dir / "TXT" / "hello.txt").exists()
@@ -481,7 +491,7 @@ class TestPathMode:
             path_mode_flag, "%Upper(){%Name()}", nonexistent_path
         )
 
-        assert error_code != 0
+        assert error_code == ErrorCode.USAGE_ERROR
         assert "doesn't exists" in stderr
 
     @pytest.mark.parametrize(
@@ -494,7 +504,7 @@ class TestPathMode:
             path_mode_flag, path_expression, text_data_dir
         )
 
-        assert error_code == 3
+        assert error_code == ErrorCode.TEMPLATE_SYNTAX_ERROR
         assert "Template error" in stderr
 
     @pytest.mark.parametrize("path_expression", ["../../%Name()", "/some/dir/%Name()"])
@@ -505,7 +515,7 @@ class TestPathMode:
             path_mode_flag, path_expression, text_data_dir
         )
 
-        assert error_code == 6
+        assert error_code == ErrorCode.INVALID_DESTINATION_ERROR
         assert "Path generated for" in stderr
         assert "is not relative to the input directory" in stderr
 
@@ -520,7 +530,7 @@ class TestConflictResolution:
             "--sort", "%Name()", "%Count(start=1)", text_data_dir
         )
 
-        assert error_code == 0
+        assert error_code == ErrorCode.SUCCESS
         assert (text_data_dir / "1").exists()
         assert (text_data_dir / "2").exists()
 
@@ -530,7 +540,7 @@ class TestConflictResolution:
             flag, "--sort", "%Name()", "StaticFilename", text_data_dir
         )
 
-        assert error_code != 0
+        assert error_code == ErrorCode.INVALID_DESTINATION_ERROR
         assert "Could not rename" in stderr
         assert "as destination path" in stderr
         assert "StaticFilename" in stderr
@@ -544,7 +554,7 @@ class TestConflictResolution:
             flag, "--sort", "%Name()", "StaticFilename", text_data_dir
         )
 
-        assert error_code == 0
+        assert error_code == ErrorCode.SUCCESS
         assert "Skipping renaming of" in stdout
         assert "as destination path already exists" in stdout
         assert "StaticFilename" in stdout
@@ -558,7 +568,7 @@ class TestConflictResolution:
             flag, "--sort", "%Name()", "StaticFilename", text_data_dir
         )
 
-        assert error_code == 0
+        assert error_code == ErrorCode.SUCCESS
         assert "Overriding destination" in stderr
         assert "StaticFilename" in stderr
         assert not (text_data_dir / "hello.txt").exists()
@@ -579,7 +589,7 @@ class TestConflictResolution:
         assert "already existing file" in stderr
 
         error_code = tempren_process.wait()
-        assert error_code != 0
+        assert error_code == ErrorCode.INVALID_DESTINATION_ERROR
         assert "Could not rename" in stderr
         assert "as destination path" in stderr
         assert "StaticFilename" in stderr
@@ -601,7 +611,7 @@ class TestConflictResolution:
         assert "already existing file" in stderr
 
         error_code = tempren_process.wait()
-        assert error_code == 0
+        assert error_code == ErrorCode.SUCCESS
         assert "Overriding destination" in stderr
         assert "StaticFilename" in stderr
         assert not (text_data_dir / "hello.txt").exists()
@@ -622,7 +632,7 @@ class TestConflictResolution:
         assert "already existing file" in stderr
 
         error_code = tempren_process.wait()
-        assert error_code == 0
+        assert error_code == ErrorCode.SUCCESS
         assert "Skipping renaming of" in stdout
         assert "as destination path already exists" in stdout
         assert "StaticFilename" in stdout
@@ -649,7 +659,7 @@ class TestConflictResolution:
         assert "Custom path" in stdout
 
         error_code = tempren_process.wait()
-        assert error_code == 0
+        assert error_code == ErrorCode.SUCCESS
         assert not (text_data_dir / "hello.txt").exists()
         assert (text_data_dir / "StaticFilename").exists()
         assert not (text_data_dir / "markdown.md").exists()
@@ -673,7 +683,7 @@ class TestConflictResolution:
         assert "already exists" in stderr
 
         error_code = tempren_process.wait()
-        assert error_code != 0
+        assert error_code == ErrorCode.INVALID_DESTINATION_ERROR
         assert not (text_data_dir / "hello.txt").exists()
         assert (text_data_dir / "StaticFilename").exists()
         assert (text_data_dir / "markdown.md").exists()
