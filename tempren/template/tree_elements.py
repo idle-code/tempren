@@ -244,4 +244,7 @@ class TagInstance(PatternElement):
 
     def process(self, file: File) -> Any:
         context_str = self.context.process(file) if self.context else None
-        return self.tag.process(file, context_str)
+        try:
+            return self.tag.process(file, context_str)
+        except MissingMetadataError:
+            return ""

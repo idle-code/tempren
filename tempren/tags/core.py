@@ -62,7 +62,7 @@ class CountTag(Tag):
 
 
 class ExtTag(Tag):
-    """Renders processed file extension
+    """File extension (with leading dot)
 
     If no context is provided, current file path is used and extension is extracted from it.
     If context is present, it is parsed as a path and file extension is extracted from it.
@@ -77,7 +77,7 @@ class ExtTag(Tag):
 
 
 class BaseTag(Tag):
-    """Renders base file name without extension (suffix)
+    """Base file name without extension (suffix)
 
     If no context is provided, current file path is used to determine the base file name.
     If context is present, it is parsed as a path and file name is extracted from it.
@@ -92,7 +92,7 @@ class BaseTag(Tag):
 
 
 class DirTag(Tag):
-    """Renders file parent directory path
+    """Directory containing processed file
 
     If no context is provided, current file path is used to determine the parent directory.
     If context is present, it is parsed as a path to extract the parent directory.
@@ -107,7 +107,7 @@ class DirTag(Tag):
 
 
 class NameTag(Tag):
-    """Renders processed file name (basename with extension)"""
+    """File name (basename with extension)"""
 
     require_context = None
 
@@ -128,7 +128,7 @@ class SanitizeTag(Tag):
 
 
 class MimeTag(Tag):
-    """Guess MIME type of processed file"""
+    """MIME type of processed file"""
 
     require_context = False
     select_type: bool = False
@@ -152,7 +152,7 @@ class MimeTag(Tag):
 
 
 class MimeExtTag(Tag):
-    """Guess file extension from its MIME type"""
+    """File extension guessed from MIME type"""
 
     require_context = False
 
@@ -165,18 +165,18 @@ class IsMimeTag(Tag):
     """Checks if processed file MIME type matches provided value"""
 
     require_context = False
-    expected_type: str
+    expected_type_prefix: str
 
-    def configure(self, type: str):  # type: ignore
+    def configure(self, type_prefix: str):  # type: ignore
         """
-        :param type: expected MIME type
+        :param type_prefix: expected MIME type
         :returns: True if file MIME type starts with expected value, False otherwise
         """
-        self.expected_type = type
+        self.expected_type_prefix = type_prefix
 
     def process(self, file: File, context: Optional[str]) -> Any:
         mime_type = magic.from_file(file.absolute_path, mime=True)
-        return mime_type.startswith(self.expected_type)
+        return mime_type.startswith(self.expected_type_prefix)
 
 
 class DefaultTag(Tag):
@@ -186,7 +186,7 @@ class DefaultTag(Tag):
 
     default_value: Any
 
-    def configure(self, default_value):
+    def configure(self, default_value):  # type: ignore
         """
         :param default_value: value to be used if the context is empty or consists only of whitespace
         """

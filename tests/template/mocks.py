@@ -32,7 +32,7 @@ class MockTag(Tag):
 
 @dataclass
 class GeneratorTag(Tag):
-    output_generator: Callable[[Path, Optional[str]], Any]
+    output_generator: Callable[[File, Optional[str]], Any]
 
-    def process(self, path: Path, context: Optional[str]) -> Any:
-        return self.output_generator(path, context)
+    def process(self, file: File, context: Optional[str]) -> Any:
+        return self.output_generator(file, context)

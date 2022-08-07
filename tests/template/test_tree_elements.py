@@ -1,9 +1,15 @@
 from pytest import raises
 
 from tempren.path_generator import File
-from tempren.template.tree_elements import Pattern, RawText, TagInstance, TagPlaceholder
+from tempren.template.tree_elements import (
+    MissingMetadataError,
+    Pattern,
+    RawText,
+    TagInstance,
+    TagPlaceholder,
+)
 
-from .mocks import MockTag
+from .mocks import GeneratorTag, MockTag
 
 
 class TestRawText:
@@ -46,6 +52,17 @@ class TestPattern:
 
         assert element.process(nonexistent_file) == str(nonexistent_file.relative_path)
 
+    def test_missing_metadata_error_rendering(self, nonexistent_file: File):
+        def _tag_implementation(file, context):
+            raise MissingMetadataError()
+
+        throwing_tag = GeneratorTag(_tag_implementation)
+        element = Pattern(
+            [RawText("foo"), TagInstance(tag=throwing_tag), RawText("bar")]
+        )
+
+        assert element.process(nonexistent_file) == "foobar"
+
 
 class TestTagPlaceholder:
     def test_invalid_tag_name(self):
@@ -83,3 +100,12 @@ class TestTagInstance:
         element.process(file)
 
         assert outer_tag.context == "Context output"
+
+    def test_missing_metadata_error_is_handled(self, nonexistent_file: File):
+        def _tag_implementation(file, context):
+            raise MissingMetadataError()
+
+        throwing_tag = GeneratorTag(_tag_implementation)
+        element = TagInstance(tag=throwing_tag)
+
+        assert element.process(nonexistent_file) == ""
