@@ -198,6 +198,15 @@ class _DecreaseLogVerbosity(argparse.Action):
         log.debug("Verbosity level set to %d", root_logger.level)
 
 
+class DefaultOptionsHelpFormatter(argparse.HelpFormatter):
+    """Indicates default options in help page"""
+
+    def _get_help_string(self, action):
+        if action.default:
+            return "(default) " + action.help
+        return action.help
+
+
 # CHECK: use pydantic-cli for argument parsing
 def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
     log.debug("Parsing command line arguments")
@@ -206,6 +215,7 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         description="Template-based renaming utility",
         fromfile_prefix_chars="@",
         add_help=False,
+        formatter_class=DefaultOptionsHelpFormatter,
     )
 
     parser.add_argument(
@@ -267,6 +277,7 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         "-cs",
         "--conflict-stop",
         action="store_true",
+        default=True,
         help="Keep source file name intact and stop",
     )
     conflict_resolution.add_argument(
@@ -391,16 +402,16 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         filter_expression = None
 
     # TODO: User action='store_const' (as with mode) in parser.add_argument to simplify this
-    if args.conflict_stop:
-        conflict_strategy = ConflictResolutionStrategy.stop
-    elif args.conflict_ignore:
+    if args.conflict_ignore:
         conflict_strategy = ConflictResolutionStrategy.ignore
     elif args.conflict_override:
         conflict_strategy = ConflictResolutionStrategy.override
     elif args.conflict_manual:
         conflict_strategy = ConflictResolutionStrategy.manual
-    else:
+    elif args.conflict_stop:
         conflict_strategy = ConflictResolutionStrategy.stop
+    else:
+        raise NotImplementedError()
 
     configuration = RuntimeConfiguration(
         template=args.template,
@@ -480,7 +491,7 @@ class ErrorCode(IntEnum):
     INVALID_DESTINATION_ERROR = 1
     """Something is wrong with generated destination path"""
 
-    USAGE_ERROR = 2
+    USAGE_ERROR = 2  # argparse uses 2 for its errors too
     """User tried to use program not as it should be used"""
 
     TEMPLATE_SYNTAX_ERROR = 3
