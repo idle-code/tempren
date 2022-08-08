@@ -1,6 +1,6 @@
 import re
 from re import Pattern
-from typing import List, Optional
+from typing import Any, List, Optional
 
 from unidecode import unidecode
 
@@ -192,3 +192,22 @@ class PadTag(Tag):
             return context.rjust(self.width, self.character)
         else:
             return context.ljust(self.width, self.character)
+
+
+class SplitCaseTag(Tag):
+    """Split text into words on the case boundary"""
+
+    require_context = True
+    separator: str
+    _pattern = re.compile(r"([a-z])([A-Z])")
+
+    def configure(self, separator: str = " "):  # type: ignore
+        """
+        :param separator: character/text used to join resulting words
+        """
+        assert separator
+        self.separator = separator
+
+    def process(self, file: File, context: Optional[str]) -> Any:
+        assert context is not None
+        return self._pattern.sub("".join((r"\1", self.separator, r"\2")), context)

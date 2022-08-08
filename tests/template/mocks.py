@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import Any, Callable, Mapping, Optional, Tuple
 
 from tempren.path_generator import File

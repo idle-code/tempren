@@ -8,6 +8,7 @@ from tempren.tags.text import (
     PadTag,
     RemoveTag,
     ReplaceTag,
+    SplitCaseTag,
     StripTag,
     TitleTag,
     TrimTag,
@@ -368,3 +369,45 @@ class TestPadTag:
 
         with pytest.raises(AssertionError):
             tag.configure(-2, left=True)
+
+
+class TestSplitCaseTag:
+    def test_split_empty(self, nonexistent_file: File):
+        tag = SplitCaseTag()
+        tag.configure()
+
+        result = tag.process(nonexistent_file, "")
+
+        assert result == ""
+
+    def test_pascal_case(self, nonexistent_file: File):
+        tag = SplitCaseTag()
+        tag.configure()
+
+        result = tag.process(nonexistent_file, "PascalCase")
+
+        assert result == "Pascal Case"
+
+    def test_camel_case(self, nonexistent_file: File):
+        tag = SplitCaseTag()
+        tag.configure()
+
+        result = tag.process(nonexistent_file, "camelCase")
+
+        assert result == "camel Case"
+
+    def test_already_separated(self, nonexistent_file: File):
+        tag = SplitCaseTag()
+        tag.configure()
+
+        result = tag.process(nonexistent_file, "already separated")
+
+        assert result == "already separated"
+
+    def test_custom_separator(self, nonexistent_file: File):
+        tag = SplitCaseTag()
+        tag.configure("_")
+
+        result = tag.process(nonexistent_file, "SomeText")
+
+        assert result == "Some_Text"
