@@ -87,6 +87,7 @@ class TagPlaceholder(PatternElement):
 
     location: Location = field(init=False, compare=False)
     tag_name: str
+    category_name: Optional[str] = None
     context: Optional[Pattern] = None
     args: List[Any] = field(default_factory=list)
     kwargs: Mapping[str, Any] = field(default_factory=dict)
@@ -94,6 +95,8 @@ class TagPlaceholder(PatternElement):
     def __post_init__(self):
         if len(self.tag_name) < 1:
             raise ValueError(f"Invalid tag name: ${repr(self.tag_name)}")
+        if self.category_name is not None and len(self.tag_name) < 1:
+            raise ValueError(f"Invalid category name: ${repr(self.category_name)}")
 
     def process(self, file: File) -> str:
         raise NotImplementedError(
@@ -101,7 +104,7 @@ class TagPlaceholder(PatternElement):
         )
 
 
-class FileNotSupportedError(Exception):  # FIXME: use
+class FileNotSupportedError(Exception):
     """Tag cannot extract value due to invalid file type"""
 
     pass

@@ -50,10 +50,13 @@ ARGS_START
     : '(' -> mode(ARGS_MODE)
     ;
 
+CATEGORY_SEPARATOR
+    : '.'
+    ;
+
 TAG_ID
     : ID
     ;
-
 
 mode ARGS_MODE;
 

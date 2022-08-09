@@ -59,7 +59,7 @@ class _TreeVisitor(TagTemplateParserVisitor):
     def visitTerminal(self, node):
         if node.getSymbol().type not in ARGUMENT_VALUE_TYPES:
             return IGNORED_TERMINAL
-        return self.defaultResult()
+        raise NotImplementedError()
 
     def aggregateResult(
         self, pattern: List[PatternElement], element: PatternElement
@@ -76,7 +76,7 @@ class _TreeVisitor(TagTemplateParserVisitor):
     ) -> List[TagPlaceholder]:
         if ctx.errorNonTagInPipeList:
             non_tag_symbol = ctx.errorNonTagInPipeList.children[0].symbol
-            raise TagTemplateSyntaxError(
+            raise TemplateSyntaxError(
                 location_from_symbol(non_tag_symbol),
                 message=f"non-tag in the pipe list",
             )
@@ -96,19 +96,27 @@ class _TreeVisitor(TagTemplateParserVisitor):
         return Pattern(pattern_elements)
 
     def visitTag(self, ctx: TagTemplateParser.TagContext) -> TagPlaceholder:
+        category_name = None
+        if ctx.categoryId:
+            category_name = ctx.categoryId.text
         if ctx.errorMissingTagId:
-            raise TagTemplateSyntaxError(
+            raise TemplateSyntaxError(
                 location_from_symbol(ctx.errorMissingTagId),
                 message=f"missing tag name",
             )
-        tag_name = ctx.TAG_ID().getText()
-        if ctx.errorNoArgumentList:
-            raise TagTemplateSyntaxError(
-                location_from_symbol(ctx.errorNoArgumentList),
-                message=f"missing argument list for tag '{tag_name}'",
+        if ctx.errorMissingCategoryId:
+            raise TemplateSyntaxError(
+                location_from_symbol(ctx.errorMissingCategoryId),
+                message=f"missing category name",
             )
+        if ctx.errorNoArgumentList:
+            raise TemplateSyntaxError(
+                location_from_symbol(ctx.errorNoArgumentList),
+                message=f"missing argument list for tag '{ctx.errorNoArgumentList.text}'",
+            )
+        tag_name: str = ctx.tagId.text  # type: ignore
         if ctx.errorUnclosedContext:
-            raise TagTemplateSyntaxError(
+            raise TemplateSyntaxError(
                 location_from_symbol(ctx.errorUnclosedContext),
                 message=f"missing closing context bracket for tag '{tag_name}'",
             )
@@ -120,19 +128,19 @@ class _TreeVisitor(TagTemplateParserVisitor):
 
         tag = TagPlaceholder(
             tag_name=tag_name,
+            category_name=category_name,
             args=args,
             kwargs=kwargs,
             context=context,
         )
-        symbol = ctx.TAG_ID().getSymbol()
-        tag.location = location_from_symbol(symbol)
+        tag.location = location_from_symbol(ctx.tagId)
         return tag
 
     def visitArgumentList(
         self, ctx: TagTemplateParser.ArgumentListContext
     ) -> Tuple[List[ArgValue], Mapping[str, ArgValue]]:
         if ctx.errorUnclosedArgumentList:
-            raise TagTemplateSyntaxError(
+            raise TemplateSyntaxError(
                 location_from_symbol(ctx.errorUnclosedArgumentList),
                 message="missing closing argument list bracket",
             )
@@ -201,40 +209,13 @@ class TagTreeBuilder:
 
 class TagTemplateErrorListener(ErrorListener):
     def syntaxError(self, recognizer, offendingSymbol, line, column, msg, e):
-        from pprint import pprint
-
-        # pprint([">>>>>///", recognizer, offendingSymbol, line, column, msg, e])
         error_location = Location(line, column, len(offendingSymbol.text))
         if "extraneous input" in msg or "mismatched input" in msg:
-            raise TagTemplateSyntaxError(
+            raise TemplateSyntaxError(
                 error_location,
                 f"unexpected symbol '{offendingSymbol.text}'",
             )
-        raise TagTemplateSyntaxError(error_location, msg)
-
-    def reportAmbiguity(
-        self, recognizer, dfa, startIndex, stopIndex, exact, ambigAlts, configs
-    ):
-        # print("reportAmbiguity")
-        super().reportAmbiguity(
-            recognizer, dfa, startIndex, stopIndex, exact, ambigAlts, configs
-        )
-
-    def reportAttemptingFullContext(
-        self, recognizer, dfa, startIndex, stopIndex, conflictingAlts, configs
-    ):
-        # print("reportAttemptingFullContext")
-        super().reportAttemptingFullContext(
-            recognizer, dfa, startIndex, stopIndex, conflictingAlts, configs
-        )
-
-    def reportContextSensitivity(
-        self, recognizer, dfa, startIndex, stopIndex, prediction, configs
-    ):
-        # print("reportContextSensitivity")
-        super().reportContextSensitivity(
-            recognizer, dfa, startIndex, stopIndex, prediction, configs
-        )
+        raise TemplateSyntaxError(error_location, msg)
 
 
 class TemplateError(Exception):
@@ -250,15 +231,15 @@ class TemplateError(Exception):
         self.message = message
 
 
-class TagTemplateSyntaxError(TemplateError):
+class TemplateSyntaxError(TemplateError):
     pass
 
 
-class TagTemplateSemanticError(TemplateError):
+class TemplateSemanticError(TemplateError):
     pass
 
 
-class TagError(TagTemplateSemanticError):
+class TagError(TemplateSemanticError):
     tag_name: str
 
     def __init__(self, location: Location, tag_name: str, message: str):

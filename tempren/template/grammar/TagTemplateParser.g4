@@ -7,9 +7,10 @@ rootPattern
     ;
 
 tag
-    : TAG_START TAG_ID argumentList ('{' pattern '}')?
+    : TAG_START (categoryId=TAG_ID '.')? tagId=TAG_ID argumentList ('{' pattern '}')?
+    | TAG_START errorMissingCategoryId='.' tagId=TAG_ID argumentList
     | TAG_START errorNoArgumentList=TAG_ID
-    | TAG_START TAG_ID argumentList errorUnclosedContext='{' pattern
+    | TAG_START tagId=TAG_ID argumentList errorUnclosedContext='{' pattern
     | errorMissingTagId=TAG_START argumentList
     ;
 
