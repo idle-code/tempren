@@ -5,6 +5,8 @@ from typing import Optional
 import pytest
 
 from tempren.template.tree_builder import (
+    AmbiguousTagError,
+    AmbiguousTagNameError,
     ConfigurationError,
     ContextForbiddenError,
     ContextMissingError,
@@ -76,6 +78,65 @@ class TestTagCategory:
 
 
 class TestTagRegistry:
+    def test_find_tag_factory__missing_factory(self):
+        registry = TagRegistry()
+
+        tag_factory = registry.find_tag_factory("Mock")
+
+        assert tag_factory is None
+
+    def test_find_tag_factory__unknown_category(self):
+        registry = TagRegistry()
+
+        tag_factory = registry.find_tag_factory("Mock", "Category")
+
+        assert tag_factory is None
+
+    def test_find_tag_factory__single_tag_no_category(self):
+        registry = TagRegistry()
+        category = registry.register_category("Category")
+        mock_tag_factory = TagFactoryFromClass(MockTag)
+        category.register_tag_factory(mock_tag_factory)
+
+        tag_factory = registry.find_tag_factory("Mock")
+
+        assert tag_factory is mock_tag_factory
+
+    def test_find_tag_factory__single_tag_invalid_category(self):
+        registry = TagRegistry()
+        category = registry.register_category("Category")
+        mock_tag_factory = TagFactoryFromClass(MockTag)
+        category.register_tag_factory(mock_tag_factory)
+
+        tag_factory = registry.find_tag_factory("Mock", "OtherCategory")
+
+        assert tag_factory is None
+
+    def test_find_tag_factory__multiple_tags_no_category(self):
+        registry = TagRegistry()
+        category_a = registry.register_category("CategoryA")
+        category_b = registry.register_category("CategoryB")
+        mock_tag_a_factory = TagFactoryFromClass(MockTag)
+        mock_tag_b_factory = TagFactoryFromClass(MockTag)
+        category_a.register_tag_factory(mock_tag_a_factory)
+        category_b.register_tag_factory(mock_tag_b_factory)
+
+        with pytest.raises(AmbiguousTagNameError):
+            registry.find_tag_factory("Mock")
+
+    def test_find_tag_factory__multiple_tags_explicit_category(self):
+        registry = TagRegistry()
+        category_a = registry.register_category("CategoryA")
+        category_b = registry.register_category("CategoryB")
+        mock_tag_a_factory = TagFactoryFromClass(MockTag)
+        mock_tag_b_factory = TagFactoryFromClass(MockTag)
+        category_a.register_tag_factory(mock_tag_a_factory)
+        category_b.register_tag_factory(mock_tag_b_factory)
+
+        tag_b_factory = registry.find_tag_factory("Mock", "CategoryB")
+
+        assert tag_b_factory is mock_tag_b_factory
+
     def test_bind__missing_tag(self):
         pattern = parse("%Nonexistent()")
         registry = TagRegistry()
@@ -85,8 +146,40 @@ class TestTagRegistry:
 
         exc.match("Nonexistent")
 
+    def test_bind__ambiguous_tag_name(self):
+        pattern = parse("%Mock()")
+        registry = TagRegistry()
+        category_a = registry.register_category("CategoryA")
+        category_b = registry.register_category("CategoryB")
+        category_a.register_tag_factory(TagFactoryFromClass(MockTag))
+        category_b.register_tag_factory(TagFactoryFromClass(MockTag))
+
+        with pytest.raises(AmbiguousTagError) as exc:
+            registry.bind(pattern)
+
+        exc.match("Mock")
+        exc.match("CategoryA")
+        exc.match("CategoryB")
+
     def test_bind__tag_factory_is_invoked(self):
         pattern = parse("%Dummy()")
+        registry = TagRegistry()
+        category = registry.register_category("Test")
+        invoked = False
+
+        def tag_factory(*args, **kwargs):
+            nonlocal invoked
+            invoked = True
+            return MockTag()
+
+        category.register_tag_factory(tag_factory, "Dummy")
+
+        registry.bind(pattern)
+
+        assert invoked
+
+    def test_bind__fully_qualified_tag_factory_is_invoked(self):
+        pattern = parse("%Test.Dummy()")
         registry = TagRegistry()
         category = registry.register_category("Test")
         invoked = False

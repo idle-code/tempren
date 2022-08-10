@@ -189,7 +189,7 @@ class TagFactoryFromClass(TagFactory):
         if self._tag_class.require_context is None:
             context_metavar = "[{...}]"
         elif self._tag_class.require_context is True:
-            context_metavar = "{...}"  # TODO: test
+            context_metavar = "{...}"  # TODO: test?
         else:
             context_metavar = ""
         single_line_signature = f"%{self._tag_name}{signature}{context_metavar}"

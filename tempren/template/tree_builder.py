@@ -253,6 +253,30 @@ class UnknownTagError(TagError):
         super().__init__(location, tag_name, "Tag not recognized")
 
 
+class AmbiguousTagNameError(Exception):
+    tag_name: str
+    category_names: List[str]
+
+    def __init__(self, tag_name: str, category_names: List[str]):
+        super().__init__(
+            f"Tag {tag_name!r} is present in multiple categories: {','.join(category_names)}"
+        )
+        self.tag_name = tag_name
+        self.category_names = category_names
+
+
+class AmbiguousTagError(TagError):
+    category_names: List[str]
+
+    def __init__(self, location: Location, tag_name: str, category_names: List[str]):
+        super().__init__(
+            location,
+            tag_name,
+            f"This tag name is present in multiple categories: {','.join(category_names)}",
+        )
+        self.category_names = category_names
+
+
 class ContextMissingError(TagError):
     def __init__(self, location: Location, tag_name: str):
         super().__init__(location, tag_name, f"Context is required for this tag")
@@ -319,12 +343,27 @@ class TagRegistry:
     def find_category(self, category_name: str) -> Optional[TagCategory]:
         return self.category_map.get(category_name, None)
 
-    def find_tag_factory(self, tag_name: str) -> Optional[TagFactory]:
-        for category in self.category_map.values():
-            tag_factory = category.find_tag_factory(tag_name)
-            if tag_factory:
-                return tag_factory
-        return None
+    def find_tag_factory(
+        self, tag_name: str, category_name: Optional[str] = None
+    ) -> Optional[TagFactory]:
+        if category_name is None:
+            found_tag_factories: Dict[str, TagFactory] = {}
+            for category in self.category_map.values():
+                tag_factory = category.find_tag_factory(tag_name)
+                if tag_factory:
+                    found_tag_factories[category.name] = tag_factory
+
+            if not found_tag_factories:
+                return None
+            elif len(found_tag_factories) == 1:
+                return next(iter(found_tag_factories.values()))
+            else:
+                category_names = sorted(list(found_tag_factories.keys()))
+                raise AmbiguousTagNameError(tag_name, category_names)
+        else:
+            if category_name not in self.category_map:
+                return None
+            return self.category_map[category_name].find_tag_factory(tag_name)
 
     def bind(self, pattern: Pattern) -> Pattern:
         return self._rewrite_pattern(pattern)
@@ -341,11 +380,18 @@ class TagRegistry:
         return bound_pattern
 
     def _rewrite_tag_placeholder(self, tag_placeholder: TagPlaceholder) -> TagInstance:
-        tag_factory: Optional[TagFactory] = self.find_tag_factory(
-            tag_placeholder.tag_name
-        )
-        if not tag_factory:
-            raise UnknownTagError(tag_placeholder.location, tag_placeholder.tag_name)
+        try:
+            tag_factory: Optional[TagFactory] = self.find_tag_factory(
+                tag_placeholder.tag_name, tag_placeholder.category_name
+            )
+            if not tag_factory:
+                raise UnknownTagError(
+                    tag_placeholder.location, tag_placeholder.tag_name
+                )
+        except AmbiguousTagNameError as exc:
+            raise AmbiguousTagError(
+                tag_placeholder.location, exc.tag_name, exc.category_names
+            ) from exc
 
         try:
             self.log.debug(
@@ -379,6 +425,7 @@ class TagRegistry:
     def register_category(
         self, category_name: str, description: Optional[str] = None
     ) -> TagCategory:
+        # TODO: This method should receive already build (non-empty) TagCategory
         if self.find_category(category_name) is not None:
             raise ValueError(f"Category '{category_name}' already registered")
         new_category = TagCategory(category_name)
