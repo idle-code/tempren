@@ -1,7 +1,6 @@
 import textwrap
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import Any, List, Mapping, Optional, Type
 
 from docstring_parser import parse as parse_docstring

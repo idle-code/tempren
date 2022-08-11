@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from pathlib import Path
 from typing import Any, Optional
 
 from tempren.path_generator import File
@@ -9,7 +8,7 @@ from tempren.template.tree_elements import Tag
 class FirstLevelTag(Tag):
     require_context = None
 
-    def process(self, path: Path, context: Optional[str]) -> str:
+    def process(self, path: File, context: Optional[str]) -> str:
         raise NotImplementedError()
 
 

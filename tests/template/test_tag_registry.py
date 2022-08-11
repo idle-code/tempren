@@ -399,6 +399,15 @@ class TestTagRegistry:
         first_level_tag_factory = registry.find_tag_factory("FirstLevel")
         assert first_level_tag_factory
 
+    def test_register_tags_in_package__skips_unsupported_modules(self):
+        registry = TagRegistry()
+        import tests.template.test_module
+
+        registry.register_tags_in_package(tests.template.test_module)
+
+        first_level_tag_factory = registry.find_tag_factory("Unsupported")
+        assert first_level_tag_factory is None
+
     def test_register_tags_in_package__finds_second_level_tags(self):
         registry = TagRegistry()
         import tests.template.test_module

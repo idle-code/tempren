@@ -463,5 +463,11 @@ class TagRegistry:
         ):
             if is_pkg:
                 continue
-            module = importlib.import_module(name)
-            self.register_tags_in_module(module)
+            try:
+                self.log.debug(f"Trying to load {name} module")
+                module = importlib.import_module(name)
+                self.register_tags_in_module(module)
+            except NotImplementedError as exc:
+                self.log.warning(f"Module {name} is currently unsupported: {exc}")
+            except Exception as exc:
+                self.log.error(exc, f"Could not load module {name}")
