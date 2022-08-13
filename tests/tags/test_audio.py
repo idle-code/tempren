@@ -1,3 +1,4 @@
+from datetime import timedelta
 from pathlib import Path
 
 import pytest
@@ -80,7 +81,7 @@ class TestMutagenTags:
 
         duration = tag.process(sample_file, None)
 
-        assert abs(duration - 1.288) < 0.001
+        assert duration == timedelta(seconds=1, microseconds=288707)
 
     def test_channels_extraction(self, sample_file: File):
         tag = ChannelsTag()

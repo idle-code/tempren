@@ -1,11 +1,16 @@
 from abc import ABC, abstractmethod
+from datetime import timedelta
 from fractions import Fraction
 from typing import Any, Optional
 
 from pymediainfo import MediaInfo
 
 from tempren.path_generator import File
-from tempren.template.tree_elements import FileNotSupportedError, Tag
+from tempren.template.tree_elements import (
+    FileNotSupportedError,
+    MissingMetadataError,
+    Tag,
+)
 
 if not MediaInfo.can_parse():
     raise NotImplementedError("MediaInfo library not found")
@@ -16,7 +21,7 @@ class MediaInfoTagBase(Tag, ABC):
 
     def process(self, file: File, context: Optional[str]) -> Any:
         media_info = MediaInfo.parse(file.absolute_path)
-        if not media_info.video_tracks:
+        if len(media_info.tracks) < 2:  # General track seems always present
             raise FileNotSupportedError()
         return self.extract_metadata(media_info)
 
@@ -25,23 +30,32 @@ class MediaInfoTagBase(Tag, ABC):
         raise NotImplementedError()
 
 
-class WidthTag(MediaInfoTagBase):
+class VideoInfoTagBase(MediaInfoTagBase, ABC):
+    def extract_metadata(self, media_info: MediaInfo) -> Any:
+        if not media_info.video_tracks:
+            raise MissingMetadataError()
+        return self.extract_video_metadata(media_info.video_tracks[0])
+
+    @abstractmethod
+    def extract_video_metadata(self, video_track) -> Any:
+        raise NotImplementedError()
+
+
+class WidthTag(VideoInfoTagBase):
     """Video width in pixels"""
 
-    def extract_metadata(self, media_info: MediaInfo) -> Any:
-        video_track = media_info.video_tracks[0]
+    def extract_video_metadata(self, video_track) -> Any:
         return video_track.width
 
 
-class HeightTag(MediaInfoTagBase):
+class HeightTag(VideoInfoTagBase):
     """Video height in pixels"""
 
-    def extract_metadata(self, media_info: MediaInfo) -> Any:
-        video_track = media_info.video_tracks[0]
+    def extract_video_metadata(self, video_track) -> Any:
         return video_track.height
 
 
-class AspectRatioTag(MediaInfoTagBase):
+class AspectRatioTag(VideoInfoTagBase):
     """Video aspect ratio (in fractional W:H or decimal format)"""
 
     use_decimal: bool
@@ -52,8 +66,7 @@ class AspectRatioTag(MediaInfoTagBase):
         """
         self.use_decimal = decimal
 
-    def extract_metadata(self, media_info: MediaInfo) -> Any:
-        video_track = media_info.video_tracks[0]
+    def extract_video_metadata(self, video_track) -> Any:
         if self.use_decimal:
             return video_track.width / video_track.height
         else:
@@ -61,17 +74,29 @@ class AspectRatioTag(MediaInfoTagBase):
             return f"{aspect_ratio.numerator}:{aspect_ratio.denominator}"
 
 
-class FrameRateTag(MediaInfoTagBase):
+class FrameRateTag(VideoInfoTagBase):
     """Decimal frame rate per second"""
 
-    def extract_metadata(self, media_info: MediaInfo) -> float:
-        video_track = media_info.video_tracks[0]
+    def extract_video_metadata(self, video_track) -> Any:
         return float(video_track.frame_rate)
 
 
-class FrameCountTag(MediaInfoTagBase):
-    """Number of frames in file"""
+class VideoCodecTag(VideoInfoTagBase):
+    """Name of video encoding codec"""
 
-    def extract_metadata(self, media_info: MediaInfo) -> int:
-        video_track = media_info.video_tracks[0]
+    def extract_video_metadata(self, video_track) -> Any:
+        return video_track.format
+
+
+class FrameCountTag(VideoInfoTagBase):
+    """Number of frames in the file"""
+
+    def extract_video_metadata(self, video_track) -> Any:
         return int(video_track.frame_count)
+
+
+class DurationTag(VideoInfoTagBase):
+    """Video duration in seconds"""
+
+    def extract_video_metadata(self, video_track) -> timedelta:
+        return timedelta(milliseconds=video_track.duration)

@@ -1,4 +1,5 @@
 from abc import ABC
+from datetime import timedelta
 from typing import Any, Dict, List, Optional
 
 import mutagen
@@ -10,7 +11,7 @@ from tempren.template.tree_elements import MissingMetadataError, Tag
 
 
 class MutagenTagBase(Tag, ABC):
-    """Extract audio metadata (tags) using mutagen library"""
+    """Extracts audio metadata (tags) using mutagen library"""
 
     require_context = False
 
@@ -20,7 +21,7 @@ class MutagenTagBase(Tag, ABC):
         metadata_dict = self._extract_metadata(file)
         if self.tag_key not in metadata_dict:
             raise MissingMetadataError()
-        tag_value = metadata_dict[self.tag_key]
+        tag_value = self.format_value(metadata_dict[self.tag_key])
         if isinstance(tag_value, list):
             tag_value = "\n".join(tag_value)
         return tag_value
@@ -42,74 +43,81 @@ class MutagenTagBase(Tag, ABC):
         metadata_dict.update(dict(audio_file))
         return metadata_dict
 
+    def format_value(self, metadata_value: Any):
+        return metadata_value
+
 
 class TitleTag(MutagenTagBase):
-    """Extract track title"""
+    """Track title"""
 
     tag_key = "title"
 
 
 class AlbumTag(MutagenTagBase):
-    """Extract album name"""
+    """Album name"""
 
     tag_key = "album"
 
 
 class ArtistTag(MutagenTagBase):
-    """Extract name of the artist"""
+    """Name of the artist"""
 
     tag_key = "artist"
 
 
 class CommentTag(MutagenTagBase):
-    """Extract comment"""
+    """Comment"""
 
     tag_key = "comments"
 
 
 class YearTag(MutagenTagBase):
-    """Extract year of the release"""
+    """Year of the release"""
 
     tag_key = "date"
 
 
 class GenreTag(MutagenTagBase):
-    """Extract genre type"""
+    """Genre type"""
 
     tag_key = "genre"
 
 
 class TrackTag(MutagenTagBase):
-    """Extract track number"""
+    """Track number"""
 
     tag_key = "tracknumber"
 
 
 class DurationTag(MutagenTagBase):
-    """Extract track duration in seconds"""
+    """Track duration in seconds"""
 
     tag_key = "duration"
 
+    def format_value(self, metadata_value: Any):
+        duration_in_seconds = float(super().format_value(metadata_value))
+        return timedelta(seconds=duration_in_seconds)
+
 
 class ChannelsTag(MutagenTagBase):
-    """Extract number of channels"""
+    """Number of channels"""
 
     tag_key = "channels"
 
 
 class SampleRateTag(MutagenTagBase):
-    """Extract sample rate"""
+    """Sample rate"""
 
     tag_key = "sample_rate"
 
 
 class BitRateTag(MutagenTagBase):
-    """Extract bit rate"""
+    """Bit rate"""
 
     tag_key = "bitrate"
 
 
 class BitsPerSampleTag(MutagenTagBase):
-    """Extract bit rate"""
+    """Bit rate per sample"""
 
     tag_key = "bits_per_sample"

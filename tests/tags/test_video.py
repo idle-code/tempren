@@ -1,3 +1,4 @@
+from datetime import timedelta
 from pathlib import Path
 
 import pytest
@@ -5,23 +6,35 @@ import pytest
 from tempren.path_generator import File
 from tempren.tags.video import (
     AspectRatioTag,
+    DurationTag,
     FrameCountTag,
     FrameRateTag,
     HeightTag,
+    VideoCodecTag,
     WidthTag,
 )
-from tempren.template.tree_elements import FileNotSupportedError, Tag
+from tempren.template.tree_elements import (
+    FileNotSupportedError,
+    MissingMetadataError,
+    Tag,
+)
 
 
-class MediaInfoTagTests:
+class VideoInfoTagTests:
     def test_invalid_file_type(self, tag: Tag, text_data_dir: Path):
         text_file = File(text_data_dir, Path("hello.txt"))
 
         with pytest.raises(FileNotSupportedError):
             tag.process(text_file, None)
 
+    def test_missing_video_track(self, tag: Tag, audio_data_dir: Path):
+        sample_file = File(audio_data_dir, Path("sample.mp3"))
 
-class TestWidthTag(MediaInfoTagTests):
+        with pytest.raises(MissingMetadataError):
+            tag.process(sample_file, None)
+
+
+class TestWidthTag(VideoInfoTagTests):
     @pytest.fixture
     def tag(self) -> WidthTag:
         return WidthTag()
@@ -41,7 +54,7 @@ class TestWidthTag(MediaInfoTagTests):
         assert width == 600
 
 
-class TestHeightTag(MediaInfoTagTests):
+class TestHeightTag(VideoInfoTagTests):
     @pytest.fixture
     def tag(self) -> HeightTag:
         return HeightTag()
@@ -61,7 +74,7 @@ class TestHeightTag(MediaInfoTagTests):
         assert height == 450
 
 
-class TestAspectRatioTag(MediaInfoTagTests):
+class TestAspectRatioTag(VideoInfoTagTests):
     @pytest.fixture
     def tag(self):
         return AspectRatioTag()
@@ -83,7 +96,7 @@ class TestAspectRatioTag(MediaInfoTagTests):
         assert abs(ratio - 1.33) < 0.01
 
 
-class TestFrameRateTag(MediaInfoTagTests):
+class TestFrameRateTag(VideoInfoTagTests):
     @pytest.fixture
     def tag(self):
         return FrameRateTag()
@@ -96,7 +109,7 @@ class TestFrameRateTag(MediaInfoTagTests):
         assert abs(frame_rate - 5) < 0.01
 
 
-class TestFrameCountTag(MediaInfoTagTests):
+class TestFrameCountTag(VideoInfoTagTests):
     @pytest.fixture
     def tag(self):
         return FrameCountTag()
@@ -107,3 +120,36 @@ class TestFrameCountTag(MediaInfoTagTests):
         frame_count = tag.process(video_file, None)
 
         assert frame_count == 14
+
+
+class TestVideoCodecTag(VideoInfoTagTests):
+    @pytest.fixture
+    def tag(self):
+        return VideoCodecTag()
+
+    def test_mp4_codec(self, tag: VideoCodecTag, video_data_dir: Path):
+        video_file = File(video_data_dir, Path("timelapse.mp4"))
+
+        video_codec = tag.process(video_file, None)
+
+        assert video_codec == "AVC"
+
+    def test_mkv_codec(self, tag: VideoCodecTag, video_data_dir: Path):
+        video_file = File(video_data_dir, Path("timelapse.mkv"))
+
+        video_codec = tag.process(video_file, None)
+
+        assert video_codec == "VP9"
+
+
+class TestDurationTag(VideoInfoTagTests):
+    @pytest.fixture
+    def tag(self):
+        return DurationTag()
+
+    def test_duration(self, tag: DurationTag, video_data_dir: Path):
+        video_file = File(video_data_dir, Path("timelapse.mp4"))
+
+        duration = tag.process(video_file, None)
+
+        assert duration == timedelta(seconds=2, milliseconds=800)

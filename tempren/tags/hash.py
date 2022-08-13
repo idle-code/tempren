@@ -17,7 +17,7 @@ def _calculate_hash(algorithm, path: Path, chunk_size: int) -> str:
 
 
 class Md5Tag(Tag):
-    """Calculates MD5 hash of the file"""
+    """MD5 hash of the file"""
 
     require_context = False
 
@@ -27,7 +27,7 @@ class Md5Tag(Tag):
 
 
 class Sha1Tag(Tag):
-    """Calculates SHA1 hash of the file"""
+    """SHA1 hash of the file"""
 
     require_context = False
 
@@ -37,7 +37,7 @@ class Sha1Tag(Tag):
 
 
 class Sha256Tag(Tag):
-    """Calculates SHA256 hash of the file"""
+    """SHA256 hash of the file"""
 
     require_context = False
 
@@ -47,7 +47,7 @@ class Sha256Tag(Tag):
 
 
 class Sha224Tag(Tag):
-    """Calculates SHA224 hash of the file"""
+    """SHA224 hash of the file"""
 
     require_context = False
 
@@ -57,7 +57,7 @@ class Sha224Tag(Tag):
 
 
 class Crc32Tag(Tag):
-    """Calculates CRC32 hash of the file"""
+    """CRC32 hash of the file"""
 
     require_context = False
 
