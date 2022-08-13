@@ -6,6 +6,7 @@ import pytest
 from tempren.path_generator import File
 from tempren.tags.video import (
     AspectRatioTag,
+    BitRateTag,
     DurationTag,
     FrameCountTag,
     FrameRateTag,
@@ -153,3 +154,23 @@ class TestDurationTag(VideoInfoTagTests):
         duration = tag.process(video_file, None)
 
         assert duration == timedelta(seconds=2, milliseconds=800)
+
+
+class TestBitRateTag(VideoInfoTagTests):
+    @pytest.fixture
+    def tag(self):
+        return BitRateTag()
+
+    def test_mp4_bit_rate(self, tag: VideoCodecTag, video_data_dir: Path):
+        video_file = File(video_data_dir, Path("timelapse.mp4"))
+
+        bit_rate = tag.process(video_file, None)
+
+        assert bit_rate == 1329477
+
+    def test_mkv_bit_rate(self, tag: VideoCodecTag, video_data_dir: Path):
+        video_file = File(video_data_dir, Path("timelapse.mkv"))
+
+        bit_rate = tag.process(video_file, None)
+
+        assert bit_rate == 473503

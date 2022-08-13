@@ -100,3 +100,10 @@ class DurationTag(VideoInfoTagBase):
 
     def extract_video_metadata(self, video_track) -> timedelta:
         return timedelta(milliseconds=video_track.duration)
+
+
+class BitRateTag(VideoInfoTagBase):
+    """Video stream bit rate"""
+
+    def extract_video_metadata(self, video_track) -> int:
+        return int(video_track.bit_rate)
