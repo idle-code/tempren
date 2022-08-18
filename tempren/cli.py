@@ -11,6 +11,7 @@ from typing import Any, List, NoReturn, Optional, Sequence, Text, Union
 
 from tempren.filesystem import DestinationAlreadyExistsError
 from tempren.path_generator import TemplateEvaluationError
+from tempren.template.tree_elements import TagName
 
 from .pipeline import (
     ConflictResolutionStrategy,
@@ -21,7 +22,13 @@ from .pipeline import (
     build_pipeline,
     build_tag_registry,
 )
-from .template.tree_builder import TemplateError
+from .template.tree_builder import (
+    AmbiguousTagError,
+    TagError,
+    TemplateError,
+    UnknownCategoryError,
+    UnknownTagError,
+)
 
 log = logging.getLogger("CLI")
 
@@ -102,7 +109,7 @@ class _ListAvailableTags(argparse.Action):
             all_category_tags = sorted(category.tag_map.items())
             if not all_category_tags:
                 # There is no tags in the category
-                # TODO: Remove such category from listing
+                # TODO: Empty categories should not be present in the registry
                 continue
             max_name_length = max(
                 [len(tag_name) for tag_name, factory in all_category_tags]
@@ -128,13 +135,19 @@ class _ShowHelp(argparse.Action):
         if values is None:
             parser.print_help()
         else:
-            tag_name = str(values)
+            raw_tag_name = str(values)
             registry = build_tag_registry()
-            tag_factory = registry.find_tag_factory(tag_name)
-            if tag_factory is None:
-                parser.exit(
-                    ErrorCode.USAGE_ERROR, f"Could not find tag with '{tag_name}' name"
-                )
+
+            try:
+                if "." in raw_tag_name:
+                    tag_name = TagName(*reversed(raw_tag_name.split(".")))
+                else:
+                    tag_name = TagName(raw_tag_name)
+
+                tag_factory = registry.get_tag_factory(tag_name)
+            except TagError as tag_error:
+                parser.exit(ErrorCode.USAGE_ERROR, str(tag_error))
+                return
             log.info(tag_factory.configuration_signature)
             log.info("")
             log.info(tag_factory.short_description)

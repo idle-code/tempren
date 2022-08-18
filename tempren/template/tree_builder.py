@@ -2,6 +2,7 @@ import importlib
 import inspect
 import logging
 import pkgutil
+from dataclasses import dataclass
 from functools import reduce
 from logging import Logger
 from types import ModuleType
@@ -22,6 +23,7 @@ from .tree_elements import (
     TagFactory,
     TagFactoryFromClass,
     TagInstance,
+    TagName,
     TagPlaceholder,
 )
 
@@ -52,6 +54,15 @@ def location_from_symbol(symbol) -> Location:
     )
 
 
+def merge_locations(first: Optional[Location], second: Location) -> Location:
+    if not first:
+        return second
+    assert first.line == second.line
+    return Location(
+        first.line, first.column, second.column + second.length - first.column
+    )
+
+
 class _TreeVisitor(TagTemplateParserVisitor):
     def defaultResult(self) -> List[PatternElement]:
         return list()
@@ -77,9 +88,8 @@ class _TreeVisitor(TagTemplateParserVisitor):
         if ctx.errorNonTagInPipeList:
             non_tag_symbol = ctx.errorNonTagInPipeList.children[0].symbol
             raise TemplateSyntaxError(
-                location_from_symbol(non_tag_symbol),
-                message=f"non-tag in the pipe list",
-            )
+                message=f"non-tag in the pipe list"
+            ).with_location(location_from_symbol(non_tag_symbol))
         tag_list = self.visitChildren(ctx)
         return list(filter(bool, tag_list))
 
@@ -100,26 +110,22 @@ class _TreeVisitor(TagTemplateParserVisitor):
         if ctx.categoryId:
             category_name = ctx.categoryId.text
         if ctx.errorMissingTagId:
-            raise TemplateSyntaxError(
-                location_from_symbol(ctx.errorMissingTagId),
-                message=f"missing tag name",
+            raise TemplateSyntaxError(message=f"missing tag name").with_location(
+                location_from_symbol(ctx.errorMissingTagId)
             )
         if ctx.errorMissingCategoryId:
-            raise TemplateSyntaxError(
-                location_from_symbol(ctx.errorMissingCategoryId),
-                message=f"missing category name",
+            raise TemplateSyntaxError(message=f"missing category name").with_location(
+                location_from_symbol(ctx.errorMissingCategoryId)
             )
         if ctx.errorNoArgumentList:
             raise TemplateSyntaxError(
-                location_from_symbol(ctx.errorNoArgumentList),
-                message=f"missing argument list for tag '{ctx.errorNoArgumentList.text}'",
-            )
+                message=f"missing argument list for tag '{ctx.errorNoArgumentList.text}'"
+            ).with_location(location_from_symbol(ctx.errorNoArgumentList))
         tag_name: str = ctx.tagId.text  # type: ignore
         if ctx.errorUnclosedContext:
             raise TemplateSyntaxError(
-                location_from_symbol(ctx.errorUnclosedContext),
-                message=f"missing closing context bracket for tag '{tag_name}'",
-            )
+                message=f"missing closing context bracket for tag '{tag_name}'"
+            ).with_location(location_from_symbol(ctx.errorUnclosedContext))
         args, kwargs = self.visitArgumentList(ctx.argumentList())
         context = None
         context_pattern = ctx.pattern()
@@ -127,13 +133,18 @@ class _TreeVisitor(TagTemplateParserVisitor):
             context = self.visitPattern(ctx.pattern())
 
         tag = TagPlaceholder(
-            tag_name=tag_name,
-            category_name=category_name,
+            tag_name=TagName(tag_name, category_name),
             args=args,
             kwargs=kwargs,
             context=context,
         )
-        tag.location = location_from_symbol(ctx.tagId)
+
+        tag_name_location = location_from_symbol(ctx.tagId)
+        if ctx.categoryId:
+            tag_category_location = location_from_symbol(ctx.categoryId)
+            tag.location = merge_locations(tag_category_location, tag_name_location)
+        else:
+            tag.location = tag_name_location
         return tag
 
     def visitArgumentList(
@@ -141,9 +152,8 @@ class _TreeVisitor(TagTemplateParserVisitor):
     ) -> Tuple[List[ArgValue], Mapping[str, ArgValue]]:
         if ctx.errorUnclosedArgumentList:
             raise TemplateSyntaxError(
-                location_from_symbol(ctx.errorUnclosedArgumentList),
-                message="missing closing argument list bracket",
-            )
+                message="missing closing argument list bracket"
+            ).with_location(location_from_symbol(ctx.errorUnclosedArgumentList))
         collected_arguments = super().visitArgumentList(ctx)
         args = [
             arg_val for arg_name, arg_val in collected_arguments if arg_name is None
@@ -212,23 +222,32 @@ class TagTemplateErrorListener(ErrorListener):
         error_location = Location(line, column, len(offendingSymbol.text))
         if "extraneous input" in msg or "mismatched input" in msg:
             raise TemplateSyntaxError(
-                error_location,
-                f"unexpected symbol '{offendingSymbol.text}'",
-            )
-        raise TemplateSyntaxError(error_location, msg)
+                f"unexpected symbol '{offendingSymbol.text}'"
+            ).with_location(error_location)
+        else:
+            raise TemplateSyntaxError(msg).with_location(error_location)
 
 
 class TemplateError(Exception):
     """Represents an error in the template itself"""
 
-    location: Location
     message: str
+    location: Location
     template: str
 
-    def __init__(self, location: Location, message: str):
-        super().__init__(f"{location}: {message}")
-        self.location = location
+    def __init__(self, message: str):
         self.message = message
+        self.location = Location(0, 0, 0)
+
+    def with_location(self, location: Location) -> "TemplateError":
+        self.location = location
+        return self
+
+    def __str__(self) -> str:
+        if self.location:
+            return f"{self.location}: {self.message}"
+        else:
+            return self.message
 
 
 class TemplateSyntaxError(TemplateError):
@@ -240,56 +259,67 @@ class TemplateSemanticError(TemplateError):
 
 
 class TagError(TemplateSemanticError):
-    tag_name: str
+    tag_name: TagName
 
-    def __init__(self, location: Location, tag_name: str, message: str):
+    def __init__(self, tag_name: TagName, message: str):
         assert tag_name
         self.tag_name = tag_name
-        super().__init__(location, f"Error in tag '{self.tag_name}': {message}")
+        super().__init__(f"Error in tag '{self.tag_name}': {message}")
 
 
 class UnknownTagError(TagError):
-    def __init__(self, location: Location, tag_name: str):
-        super().__init__(location, tag_name, "Tag not recognized")
+    def __init__(self, tag_name: TagName):
+        super().__init__(tag_name, f"Unknown tag name: {tag_name.name}")
 
-
-class AmbiguousTagNameError(Exception):
-    tag_name: str
-    category_names: List[str]
-
-    def __init__(self, tag_name: str, category_names: List[str]):
-        super().__init__(
-            f"Tag {tag_name!r} is present in multiple categories: {','.join(category_names)}"
+    def with_location(self, whole_name_location: Location) -> "TemplateError":
+        if not self.tag_name.category:
+            return super().with_location(whole_name_location)
+        name_location = Location(
+            whole_name_location.line,
+            whole_name_location.column + len(self.tag_name.category) + 1,
+            len(self.tag_name.name),
         )
-        self.tag_name = tag_name
-        self.category_names = category_names
+        return super().with_location(name_location)
+
+
+class UnknownCategoryError(TagError):
+    def __init__(self, tag_name: TagName):
+        super().__init__(tag_name, f"Unknown category name: {tag_name.category}")
+
+    def with_location(self, whole_name_location: Location) -> "TemplateError":
+        assert self.tag_name.category
+        category_location = Location(
+            whole_name_location.line,
+            whole_name_location.column,
+            len(self.tag_name.category),
+        )
+        return super().with_location(category_location)
 
 
 class AmbiguousTagError(TagError):
     category_names: List[str]
 
-    def __init__(self, location: Location, tag_name: str, category_names: List[str]):
+    def __init__(self, tag_name: TagName, category_names: List[str]):
         super().__init__(
-            location,
             tag_name,
-            f"This tag name is present in multiple categories: {','.join(category_names)}",
+            f"This tag name is present in multiple categories: {', '.join(category_names)}",
         )
         self.category_names = category_names
 
 
 class ContextMissingError(TagError):
-    def __init__(self, location: Location, tag_name: str):
-        super().__init__(location, tag_name, f"Context is required for this tag")
+    def __init__(self, tag_name: TagName):
+        super().__init__(tag_name, f"Context is required for this tag")
 
 
 class ContextForbiddenError(TagError):
-    def __init__(self, location: Location, tag_name: str):
-        super().__init__(location, tag_name, f"This tag cannot be used with context")
+    def __init__(self, tag_name: TagName):
+        super().__init__(tag_name, f"This tag cannot be used with context")
 
 
 class ConfigurationError(TagError):
-    def __init__(self, location: Location, tag_name: str, message: str):
-        super().__init__(location, tag_name, f"Configuration not valid: {message}")
+    def __init__(self, tag_name: TagName, message: str):
+        super().__init__(tag_name, f"Configuration not valid: {message}")
 
 
 class TagCategory:
@@ -341,29 +371,46 @@ class TagRegistry:
         return sorted(self.category_map.keys())
 
     def find_category(self, category_name: str) -> Optional[TagCategory]:
+        category = self.category_map.get(category_name, None)
+        if category:
+            return category
+        category_name = category_name.lower()
         return self.category_map.get(category_name, None)
 
-    def find_tag_factory(
-        self, tag_name: str, category_name: Optional[str] = None
-    ) -> Optional[TagFactory]:
-        if category_name is None:
-            found_tag_factories: Dict[str, TagFactory] = {}
-            for category in self.category_map.values():
-                tag_factory = category.find_tag_factory(tag_name)
-                if tag_factory:
-                    found_tag_factories[category.name] = tag_factory
-
-            if not found_tag_factories:
-                return None
-            elif len(found_tag_factories) == 1:
-                return next(iter(found_tag_factories.values()))
-            else:
-                category_names = sorted(list(found_tag_factories.keys()))
-                raise AmbiguousTagNameError(tag_name, category_names)
+    def get_tag_factory(self, tag_name: TagName) -> TagFactory:
+        if tag_name.category is None:
+            return self._get_tag_factory_by_unique_name(tag_name)
         else:
-            if category_name not in self.category_map:
-                return None
-            return self.category_map[category_name].find_tag_factory(tag_name)
+            return self._get_tag_factory_by_name_and_category(tag_name)
+
+    def _get_tag_factory_by_unique_name(self, tag_name: TagName) -> TagFactory:
+        # In case there are tags with the same name in multiple categories,
+        # category name have to be specified explicitly
+        found_tag_factories: Dict[str, TagFactory] = {}
+        for category in self.category_map.values():
+            tag_factory = category.find_tag_factory(tag_name.name)
+            if tag_factory:
+                found_tag_factories[category.name] = tag_factory
+
+        if not found_tag_factories:
+            raise UnknownTagError(tag_name)
+        elif len(found_tag_factories) > 1:
+            category_names = sorted(list(found_tag_factories.keys()))
+            raise AmbiguousTagError(tag_name, category_names)
+
+        return next(iter(found_tag_factories.values()))
+
+    def _get_tag_factory_by_name_and_category(self, tag_name: TagName) -> TagFactory:
+        assert tag_name.category
+        tag_category = self.find_category(tag_name.category)
+        if tag_category is None:
+            raise UnknownCategoryError(tag_name)
+
+        tag_factory = tag_category.find_tag_factory(tag_name.name)
+        if tag_factory is None:
+            raise UnknownTagError(tag_name)
+
+        return tag_factory
 
     def bind(self, pattern: Pattern) -> Pattern:
         return self._rewrite_pattern(pattern)
@@ -381,19 +428,8 @@ class TagRegistry:
 
     def _rewrite_tag_placeholder(self, tag_placeholder: TagPlaceholder) -> TagInstance:
         try:
-            tag_factory: Optional[TagFactory] = self.find_tag_factory(
-                tag_placeholder.tag_name, tag_placeholder.category_name
-            )
-            if not tag_factory:
-                raise UnknownTagError(
-                    tag_placeholder.location, tag_placeholder.tag_name
-                )
-        except AmbiguousTagNameError as exc:
-            raise AmbiguousTagError(
-                tag_placeholder.location, exc.tag_name, exc.category_names
-            ) from exc
+            tag_factory = self.get_tag_factory(tag_placeholder.tag_name)
 
-        try:
             self.log.debug(
                 "Creating tag '%s' with arguments: %s %s",
                 tag_placeholder.tag_name,
@@ -401,19 +437,21 @@ class TagRegistry:
                 tag_placeholder.kwargs,
             )
             tag = tag_factory(*tag_placeholder.args, **tag_placeholder.kwargs)
+        except TemplateError as template_error:
+            raise template_error.with_location(tag_placeholder.location)
         except Exception as exc:
-            raise ConfigurationError(
-                tag_placeholder.location, tag_placeholder.tag_name, str(exc)
+            raise ConfigurationError(tag_placeholder.tag_name, str(exc)).with_location(
+                tag_placeholder.location
             ) from exc
 
         if tag.require_context is not None:
             if tag_placeholder.context and not tag.require_context:
-                raise ContextForbiddenError(
-                    tag_placeholder.location, tag_placeholder.tag_name
+                raise ContextForbiddenError(tag_placeholder.tag_name).with_location(
+                    tag_placeholder.location
                 )
             elif tag_placeholder.context is None and tag.require_context:
-                raise ContextMissingError(
-                    tag_placeholder.location, tag_placeholder.tag_name
+                raise ContextMissingError(tag_placeholder.tag_name).with_location(
+                    tag_placeholder.location
                 )
 
         context_pattern: Optional[Pattern] = None

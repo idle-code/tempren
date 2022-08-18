@@ -132,7 +132,8 @@ class TestVariousFlags:
         stdout, stderr, error_code = run_tempren_process(flag, "NonExistent")
 
         assert error_code == ErrorCode.USAGE_ERROR
-        assert "Could not find tag with 'NonExistent' name" in stderr
+        assert "Unknown tag name" in stderr
+        assert "NonExistent" in stderr
 
     @pytest.mark.parametrize("flag", ["-h", "--help"])
     def test_help_tag_documentation(self, flag: str):
@@ -142,6 +143,13 @@ class TestVariousFlags:
         assert "Count(start" in stdout
         assert "start - " in stdout
         assert "Generates sequential numbers" in stdout
+
+    @pytest.mark.parametrize("flag", ["-h", "--help"])
+    def test_help_tag_in_category_documentation(self, flag: str):
+        stdout, stderr, error_code = run_tempren_process(flag, "Image.Width")
+
+        assert error_code == ErrorCode.SUCCESS
+        assert "Width()" in stdout
 
     @pytest.mark.parametrize("flag", ["-h", "--help"])
     def test_help_tag_documentation_long_description(self, flag: str):

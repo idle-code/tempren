@@ -6,6 +6,7 @@ from tempren.template.tree_elements import (
     Pattern,
     RawText,
     TagInstance,
+    TagName,
     TagPlaceholder,
 )
 
@@ -64,10 +65,14 @@ class TestPattern:
         assert element.process(nonexistent_file) == "foobar"
 
 
-class TestTagPlaceholder:
+class TestTagName:
     def test_invalid_tag_name(self):
         with raises(ValueError):
-            TagPlaceholder("")
+            TagName("")
+
+    def test_invalid_tag_category(self):
+        with raises(ValueError):
+            TagName("TAG", "")
 
 
 class TestTagInstance:
