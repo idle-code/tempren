@@ -204,7 +204,7 @@ class Pipeline:
         if strategy == ConflictResolutionStrategy.stop:
             raise DestinationAlreadyExistsError(source_path, destination_path)
         elif strategy == ConflictResolutionStrategy.ignore:
-            self.log.info(
+            self.log.debug(
                 "Skipping renaming of '%s' to '%s' as destination path already exists",
                 source_path,
                 destination_path,

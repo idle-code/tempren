@@ -35,7 +35,7 @@ class MutagenTagBase(Tag, ABC):
         metadata_dict["sample_rate"] = audio_file.info.sample_rate
         metadata_dict["bitrate"] = audio_file.info.bitrate
         if isinstance(audio_file, mutagen.mp3.MP3):
-            metadata_dict["comments"] = audio_file["COMM::XXX"]
+            metadata_dict["comments"] = audio_file.get("COMM::XXX", "")
             audio_file = mutagen.mp3.MP3(file.absolute_path, ID3=EasyID3)
         else:
             metadata_dict["bits_per_sample"] = audio_file.info.bits_per_sample

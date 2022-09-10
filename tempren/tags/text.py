@@ -177,7 +177,7 @@ class PadTag(Tag):
         self.width = width
         assert len(character) == 1, "single character have to be provided for padding"
         self.character = character
-        assert left or right
+        assert left or right, "'left' or 'right' direction have to be provided"
         self.left = left
         self.right = right
 
