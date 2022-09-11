@@ -559,7 +559,7 @@ class TestConflictResolution:
     @pytest.mark.parametrize("flag", ["-ci", "--conflict-ignore"])
     def test_ignore_conflict_resolution(self, text_data_dir: Path, flag: str):
         stdout, stderr, error_code = run_tempren(
-            flag, "--sort", "%Name()", "StaticFilename", text_data_dir
+            flag, "--verbose", "--sort", "%Name()", "StaticFilename", text_data_dir
         )
 
         assert error_code == ErrorCode.SUCCESS
@@ -632,7 +632,7 @@ class TestConflictResolution:
         self, text_data_dir: Path, flag: str, selection: str
     ):
         tempren_process = start_tempren_process(
-            flag, "--sort", "%Name()", "StaticFilename", text_data_dir
+            flag, "--verbose", "--sort", "%Name()", "StaticFilename", text_data_dir
         )
 
         stdout, stderr = tempren_process.communicate(input=selection + "\n", timeout=3)
