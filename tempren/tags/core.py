@@ -196,3 +196,49 @@ class DefaultTag(Tag):
         if context and not context.isspace():
             return context
         return self.default_value
+
+
+class AsSizeTag(Tag):
+    """Change size (in bytes) representation
+
+    Supported unit prefixes are: K, M, G, T and P
+    """
+
+    require_context = True
+
+    target_unit_multiplier: int
+    precision_digits: Optional[int]
+
+    _unit_weights = {
+        "k": 1024,
+        "m": 1024 ** 2,
+        "g": 1024 ** 3,
+        "t": 1024 ** 4,
+        "p": 1024 ** 5,
+    }
+
+    def configure(self, unit: str, ndigits: Optional[int] = None):  # type: ignore
+        """
+        :param unit: name of the target unit
+        :param ndigits: number of decimal digits
+        """
+        unit = str(unit).lower()
+        unit_prefix = next(
+            filter(
+                lambda prefix: unit.startswith(prefix), AsSizeTag._unit_weights.keys()
+            ),
+            None,
+        )
+        if unit_prefix is None:
+            raise ValueError("Unknown unit provided")
+        self.target_unit_multiplier = AsSizeTag._unit_weights[unit_prefix]
+        if ndigits is not None and ndigits <= 0:
+            raise ValueError("Precision have to be positive")
+        self.precision_digits = ndigits
+
+    def process(self, file: File, context: Optional[str]) -> str:
+        assert context is not None
+        size_in_bytes = float(context)
+        size_in_target_unit = size_in_bytes / self.target_unit_multiplier
+        size_in_target_unit = round(size_in_target_unit, self.precision_digits)
+        return str(size_in_target_unit)

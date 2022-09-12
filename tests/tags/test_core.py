@@ -1,9 +1,11 @@
 from pathlib import Path
+from typing import Optional
 
 import pytest
 
 from tempren.path_generator import File
 from tempren.tags.core import (
+    AsSizeTag,
     BaseTag,
     CountTag,
     DefaultTag,
@@ -390,3 +392,82 @@ class TestDefaultTag:
         result = tag.process(nonexistent_file, "  \t")
 
         assert result == "default"
+
+
+class TestAsSizeTag:
+    def test_no_unit(self):
+        tag = AsSizeTag()
+
+        with pytest.raises(ValueError):
+            tag.configure(None)
+
+    def test_unknown_unit(self):
+        tag = AsSizeTag()
+
+        with pytest.raises(ValueError):
+            tag.configure("spam")
+
+    def test_invalid_precision(self):
+        tag = AsSizeTag()
+
+        with pytest.raises(ValueError):
+            tag.configure("KiB", -2)
+
+    @pytest.mark.parametrize("unit", ("k", "K", "kb", "KB", "kib", "KiB"))
+    def test_unit_case(self, nonexistent_file: File, unit: str):
+        tag = AsSizeTag()
+        tag.configure(unit)
+
+        size_in_unit = tag.process(nonexistent_file, "1024")
+
+        assert size_in_unit == "1"
+
+    @pytest.mark.parametrize(
+        "unit,unit_multiplier",
+        [
+            ("k", 1024),
+            ("kB", 1024),
+            ("KiB", 1024),
+            ("M", 1024 ** 2),
+            ("MB", 1024 ** 2),
+            ("MiB", 1024 ** 2),
+            ("G", 1024 ** 3),
+            ("GB", 1024 ** 3),
+            ("GiB", 1024 ** 3),
+            ("TB", 1024 ** 4),
+            ("T", 1024 ** 4),
+            ("TiB", 1024 ** 4),
+            ("P", 1024 ** 5),
+            ("PB", 1024 ** 5),
+            ("PiB", 1024 ** 5),
+        ],
+    )
+    @pytest.mark.parametrize(
+        "precision,size_multiplier,expected_output",
+        [
+            (None, 0.5, "0"),
+            (None, 1, "1"),
+            (None, 1.5, "2"),
+            (None, 12.34, "12"),
+            (1, 0.5, "0.5"),
+            (1, 1, "1.0"),
+            (1, 1.5, "1.5"),
+            (2, 12.34, "12.34"),
+        ],
+    )
+    def test_unit_rounding(
+        self,
+        nonexistent_file: File,
+        unit: str,
+        unit_multiplier: float,
+        precision: Optional[int],
+        size_multiplier: float,
+        expected_output: str,
+    ):
+        tag = AsSizeTag()
+        tag.configure(unit, precision)
+        size_in_bytes = size_multiplier * unit_multiplier
+
+        size_in_unit = tag.process(nonexistent_file, str(size_in_bytes))
+
+        assert size_in_unit == expected_output

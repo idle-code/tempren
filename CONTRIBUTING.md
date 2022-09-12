@@ -40,3 +40,4 @@ $ mypy
 ```
 
 ### TODO: Tags development
+TODO: Establish convention for error reporting in `process` and `configure` methods (`if`'s vs `assert`)
