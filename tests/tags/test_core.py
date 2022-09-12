@@ -15,6 +15,7 @@ from tempren.tags.core import (
     MimeExtTag,
     MimeTag,
     NameTag,
+    RoundTag,
     SanitizeTag,
 )
 
@@ -471,3 +472,65 @@ class TestAsSizeTag:
         size_in_unit = tag.process(nonexistent_file, str(size_in_bytes))
 
         assert size_in_unit == expected_output
+
+
+class TestRoundTag:
+    def test_no_precision_specified(self, nonexistent_file: File):
+        tag = RoundTag()
+        tag.configure()
+
+        rounded = tag.process(nonexistent_file, "123.456")
+
+        assert rounded == "123"
+
+    def test_zero_precision(self, nonexistent_file: File):
+        tag = RoundTag()
+        tag.configure(0)
+
+        rounded = tag.process(nonexistent_file, "123.456")
+
+        assert rounded == "123"
+
+    def test_positive_precision(self, nonexistent_file: File):
+        tag = RoundTag()
+        tag.configure(2)
+
+        rounded = tag.process(nonexistent_file, "123.456")
+
+        assert rounded == "123.46"
+
+    def test_negative_precision(self, nonexistent_file: File):
+        tag = RoundTag()
+        tag.configure(-2)
+
+        rounded = tag.process(nonexistent_file, "123.456")
+
+        assert rounded == "100"
+
+    def test_precision_and_up_down_rounding(self):
+        tag = RoundTag()
+
+        with pytest.raises(ValueError):
+            tag.configure(2, down=True)
+
+    def test_up_and_down_rounding(self):
+        tag = RoundTag()
+
+        with pytest.raises(ValueError):
+            tag.configure(down=True, up=True)
+
+    def test_ceil_rounding(self, nonexistent_file: File):
+        tag = RoundTag()
+        tag.configure(up=True)
+
+        rounded = tag.process(nonexistent_file, "123.456")
+
+        assert rounded == "124"
+
+    def test_floor_rounding(self, nonexistent_file: File):
+        tag = RoundTag()
+        tag.configure(down=True)
+
+        rounded = tag.process(nonexistent_file, "123.456")
+
+        assert rounded == "123"

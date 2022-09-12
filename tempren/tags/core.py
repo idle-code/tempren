@@ -1,5 +1,6 @@
 import mimetypes
 from collections import defaultdict
+from math import ceil, floor
 from pathlib import Path
 from typing import Any, Optional, Union
 
@@ -242,3 +243,43 @@ class AsSizeTag(Tag):
         size_in_target_unit = size_in_bytes / self.target_unit_multiplier
         size_in_target_unit = round(size_in_target_unit, self.precision_digits)
         return str(size_in_target_unit)
+
+
+class RoundTag(Tag):
+    """Round provided numeric value to specified number of decimal digits"""
+
+    require_context = True
+
+    precision_digits: int
+    direction: Optional[bool]
+
+    def configure(self, ndigits: int = 0, down: bool = False, up: bool = False):  # type: ignore
+        """
+        :param ndigits: number of decimal digits
+        :param down: round to the closest integer less than the processed value
+        :param up: round to the closest integer greater than the processed value
+        """
+        if ndigits != 0 and (down or up):
+            raise ValueError("down or up cannot be used with precision digits")
+        if down and up:
+            raise ValueError("down and up cannot cannot be specified simultaneously")
+        if down:
+            self.direction = False
+        elif up:
+            self.direction = True
+        else:
+            self.direction = None
+        self.precision_digits = ndigits
+
+    def process(self, file: File, context: Optional[str]) -> Any:
+        assert context is not None
+        number = float(context)
+        if self.direction is None:
+            rounded_number = round(number, self.precision_digits)
+            if self.precision_digits <= 0:
+                rounded_number = int(rounded_number)
+        elif self.direction:
+            rounded_number = ceil(number)
+        else:
+            rounded_number = floor(number)
+        return str(rounded_number)
