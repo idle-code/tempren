@@ -1,3 +1,5 @@
+import datetime
+import itertools
 import mimetypes
 from collections import defaultdict
 from math import ceil, floor
@@ -297,3 +299,61 @@ class EvalTag(Tag):
     def process(self, file: File, context: Optional[str]) -> Any:  # type ignore
         assert context is not None
         return evaluate_expression(context)
+
+
+class AsTimeTag(Tag):
+    """Re-format provided date-time (in ISO 8601 representation)"""
+
+    require_context = True
+
+    destination_format: str
+
+    def configure(self, format: str):  # type: ignore
+        """
+        :param format: strftime format to use
+        """
+        self.destination_format = format
+
+    def process(self, file: File, context: Optional[str]) -> str:  # type: ignore
+        assert context is not None
+        parsed_datetime = datetime.datetime.fromisoformat(context)
+        return parsed_datetime.strftime(self.destination_format)
+
+
+AsTimeTag.__doc__ = "\n".join(
+    [
+        str(AsTimeTag.__doc__),
+        "Possible fields:",
+        """Date
+  %a\t Abbreviated weekday name ("Mon")
+  %A\t Weekday name ("Monday")
+  %b\t Abbreviated month name ("Oct")
+  %B\t Month name ("October")
+  %d\t Zero-prefixed day of the month (01..31)
+  %e\t Day of the month (1..31)
+  %j\t Zero-prefixed day of the year (001..366)
+  %m\t Zero-prefixed month of the year (01..12)
+  %U\t Week number of the current year (with Sunday being first day of the week) (00..53)
+  %W\t Week number of the current year (with Monday being first day of the week) (00..53)
+  %w\t Day of the week (where Sunday is 0) (0..6)
+  %x\t System dependent representation for the date alone
+  %y\t Year without a century (00..99)
+  %Y\t Year with a century
+
+Time
+  %H\t Zero-prefixed hour (00..23)
+  %I\t Zero-prefixed hour (01..12)
+  %l\t Hour (1..12)
+  %M\t Zero-prefixed minutes (00..59)
+  %N\t Fractional seconds digits, default is 9 digits (nanosecond)
+  %P\t Meridian indicator (am/pm)
+  %p\t Meridian indicator (AM/PM)
+  %S\t Zero-prefixed Seconds (00..60)
+  %X\t System dependent representation for the time alone
+  %Z\t Time zone name
+
+Other
+  %c\t System dependent date and time representation
+  %%\t "%" character itself""",
+    ]
+)
