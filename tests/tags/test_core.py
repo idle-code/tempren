@@ -3,13 +3,14 @@ from typing import Optional
 
 import pytest
 
-from tempren.path_generator import File
+from tempren.path_generator import ExpressionEvaluationError, File
 from tempren.tags.core import (
     AsSizeTag,
     BaseTag,
     CountTag,
     DefaultTag,
     DirTag,
+    EvalTag,
     ExtTag,
     IsMimeTag,
     MimeExtTag,
@@ -534,3 +535,20 @@ class TestRoundTag:
         rounded = tag.process(nonexistent_file, "123.456")
 
         assert rounded == "123"
+
+
+class TestEvalTag:
+    def test_empty_context(self, nonexistent_file: File):
+        tag = EvalTag()
+        tag.configure()
+
+        with pytest.raises(ExpressionEvaluationError):
+            tag.process(nonexistent_file, "")
+
+    def test_numeric_expression(self, nonexistent_file: File):
+        tag = EvalTag()
+        tag.configure()
+
+        result = tag.process(nonexistent_file, "2 + 3")
+
+        assert result == 5

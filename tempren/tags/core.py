@@ -7,6 +7,7 @@ from typing import Any, Optional, Union
 import magic
 import pathvalidate
 
+from tempren.path_generator import evaluate_expression
 from tempren.template.path_generators import File
 from tempren.template.tree_elements import Tag
 
@@ -283,3 +284,16 @@ class RoundTag(Tag):
         else:
             rounded_number = floor(number)
         return str(rounded_number)
+
+
+class EvalTag(Tag):
+    """Evaluate context as a Python expression"""
+
+    require_context = True
+
+    def configure(self):
+        super().configure()
+
+    def process(self, file: File, context: Optional[str]) -> Any:  # type ignore
+        assert context is not None
+        return evaluate_expression(context)
