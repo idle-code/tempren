@@ -6,6 +6,7 @@ from math import ceil, floor
 from pathlib import Path
 from typing import Any, Optional, Union
 
+import isodate
 import magic
 import pathvalidate
 
@@ -323,8 +324,8 @@ class AsTimeTag(Tag):
 AsTimeTag.__doc__ = "\n".join(
     [
         str(AsTimeTag.__doc__),
-        "Possible fields:",
-        """Date
+        """Possible fields:
+Date
   %a\t Abbreviated weekday name ("Mon")
   %A\t Weekday name ("Monday")
   %b\t Abbreviated month name ("Oct")
@@ -354,6 +355,49 @@ Time
 
 Other
   %c\t System dependent date and time representation
+  %%\t "%" character itself""",
+    ]
+)
+
+
+class AsDurationTag(Tag):
+    """Re-format provided duration (in ISO 8601 representation)"""
+
+    require_context = True
+
+    destination_format: str
+
+    def configure(self, format: str):  # type: ignore
+        """
+        :param format: strftime format to use
+        """
+        self.destination_format = format
+
+    def process(self, file: File, context: Optional[str]) -> str:  # type: ignore
+        assert context is not None
+        parsed_duration = isodate.parse_duration(context)
+        return isodate.strftime(parsed_duration, self.destination_format)
+
+
+AsDurationTag.__doc__ = "\n".join(
+    [
+        str(AsDurationTag.__doc__),
+        """Possible fields:
+  %j\t Zero-prefixed day of the year (001..366)
+  %d\t Zero-prefixed day of the month (01..31)
+  %m\t Zero-prefixed month (01..12)
+  %W\t Week number of the current year (with Monday being first day of the week) (00..53)
+  %w\t Day of the week (where Monday is 0) (0..6)
+  %Y\t Year with a century (four digits)
+  %C\t Century (00..99)
+  %H\t Zero-prefixed hour (00..23)
+  %M\t Zero-prefixed minutes (00..59)
+  %S\t Zero-prefixed seconds (00..61)
+  %f\t Zero-prefixed microsecond (0..999999)
+  %z\t UTC offset in the form +HHMM or -HHMM (if present)
+  %Z\t Time zone name (if present)
+  %P\t ISO8601 duration format
+  %p\t ISO8601 duration format in weeks
   %%\t "%" character itself""",
     ]
 )

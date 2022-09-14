@@ -5,6 +5,7 @@ import pytest
 
 from tempren.path_generator import ExpressionEvaluationError, File
 from tempren.tags.core import (
+    AsDurationTag,
     AsSizeTag,
     AsTimeTag,
     BaseTag,
@@ -570,3 +571,20 @@ class TestAsTimeTag:
         result = tag.process(nonexistent_file, "2020-10-15T11:33:39")
 
         assert result == "15-10-20"
+
+
+class TestAsDurationTag:
+    def test_invalid_input(self, nonexistent_file: File):
+        tag = AsDurationTag()
+        tag.configure("%h%m%s")
+
+        with pytest.raises(ValueError):
+            tag.process(nonexistent_file, "foobar")
+
+    def test_valid_format(self, nonexistent_file: File):
+        tag = AsDurationTag()
+        tag.configure("%S-%M-%H-%d-%m-%Y")
+
+        result = tag.process(nonexistent_file, "P1Y2M3DT4H5M6S")
+
+        assert result == "06-05-04-03-02-0001"
