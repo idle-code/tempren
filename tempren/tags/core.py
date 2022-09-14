@@ -401,3 +401,34 @@ AsDurationTag.__doc__ = "\n".join(
   %%\t "%" character itself""",
     ]
 )
+
+
+_supported_bases = {2: "b", 8: "o", 10: "d", 16: "x"}
+
+
+class AsIntTag(Tag):
+    """Converts integer from the context from one base to another (removing leading zeros if necessary)"""
+
+    require_context = True
+
+    src_base: int
+    dst_base: int
+
+    def configure(self, src_base: int = 10, dst_base: int = 10):  # type: ignore
+        """
+        :param src_base: source base
+        :param dst_base: destination base
+        Supported bases are: 2, 8, 10 and 16
+        """
+        if src_base not in _supported_bases:
+            raise ValueError(f"Unsupported source base: {src_base}")
+        if dst_base not in _supported_bases:
+            raise ValueError(f"Unsupported destination base: {dst_base}")
+        self.src_base = src_base
+        self.dst_base = dst_base
+
+    def process(self, file: File, context: Optional[str]) -> str:
+        assert context is not None
+
+        parsed_number = int(context, base=self.src_base)
+        return format(parsed_number, _supported_bases[self.dst_base])

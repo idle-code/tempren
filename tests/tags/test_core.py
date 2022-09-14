@@ -6,6 +6,7 @@ import pytest
 from tempren.path_generator import ExpressionEvaluationError, File
 from tempren.tags.core import (
     AsDurationTag,
+    AsIntTag,
     AsSizeTag,
     AsTimeTag,
     BaseTag,
@@ -588,3 +589,44 @@ class TestAsDurationTag:
         result = tag.process(nonexistent_file, "P1Y2M3DT4H5M6S")
 
         assert result == "06-05-04-03-02-0001"
+
+
+class TestAsIntTag:
+    def test_invalid_input(self, nonexistent_file: File):
+        tag = AsIntTag()
+        tag.configure()
+
+        with pytest.raises(ValueError):
+            tag.process(nonexistent_file, "foobar")
+
+    def test_positive_number(self, nonexistent_file: File):
+        tag = AsIntTag()
+        tag.configure()
+
+        number = tag.process(nonexistent_file, "10")
+
+        assert number == "10"
+
+    def test_remove_leading_zeros(self, nonexistent_file: File):
+        tag = AsIntTag()
+        tag.configure()
+
+        number = tag.process(nonexistent_file, "023")
+
+        assert number == "23"
+
+    def test_hex_to_dec(self, nonexistent_file: File):
+        tag = AsIntTag()
+        tag.configure(16, 10)
+
+        number = tag.process(nonexistent_file, "BEEF")
+
+        assert number == "48879"
+
+    def test_oct_to_bin(self, nonexistent_file: File):
+        tag = AsIntTag()
+        tag.configure(8, 2)
+
+        number = tag.process(nonexistent_file, "776")
+
+        assert number == "111111110"
