@@ -599,6 +599,18 @@ class TestAsIntTag:
         with pytest.raises(ValueError):
             tag.process(nonexistent_file, "foobar")
 
+    def test_invalid_source_base(self):
+        tag = AsIntTag()
+
+        with pytest.raises(ValueError):
+            tag.configure(src_base=13)
+
+    def test_invalid_destination_base(self):
+        tag = AsIntTag()
+
+        with pytest.raises(ValueError):
+            tag.configure(dst_base=13)
+
     def test_positive_number(self, nonexistent_file: File):
         tag = AsIntTag()
         tag.configure()
