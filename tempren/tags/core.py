@@ -216,10 +216,10 @@ class AsSizeTag(Tag):
 
     _unit_weights = {
         "k": 1024,
-        "m": 1024 ** 2,
-        "g": 1024 ** 3,
-        "t": 1024 ** 4,
-        "p": 1024 ** 5,
+        "m": 1024**2,
+        "g": 1024**3,
+        "t": 1024**4,
+        "p": 1024**5,
     }
 
     def configure(self, unit: str, ndigits: Optional[int] = None):  # type: ignore

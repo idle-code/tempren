@@ -1515,7 +1515,7 @@ class TagTemplateLexer(Lexer):
     ARG_NAME = 18
     ARG_EQUALS = 19
 
-    channelNames = [u"DEFAULT_TOKEN_CHANNEL", u"HIDDEN"]
+    channelNames = ["DEFAULT_TOKEN_CHANNEL", "HIDDEN"]
 
     modeNames = ["DEFAULT_MODE", "TAG_MODE", "ARGS_MODE"]
 
