@@ -27,7 +27,7 @@ You can also take a look on the following examples.
 
 ## Examples
 **Note: When experimenting on your own please use `--dry-run` flag!** \
-**Tempren will not override your files by default but invalid template can mess them up a bit.**
+**Tempren will not override your files by default but invalid template can mangle their names.**
 
 Cleaning up names for sensitive (e.g. FAT32) filesystems:
 ```commandline
