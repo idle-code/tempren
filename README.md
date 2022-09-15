@@ -3,6 +3,7 @@
 ![run-tests](https://github.com/idle-code/tempren/actions/workflows/run-tests.yml/badge.svg)
 [![codecov](https://codecov.io/gh/idle-code/tempren/branch/develop/graph/badge.svg?token=1CR2PX6GYB)](https://codecov.io/gh/idle-code/tempren)
 [![PyPI version](https://badge.fury.io/py/tempren.svg)](https://badge.fury.io/py/tempren)
+[![pre-commit.ci status](https://results.pre-commit.ci/badge/github/idle-code/tempren/develop.svg)](https://results.pre-commit.ci/latest/github/idle-code/tempren/develop)
 
 `tempren` is a powerful batch file renamer that can generate filenames based on flexible template expressions.
 It can create new, modify existing filenames or sort files into directories based on their attributes (metadata).
@@ -10,9 +11,9 @@ Rich library of build-in tags allow for easy metadata extraction from common fil
 
 ## Features
 - Template-based filename/path generation
-- Configurable file selection (filtering)
+- Audio/Video/Images/etc metadata extraction
+- Configurable, metadata-based file selection (filtering)
 - Metadata-based sorting
-- Multimedia metadata extraction
 
 ## Installation
 Currently only PyPI installation is supported, just run following command:
@@ -99,6 +100,5 @@ Renamed: 03-168948-Roger Subirana Mata-Thryst.mp3
 ```
 
 ## Contributing
-
-If you noticed a bug please or have and idea for new tag please open an issue with appropriate tags.
-If you would like to contribute to the development please visit [contributing page](CONTRIBUTING.md).
+If you noticed a bug or have and idea for new tag please open an issue with appropriate tags.
+If you would like to contribute to the development you can visit [contributing page](CONTRIBUTING.md) designed specially for that.
