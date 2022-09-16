@@ -1,0 +1,21 @@
+name: tempren
+base: core20
+version: '0.6.0'
+summary: Template-based file renaming utility
+description: |
+  tempren is a powerful batch file renamer that can generate filenames based on flexible template expressions.
+  It can create new, modify existing filenames or sort files into directories based on their attributes (metadata).
+  Rich library of build-in tags allow for easy metadata extraction from common file types.
+grade: devel # must be 'stable' to release into candidate/stable channels
+confinement: strict
+
+parts:
+  tempren:
+    plugin: python
+    python-packages: [tempren]
+
+apps:
+  tempren:
+    command: bin/tempren
+    plugs:
+      - home
