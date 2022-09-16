@@ -12,7 +12,7 @@ poetry version $BUMP_RULE
 NEW_VERSION=$(poetry version --short)
 
 # Update snap package version
-sed -ei "s/version: .+$/version: '$NEW_VERSION'/" snap/snapcraft.yaml
+sed -i -e "s/^version: '[[:digit:]]\.[[:digit:]]\.[[:digit:]]'/version: '$NEW_VERSION'/g" snap/snapcraft.yaml
 
 git commit -a -m "Version v$NEW_VERSION"
 git tag "v$NEW_VERSION"
