@@ -185,7 +185,13 @@ class TagFactoryFromClass(TagFactory):
         argument_description = self._create_arguments_description()
         if argument_description is None:
             return single_line_signature
-        return "\n".join((single_line_signature, argument_description))
+        signature_start_length = 1 + len(self.tag_name) + 1
+        return "\n".join(
+            (
+                single_line_signature,
+                textwrap.indent(argument_description, " " * signature_start_length),
+            )
+        )
 
     def _create_configuration_signature(self) -> str:
         import inspect
@@ -210,7 +216,7 @@ class TagFactoryFromClass(TagFactory):
             argument_description.append(f"{argument.arg_name} - {argument.description}")
         if not argument_description:
             return None
-        return textwrap.indent("\n".join(argument_description), "  ")
+        return "\n".join(argument_description)
 
     @property
     def short_description(self) -> str:

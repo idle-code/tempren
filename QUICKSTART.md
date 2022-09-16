@@ -10,7 +10,7 @@ You will need around 5 minutes total to work through it.
 
 For more comprehensive documentation you can always refer to the [manual](MANUAL.md).
 
-**Note: When playing with tempren make sure to use `--dry-run` (`-d`) flag so that the actual files are not accidentally changed.**
+> **Note: When playing with tempren make sure to use `--dry-run` (`-d`) flag so that the actual files are not accidentally changed.**
 
 ## Installation
 
@@ -28,17 +28,75 @@ Tempren have two main modes of operation: **name** and **path**.
 
 In the **name** mode (default, enabled by `-n`, `--name` flag), the template is used for filename generation only.
 This is useful if you want to operate on files specified on the command line or in a single directory.
+**TODO: files cannot be specified on the command line... yet**
 
 With **path** mode (enabled by `-p`, `--path` flag), the template generates a whole path (relative to the input directory).
 This way you can sort files into dynamically generated catalogues.
 
 ## Tag template syntax
-**Raw text**
-**Tag name (and optional category)**
-**Arguments + types/kinds**
-**Contexts**
+The core concept of `tempren` is **tag template** or **template** for short.
+To generate multiple filenames from a single prompt you need a way to distinguish parts that are different between names and tags in the template take care of that.
+
+Template consist of _raw text_ interleaved with _tag invocations_. For example:
+```
+Raw text with a %TagCategory.TagName() in it
+```
+As you can see tag invocations really stand out - they always start with `%` symbol followed by an optional tag category and name.
+At the end of tag invocation there is an empty argument list. Those familiar with programming quickly notice similarity to the function invocation.
+And rightly so - each tag invocation is in fact _called_ for every file which name `tempren` attempts to change.
+This is the way `tempren` introduces differences in between processed files.
+
+Many tags don't require any arguments but some can be configured to further tweak their behaviour.
+For example:
+```
+Image_%Count(width=4)%Ext()
+```
+This is our first template that could actually be used to generate new names.\
+Here `Count` tag is used as a simple counter to generate 4-digit numbers for some kind of images.
+`Ext` tag renders original file extension - which you often don't want to change.
+
+> **Note: By default (when no `-s`/`--sort` flag is used) `tempren` will process files in order provided by the OS.**\
+> This is different to what you usually see in the file manager and may appear random.\
+> `Count` tag doesn't know order of processed files and will just provide numbers for each invocation... numbering files randomly if no sorting is specified.
+
+### Tag configuration arguments
+Tag arguments can have three types:
+- `int` for decimal numbers
+- `str` for quoted string literals (you can use single `'` or double `"` quotation marks)
+- `bool` for boolean flags
+
+You can see what types of arguments a tag expects by looking at its documentation, for example:
+```commandline
+$ tempren --help Trim
+
+  %Trim(width: int, left: bool = False, right: bool = False){...}
+        width - width of resulting trimmed context or (if negative) number of characters to trim
+        left - trim characters from the left
+        right - trim characters from the right
+
+Trims context to a specified width by cropping left/right side off
+```
+tells you that `Trim` tag requires you to provide number of characters to trim and a side.
+With this information you can invoke it like: `%Trim(width=3, right=True)` or `%Trim(3, right=true)` or even `%Trim(3, right)`.
+This syntax is similar to python invocation with additional shortcut for boolean flags, which if specified are set to `True`.
+
+### Contexts
+For processor tags to be useful, there should be a way to limit their scope of operation - **tag context** is a way to do it.
+
+When you look at the tag signature, sometimes you can notice curly braces with ellipsis within: `{...}`
+This indicates that tag requires context to work on.
+If this symbol is additionally enclosed in square braces - `[{...}]` - it means that context for this tag is optional.
+`Trim` tag above requires context to work on. `Count` on the other hand doesn't need it and you will get an error if you try to provide it regardless.
+
+### Escaping
+`tempren`
 **Escaping**
 **CLI escaping considerations**
+When running `tempren` from the shell you should be careful to properly escape characters in the template that may be interpreted by it.
+Good way to do it is to use single quotes `'` for template arguments and double `"` for string tag arguments inside it:
+```commandline
+$ tempren -d
+```
 
 ## Available tags
 **Built-in listing and help**
@@ -47,7 +105,7 @@ tempren -l
 ```
 
 ```commandline
-tempren -h <tag name>
+tempren -h <TagName>
 ```
 
 **Tag kinds (metadata extraction/processing)**
@@ -63,6 +121,9 @@ Most processor tags are versatile enough to justify they placement in `Core` and
 ```
 %AsSize('kb'){%Size()}KB
 ```
+
+
+
 
 * * *
 

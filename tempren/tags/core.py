@@ -71,6 +71,7 @@ class ExtTag(Tag):
 
     If no context is provided, current file path is used and extension is extracted from it.
     If context is present, it is parsed as a path and file extension is extracted from it.
+    If file doesn't have an extension, an empty string will be rendered.
     """
 
     require_context = None

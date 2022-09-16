@@ -148,7 +148,8 @@ class _ShowHelp(argparse.Action):
             except TagError as tag_error:
                 parser.exit(ErrorCode.USAGE_ERROR, str(tag_error))
                 return
-            log.info(tag_factory.configuration_signature)
+            log.info("")
+            log.info(indent(tag_factory.configuration_signature, "  "))
             log.info("")
             log.info(tag_factory.short_description)
             if tag_factory.long_description:
