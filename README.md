@@ -1,4 +1,5 @@
-# Tempren - template-based file renaming utility
+<h1 align="center">Tempren</h1>
+<p align="center">Template-based file renaming utility</p>
 
 ![run-tests](https://github.com/idle-code/tempren/actions/workflows/run-tests.yml/badge.svg)
 [![codecov](https://codecov.io/gh/idle-code/tempren/branch/develop/graph/badge.svg?token=1CR2PX6GYB)](https://codecov.io/gh/idle-code/tempren)
