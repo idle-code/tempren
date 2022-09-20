@@ -1,5 +1,4 @@
-<h1 align="center">Tempren</h1>
-<p align="center">Template-based file renaming utility</p>
+# Tempren - template-based file renaming utility
 
 ![run-tests](https://github.com/idle-code/tempren/actions/workflows/run-tests.yml/badge.svg)
 [![codecov](https://codecov.io/gh/idle-code/tempren/branch/develop/graph/badge.svg?token=1CR2PX6GYB)](https://codecov.io/gh/idle-code/tempren)
@@ -30,7 +29,9 @@ You can also take a look on the following examples.
 **Note: When experimenting on your own please use `--dry-run` flag!** \
 **Tempren will not override your files by default but invalid template can mangle their names.**
 
-Cleaning up names for sensitive (e.g. FAT32) filesystems:
+<details>
+<summary>Cleaning up names for sensitive (e.g. FAT32) filesystems</summary>
+
 ```commandline
 $ tempren --recursive --name "%Strip(){%Base()|%Unidecode()|%Sanitize()|%Collapse()}%Ext()" ./Some\ OST/
 Renamed: Disk 1/14 - 接近.flac
@@ -47,8 +48,11 @@ Renamed: Disk 1/09 - 阿良句のテーマ(ハイ).flac
      to: Disk 1/09 - A Liang Ju notema(hai).flac
 ...
 ```
+</details>
 
-Adding resolution to the image files:
+<details>
+<summary>Adding resolution to the image files</summary>
+
 ```commandline
 $ tempren --name "%Base()_%Image.Width()x%Image.Height()%Ext()" ~/Pictures/Wallpapers
 Renamed: 0sa5yfiskqr21.jpg
@@ -63,8 +67,11 @@ Renamed: 1211740803547.jpg
      to: 1211740803547_1200x1109.jpg
 ...
 ```
+</details>
 
-Sorting files into directories based on their MIME type:
+<details>
+<summary>Sorting files into directories based on their MIME type</summary>
+
 ```commandline
 $ tempren -d --path "%Capitalize(){%Mime(subtype)}/%Name()" ~/Downloads
 Renamed: dotnet-install.sh
@@ -83,8 +90,11 @@ Renamed: antlr-4.9.2-complete.jar
      to: Java-archive/antlr-4.9.2-complete.jar
 ...
 ```
+</details>
 
-Adding checksums to the names of the audio files:
+<details>
+<summary>Adding checksums to the names of the audio files</summary>
+
 ```commandline
 $ tempren --filter-template "%IsMime('audio')" --name "%Base() [%Upper(){%Crc32()}]%Ext()" ./Roger\ Subirana\ Mata\ -\ Point\ of\ no\ return
 Renamed: 10-169205-Roger Subirana Mata-Island of light.mp3
@@ -99,6 +109,8 @@ Renamed: 03-168948-Roger Subirana Mata-Thryst.mp3
      to: 03-168948-Roger Subirana Mata-Thryst [5D23E43B].mp3
 ...
 ```
+</details>
+
 
 ## Contributing
 If you noticed a bug or have and idea for new tag please open an issue with appropriate tags.

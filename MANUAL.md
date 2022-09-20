@@ -76,7 +76,9 @@ Raw text with a %UniqueTag() in it
 
 ## Tag configuration arguments
 
-**TODO: reference to documentation types**
+Some tags can be or even need to be configured before they can do their work.
+To do so, with every invocation user is expected to pass configuration arguments in tags' argument list.
+What arguments are expected and in what order can be found by looking at built in [tag documentation](#Builtin documentation).
 
 Argument list follows tag name and is contained in parentheses: `()`.
 Each argument value is separated by a single coma `,` (with optional space) and can be one of three types:
@@ -89,8 +91,18 @@ Numbers can be accepted only in decimal (base 10) representation without fractio
 String literals may contain any character except for used quote mark - if quote mark is required,
 it should be prefixed with a single  backslash character, i.e. `\'` or `\"`.
 
-For boolean flags can accept two types of values: `True`/`true` or `False`/`false`.
-Additionally there exist shortcut for
+Boolean flags can accept two types of values: `True`/`true` or `False`/`false`.\
+Additionally there exist shortcut for setting flag to `True` - just use flag name as an argument value (similar to explicit names).
+Therefore, following invocations are equivalent:
+```
+%Trim(-2, left=True)
+%Trim(-2, true)
+%Trim(-2, left)
+```
+
+Order of argument is important if explicit names are not used: `%Trim(-1, True)`\
+When explicit argument names are used, arguments can be out of order: `%Trim(left, width=-1)`
+
 
 **TODO: explicit argument names**
 
