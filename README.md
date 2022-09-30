@@ -5,8 +5,8 @@
 [![PyPI version](https://badge.fury.io/py/tempren.svg)](https://badge.fury.io/py/tempren)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/idle-code/tempren/develop.svg)](https://results.pre-commit.ci/latest/github/idle-code/tempren/develop)
 
-`tempren` is a powerful file renaming utility that uses flexible template expressions to create new file paths and names. 
-New file paths can be based on original filename, created independently or from the underlying file's tags. 
+`tempren` is a powerful file renaming utility that uses flexible template expressions to create new file paths and names.
+New file paths can be based on original filename, created independently or from the underlying file's tags.
 Rich library of built-in tag extraction modules helps with tagging many common file types.
 
 ## Features
