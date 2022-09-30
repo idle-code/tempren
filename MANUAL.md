@@ -153,8 +153,8 @@ There are three types of a filtering expressions supported:
 
 ## Template-based filtering
 Template-based filtering allows to include/exclude files based on their metadata.
-Tag template can be passed with `--filter-template`/`-ft` flag.
-Filtering template is rendered for each file and then, it is evaluated as Python expression.
+Filter expression can be passed with `--filter-template`/`-ft` flag.
+Filter expression tag template is rendered for each file and then, it is evaluated as Python expression.
 If result of evaluation is _truthy_, the file is considered for the renaming.
 
 For example, the following filtering template will exclude files larger than 1024 bytes:
@@ -185,9 +185,31 @@ Sometimes it might be easier to specify filter for files which should **not** be
 To negate/invert any filtering expression you can use `--filter-invert`/`-fi` flag.
 
 # Template-based sorting
+In some cases (i.e. when `Count` tag is used), files should be processed in specific order to make renaming useful.
+`--sort`/`-s` flag can be used to order files considered for renaming based on their metadata.
+
+Sort expression is similar to the filter expression in a way that it also should generate valid Python value.
+Tag template evaluated from rendered sorting expression is used as key for the sorting.
+
+For example, to order files based their original name, following expression can be used:
+```
+%Name()
+```
+
+To add another sorting criteria (for cases where first key may repeat across files), a comma `,` can be used as separator.
+
+For example, to order files based their extension **then** their size, following expression can be used:
+```
+%Ext(), %Size()
+```
+
+
 ## Sorting order inversion
+By default, sorting expression order files in the ascending order.
+To change this behaviour, `--sort-invert`/`-si` flag can be used.
 
 # Conflict resolution strategies
+TODO
 
 # Various options
 ## Dry run
@@ -202,6 +224,7 @@ and decreased by `--quiet`/`-q` flag.
 Normal messages are directed to the standard output (`stdout`) while warnings and errors are sent to `stderr`.
 
 ## Hidden files handling
+TODO
 
 ## Symbolic links handling
-**TODO: Implement?**
+TODO: Implement
