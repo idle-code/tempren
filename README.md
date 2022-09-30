@@ -113,5 +113,5 @@ Renamed: 03-168948-Roger Subirana Mata-Thryst.mp3
 
 
 ## Contributing
-If you noticed a bug or have and idea for new tag please open an issue with appropriate tags.
+If you noticed a bug or have an idea for a new tag please open an issue with appropriate tags.
 If you would like to contribute to the development you can visit [contributing page](CONTRIBUTING.md) designed specially for that.

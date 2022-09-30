@@ -33,15 +33,14 @@ $ sudo snap install tempren
 When installed as a snap package, `tempren` will be kept up-to-date automatically - no user action is required.
 
 # Builtin documentation
-Short documentation for all command line arguments can always be retrieved when invoking tool with `--help`/`-h` flag:
+Short documentation for all command line arguments can always be retrieved via `--help`/`-h` flag:
 ```commandline
 $ tempren --help
 ```
 
 Options which documentation starts with `(default)` do not have to be specified explicitly on the command line.
 
-`--help`/`-h` flag can also be used to display tag-specific documentation when tag name is given as an argument,
-which (due to large library of tags and their variety) is only available in this form:
+`--help`/`-h` flag can also be used to display tag-specific documentation when tag name is given as an argument:
 ```commandline
 $ tempren --help [Category.]TagName
 ```
@@ -50,7 +49,7 @@ To find out which tags are shipped with installation, `--list-tags`/`-l` flag ca
 ```commandline
 $ tempren --list-tags
 ```
-Output of this command will list all available tag names sorted by name and grouped by category they belong to.
+The output of this command will list all available tag names sorted by name and grouped by category they belong to.
 
 # Template syntax
 Template pattern consist of a _raw text_ interleaved with _tag invocations_:
@@ -65,22 +64,21 @@ Tag invocation starts with `%` symbol followed by _tag name_, _argument list_ an
 **TODO: Reference to python function invocation**
 
 ## Tag name
-Fully qualified tag name consists of category and tag name itself separated by a single dot `.`.
-Tag name is case-sensitive and usually conforms to CamelCaseNamingConvention.
-Category name is case-insensitive but to keep convention consistent it is also presented in the same (CamelCase) manner.
+A fully qualified tag name consists of a category and tag name separated by a single dot `.`.
+The tag name is case-sensitive and conforms to CamelCaseNamingConvention.
+The category name is case-insensitive but to keep convention consistent it is also presented in the same (CamelCase) manner.
 
-If tag name is unique across categories it can be used without explicit category specification (and separating dot):
+If the tag name is unique across categories it can be used without explicit category specification (and separating dot) like this:
 ```
 Raw text with a %UniqueTag() in it
 ```
 
 ## Tag configuration arguments
+Some tags can or have to be configured before they can do their work.
+To do so, with every invocation user is expected to pass configuration arguments in the tags' argument list.
+What arguments are expected and in what order can be found by looking at built-in [tag documentation](#Builtin documentation).
 
-Some tags can be or even need to be configured before they can do their work.
-To do so, with every invocation user is expected to pass configuration arguments in tags' argument list.
-What arguments are expected and in what order can be found by looking at built in [tag documentation](#Builtin documentation).
-
-Argument list follows tag name and is contained in parentheses: `()`.
+Argument list follows tag name and is contained between parentheses: `()`.
 Each argument value is separated by a single coma `,` (with optional space) and can be one of three types:
 - `int` for integer numbers (that match `-?[0-9]+` regex)
 - `str` for quoted string literals (both single `'` and double `"` quotation marks can be used)
@@ -88,8 +86,8 @@ Each argument value is separated by a single coma `,` (with optional space) and 
 
 Numbers can be accepted only in decimal (base 10) representation without fraction part: `%Count(0, 1, 4)`
 
-String literals may contain any character except for used quote mark - if quote mark is required,
-it should be prefixed with a single  backslash character, i.e. `\'` or `\"`.
+String literals may contain any character except for the used quote mark - if quote mark shall be passed,
+it should be escaped (prefixed) with a single backslash character, i.e. `\'` or `\"`.
 
 Boolean flags can accept two types of values: `True`/`true` or `False`/`false`.\
 Additionally there exist shortcut for setting flag to `True` - just use flag name as an argument value (similar to explicit names).
@@ -100,13 +98,20 @@ Therefore, following invocations are equivalent:
 %Trim(-2, left)
 ```
 
-Order of argument is important if explicit names are not used: `%Trim(-1, True)`\
-When explicit argument names are used, arguments can be out of order: `%Trim(left, width=-1)`
+Function prototype (which can be found in tag build-in documentation) describes names for every argument:
+```
+%Trim(width: int, left: bool = False, right: bool = False){...}
+```
+Prototype above, indicates that this tag accepts up to 3 arguments named `width`, `left` and `right` accordingly.
 
+User can prefix argument value with its name and `=` symbol to specify values just for the named arguments: `%Trim(-2, right=True)`
+If all passed argument are explicitly named, their values can be out of order: `%Trim(left, width=-1)`
 
-**TODO: explicit argument names**
+Order of argument is important if explicit names are not used: `%Trim(-1, True)` will set `left` flag because it's second in the argument list.
 
 ## Context
+TODO:
+
 ## Pipe list sugar
 
 # Modes of operation
