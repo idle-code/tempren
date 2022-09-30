@@ -162,7 +162,11 @@ For example, the following filtering template will exclude files larger than 102
 %Size() <= 1024
 ```
 
-Standard Python boolean operators (`and`, `or`, `not`) can be used to chain multiple conditions.
+Standard Python boolean operators (`and`, `or`, `not`) and build-in functions can be used to chain multiple conditions.\
+For example, to include only image files that are not PNGs, following filter expression can be used:
+```
+%IsMime("image") and not %Ext().endswith("png")
+```
 
 ## Glob filtering
 Glob filtering allows to include/exclude files based on glob expression matching their filenames.
@@ -224,7 +228,11 @@ and decreased by `--quiet`/`-q` flag.
 Normal messages are directed to the standard output (`stdout`) while warnings and errors are sent to `stderr`.
 
 ## Hidden files handling
-TODO
+By default, `tempren` won't consider hidden files or directories for renaming.
+To consider such files for processing, `--include-hidden`/`-ih` flag can be used.
+
+> Note: `--include-hidden` in combination with `--recursive` flag, change how file discovery is performed.
+> When both flags are specified, hidden directories and any files in them **will be** considered for renaming.
 
 ## Symbolic links handling
 TODO: Implement
