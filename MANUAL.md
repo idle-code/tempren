@@ -52,6 +52,27 @@ $ tempren --list-tags
 ```
 The output of this command will list all available tag names sorted by name and grouped by category they belong to.
 
+
+# Modes of operation
+Tempren have two main modes of operation: **name** and **path**.
+
+In the **name** mode (default, enabled by `--name`/`-n` flag), the template is used for filename generation only.
+It is safer mode because path separator elements in generated path will result in an error.
+<!---
+This is useful if you want to operate on files specified on the command line or in a single directory.
+**TODO: files cannot be specified on the command line... yet**
+--->
+
+With **path** mode (enabled by `--path`/`-p` flag), the template generates a whole path (relative to the input directory).
+This way you can sort files into dynamically generated catalogues.
+
+## Recursive file discovery
+By default, `tempren` will not descend into subdirectories of specified input directory.
+To allow recursive file discovery, `--recurse`/`-r` flag have to be specified.
+
+> Note: If `--include-hidden` flag is used, hidden directories will also be scanned.
+
+
 # Template syntax
 Template pattern consist of a _raw text_ interleaved with _tag invocations_:
 ```
@@ -59,10 +80,6 @@ Raw text with a %TagCategory.TagName() in it
 ```
 Raw text is treated as constant - it doesn't change across template evaluations.
 Tag invocation starts with `%` symbol followed by _tag name_, _argument list_ and (optionally) its _context_.
-
-**TODO: Semantic meaning of tag invocation**
-**TODO: Semantic meaning of argument list and context**
-**TODO: Reference to python function invocation**
 
 ## Tag name
 A fully qualified tag name consists of a category and tag name separated by a single dot `.`.
@@ -125,25 +142,6 @@ This is indicated by `{...}` symbol at the end of tag prototype.
 <!---
 ## Pipe list sugar
 --->
-
-# Modes of operation
-Tempren have two main modes of operation: **name** and **path**.
-
-In the **name** mode (default, enabled by `--name`/`-n` flag), the template is used for filename generation only.
-It is safer mode because path separator elements in generated path will result in an error.
-<!---
-This is useful if you want to operate on files specified on the command line or in a single directory.
-**TODO: files cannot be specified on the command line... yet**
---->
-
-With **path** mode (enabled by `--path`/`-p` flag), the template generates a whole path (relative to the input directory).
-This way you can sort files into dynamically generated catalogues.
-
-## Recursive file discovery
-By default, `tempren` will not descend into subdirectories of specified input directory.
-To allow recursive file discovery, `--recurse`/`-r` flag have to be specified.
-
-> Note: If `--include-hidden` flag is used, hidden directories will also be scanned.
 
 # Filtering
 There are three types of a filtering expressions supported:

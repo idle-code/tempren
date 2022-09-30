@@ -21,9 +21,14 @@ Currently only PyPI installation is supported, just run following command:
 $ pip install [--user] tempren
 ```
 
+## Documentation
+[Manual](MANUAL.md) gives a tour of all `tempren` features and (until quickstart is created) should work as a guide.
+
+<!--
 ## [Quickstart](QUICKSTART.md)
 For quick, five-minute introduction to the most of `tempren` features please refer to the [quickstart](QUICKSTART.md) page.
 You can also take a look on the following examples.
+-->
 
 ## Examples
 **Note: When experimenting on your own please use `--dry-run` flag!** \
