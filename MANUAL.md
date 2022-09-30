@@ -1,4 +1,3 @@
-**TODO: TOC**
 # Installation
 ## PyPI
 If `PIP` is installed on the target system,
@@ -21,6 +20,7 @@ Distribution-specific package manager can often be used, for example:
 $ sudo apt install libmediainfo0v5
 ```
 
+<!--
 ## Snaps
 **TODO: Implement**
 > **Note: Due to limitation of confinement policies, when this installation method is used
@@ -31,6 +31,7 @@ $ sudo snap install tempren
 ```
 
 When installed as a snap package, `tempren` will be kept up-to-date automatically - no user action is required.
+-->
 
 # Builtin documentation
 Short documentation for all command line arguments can always be retrieved via `--help`/`-h` flag:
@@ -98,7 +99,7 @@ Therefore, following invocations are equivalent:
 %Trim(-2, left)
 ```
 
-Function prototype (which can be found in tag build-in documentation) describes names for every argument:
+Tag prototype (which can be found in tag build-in documentation) describes names for every argument:
 ```
 %Trim(width: int, left: bool = False, right: bool = False){...}
 ```
@@ -107,21 +108,35 @@ Prototype above, indicates that this tag accepts up to 3 arguments named `width`
 User can prefix argument value with its name and `=` symbol to specify values just for the named arguments: `%Trim(-2, right=True)`
 If all passed argument are explicitly named, their values can be out of order: `%Trim(left, width=-1)`
 
-Order of argument is important if explicit names are not used: `%Trim(-1, True)` will set `left` flag because it's second in the argument list.
+Order of arguments is important if explicit names are not used: `%Trim(-1, True)` will set `left` flag because it's second in the argument list.
 
 ## Context
-TODO:
+Contexts are parts of tag template expression passed to the tags as a kind of dynamic argument.
+To pass context to the tag invocation, use curly braces `{}` with expression embedded between.
 
+In the following example, `Upper` tag receives context containing processed file extensions and makes it uppercase:
+```
+%Upper(){%Ext()}
+```
+
+Context might be required, optional and forbidden.
+This is indicated by `{...}` symbol at the end of tag prototype.
+
+<!---
 ## Pipe list sugar
+--->
 
 # Modes of operation
 Tempren have two main modes of operation: **name** and **path**.
 
-In the **name** mode (default, enabled by `-n`, `--name` flag), the template is used for filename generation only.
+In the **name** mode (default, enabled by `--name`/`-n` flag), the template is used for filename generation only.
+It is safer mode because path separator elements in generated path will result in an error.
+<!---
 This is useful if you want to operate on files specified on the command line or in a single directory.
 **TODO: files cannot be specified on the command line... yet**
+--->
 
-With **path** mode (enabled by `-p`, `--path` flag), the template generates a whole path (relative to the input directory).
+With **path** mode (enabled by `--path`/`-p` flag), the template generates a whole path (relative to the input directory).
 This way you can sort files into dynamically generated catalogues.
 
 ## Recursive file discovery
@@ -130,8 +145,6 @@ To allow recursive file discovery, `--recurse`/`-r` flag have to be specified.
 
 > Note: If `--include-hidden` flag is used, hidden directories will also be scanned.
 
-
-
 # Filtering
 There are three types of a filtering expressions supported:
 - `template` - tag-template evaluated Python predicate expression, e.g.: `%Size() > 10*1024`
@@ -139,11 +152,37 @@ There are three types of a filtering expressions supported:
 - `regex` - python-flavored regex, e.g.: `.*\.jpe?g`
 
 ## Template-based filtering
+Template-based filtering allows to include/exclude files based on their metadata.
+Tag template can be passed with `--filter-template`/`-ft` flag.
+Filtering template is rendered for each file and then, it is evaluated as Python expression.
+If result of evaluation is _truthy_, the file is considered for the renaming.
+
+For example, the following filtering template will exclude files larger than 1024 bytes:
+```
+%Size() <= 1024
+```
+
+Standard Python boolean operators (`and`, `or`, `not`) can be used to chain multiple conditions.
+
 ## Glob filtering
+Glob filtering allows to include/exclude files based on glob expression matching their filenames.
+
+For example, to rename only files with an `Image_` prefix, following pattern can be used:
+```
+Image_*
+```
+
 ## Regex filtering
+Regular expression filtering allows to include/exclude files based on regex expression matching their filenames.
+
+For example, to rename only files that start with a digit, following pattern can be used:
+```
+^\d.*
+```
+
 ## Filter inversion
 Sometimes it might be easier to specify filter for files which should **not** be included.
-To negate/invert filtering expression you can use `-fi`, `--filter-invert` flag.
+To negate/invert any filtering expression you can use `--filter-invert`/`-fi` flag.
 
 # Template-based sorting
 ## Sorting order inversion
