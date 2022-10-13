@@ -1,3 +1,31 @@
+<!-- TOC -->
+* [Installation](#installation)
+  * [PyPI](#pypi)
+    * [Additional dependencies](#additional-dependencies)
+* [Builtin documentation](#builtin-documentation)
+* [Modes of operation](#modes-of-operation)
+  * [Recursive file discovery](#recursive-file-discovery)
+* [Template syntax](#template-syntax)
+  * [Tag name](#tag-name)
+  * [Tag configuration arguments](#tag-configuration-arguments)
+  * [Context](#context)
+* [Filtering](#filtering)
+  * [Template-based filtering](#template-based-filtering)
+  * [Glob filtering](#glob-filtering)
+  * [Regex filtering](#regex-filtering)
+  * [Filter inversion](#filter-inversion)
+* [Template-based sorting](#template-based-sorting)
+  * [Sorting order inversion](#sorting-order-inversion)
+* [Conflict resolution strategies](#conflict-resolution-strategies)
+* [Various options](#various-options)
+  * [Dry run](#dry-run)
+  * [Verbosity levels](#verbosity-levels)
+  * [Hidden files handling](#hidden-files-handling)
+  * [Symbolic links handling](#symbolic-links-handling)
+<!-- TOC -->
+
+* * *
+
 # Installation
 ## PyPI
 If `PIP` is installed on the target system,
@@ -211,7 +239,13 @@ By default, sorting expression order files in the ascending order.
 To change this behaviour, `--sort-invert`/`-si` flag can be used.
 
 # Conflict resolution strategies
-TODO
+File conflict arises when a template generates the same name for two different files or generated name already exists in the filesystem.
+
+`tempren` supports the following conflict resolution strategies:
+- `stop` - Reports an error and stops program execution (default, enabled with `--conflict-stop`/`-cs` flag)
+- `ignore` - Reports problem as a warning and continue renaming leaving source file name intact (enabled with `--conflict-ignore`/`-ci` flag)
+- `override` - Replaces destination file with the one being processed (enabled with `--conflict-override`/`-co` flag)
+- `manual` - Interactively prompts the user to select one of the above conflict resolutions (enabled with `--conflict-manual`/`-cm` flag)
 
 # Various options
 ## Dry run
