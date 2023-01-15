@@ -69,7 +69,7 @@ ManualConflictResolver = Callable[[Path, Path], Union[ConflictResolutionStrategy
 @dataclass
 class RuntimeConfiguration:
     template: str
-    input_directory: Path
+    input_files: Path
     recursive: bool = False
     include_hidden: bool = False
     dry_run: bool = False
@@ -242,6 +242,15 @@ def build_tag_registry() -> TagRegistry:
     return registry
 
 
+def build_pipelines(
+    config: RuntimeConfiguration,
+    registry: TagRegistry,
+    manual_conflict_resolver: ManualConflictResolver,  # TODO: Move to the RuntimeConfiguration
+) -> [Pipeline]:
+    # FIXME: implement
+    pass
+
+
 def build_pipeline(
     config: RuntimeConfiguration,
     registry: TagRegistry,
@@ -249,7 +258,7 @@ def build_pipeline(
 ) -> Pipeline:
     log.debug("Building pipeline")
     pipeline = Pipeline()
-    pipeline.input_directory = config.input_directory
+    pipeline.input_directory = config.input_files
     tree_builder = TagTreeBuilder()
 
     if config.recursive:

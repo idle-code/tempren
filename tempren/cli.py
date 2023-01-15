@@ -71,11 +71,11 @@ def configure_logging():
     logging.root.addHandler(stderr_handler)
 
 
-def existing_directory(val: str) -> Path:
-    directory_path = Path(val)
-    if not directory_path.is_dir():
-        raise argparse.ArgumentTypeError(f"Directory '{val}' doesn't exists")
-    return directory_path
+def existing_file(val: str) -> Path:
+    input_path = Path(val)
+    if not input_path.exists():
+        raise argparse.ArgumentTypeError(f"Path '{val}' doesn't exists")
+    return input_path
 
 
 def nonempty_string(val: str) -> str:
@@ -364,9 +364,10 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         help="Template used to generate new filename/path",
     )
     parser.add_argument(
-        "input_directory",
-        type=existing_directory,
-        help="Input directory where files to rename are stored",
+        "file",
+        type=existing_file,
+        nargs="+",
+        help="Input files or directories where files to rename are stored",
     )
     parser.add_argument(
         "-l",
@@ -429,7 +430,7 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
 
     configuration = RuntimeConfiguration(
         template=args.template,
-        input_directory=args.input_directory,
+        input_files=args.file[0],
         recursive=args.recursive,
         include_hidden=args.include_hidden,
         dry_run=args.dry_run,
