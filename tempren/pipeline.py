@@ -3,7 +3,7 @@ import os
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Callable, Iterable, Optional, Union
+from typing import Callable, Iterable, List, Optional, Union
 
 from tempren.file_filters import (
     FileFilterInverter,
@@ -69,7 +69,7 @@ ManualConflictResolver = Callable[[Path, Path], Union[ConflictResolutionStrategy
 @dataclass
 class RuntimeConfiguration:
     template: str
-    input_files: Path
+    input_paths: List[Path]
     recursive: bool = False
     include_hidden: bool = False
     dry_run: bool = False
@@ -94,7 +94,6 @@ def manual_resolver_placeholder(
 
 class Pipeline:
     log: logging.Logger
-    _input_directory: Path
     file_gatherer: FileGatherer
     sorter: Optional[Callable[[Iterable[File]], Iterable[File]]] = None
     path_generator: PathGenerator
@@ -108,19 +107,15 @@ class Pipeline:
             manual_resolver_placeholder
         )
 
-    @property
-    def input_directory(self) -> Path:
-        return self._input_directory
-
-    @input_directory.setter
-    def input_directory(self, input_path: Path):
-        self._input_directory = input_path.absolute()
-
     def execute(self):
         all_files = []
-        self.log.info(f"Gathering paths in {self.input_directory}")
-        os.chdir(self.input_directory)
-        for file in self.file_gatherer.gather_in(self.input_directory):
+
+        # Tags will receive a relative path to the processed files,
+        # to make it valid we need to change the current directory before processing:
+        self.log.info(f"Gathering paths in {self.file_gatherer.start_directory}")
+        os.chdir(self.file_gatherer.start_directory)
+
+        for file in self.file_gatherer.gather_files():
             self.log.debug("Checking %s", file)
             if not self.file_filter(file):
                 self.log.debug("%s filtered out", file)
@@ -246,26 +241,37 @@ def build_pipelines(
     config: RuntimeConfiguration,
     registry: TagRegistry,
     manual_conflict_resolver: ManualConflictResolver,  # TODO: Move to the RuntimeConfiguration
-) -> [Pipeline]:
-    # FIXME: implement
-    pass
+) -> List[Pipeline]:
+
+    input_directories = filter(lambda p: p.is_dir(), config.input_paths)
+    input_files = filter(lambda p: p.is_file(), config.input_paths)
+    if any(input_files):
+        raise NotImplementedError("Explicit file processing not implemented")  # yet
+
+    pipelines = []
+    file_gatherer: FileGatherer
+    for directory in input_directories:
+        if config.recursive:
+            file_gatherer = RecursiveFileGatherer(directory)
+        else:
+            file_gatherer = FlatFileGatherer(directory)
+
+        pipelines.append(
+            _build_pipeline(config, file_gatherer, registry, manual_conflict_resolver)
+        )
+    return pipelines
 
 
-def build_pipeline(
+def _build_pipeline(
     config: RuntimeConfiguration,
+    file_gatherer: FileGatherer,
     registry: TagRegistry,
     manual_conflict_resolver: ManualConflictResolver,  # TODO: Move to the RuntimeConfiguration
 ) -> Pipeline:
-    log.debug("Building pipeline")
-    pipeline = Pipeline()
-    pipeline.input_directory = config.input_files
+    log.debug("Building pipeline for %s", file_gatherer.start_directory)
     tree_builder = TagTreeBuilder()
-
-    if config.recursive:
-        pipeline.file_gatherer = RecursiveFileGatherer()
-    else:
-        pipeline.file_gatherer = FlatFileGatherer()
-
+    pipeline = Pipeline()
+    pipeline.file_gatherer = file_gatherer
     pipeline.file_gatherer.include_hidden = config.include_hidden
 
     def _compile_template(template_text: str) -> Pattern:

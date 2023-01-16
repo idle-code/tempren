@@ -25,8 +25,11 @@ class FileGatherer(ABC):
     include_hidden: bool = False
     """Include hidden files and directories when making the search"""
 
+    start_directory: Path
+    """Common base directory for gathered files"""
+
     @abstractmethod
-    def gather_in(self, start_directory: Path) -> Iterable[File]:
+    def gather_files(self) -> Iterable[File]:
         raise NotImplementedError()
 
 
@@ -38,32 +41,40 @@ class FilesystemGatherer(FileGatherer, ABC):
 
 
 class FlatFileGatherer(FilesystemGatherer):
-    def gather_in(self, start_directory: Path) -> Iterable[File]:
+    def __init__(self, start_directory: Path):
+        self.start_directory = start_directory
+
+    def gather_files(self) -> Iterable[File]:
         yield from map(
             lambda file_path: File(
-                start_directory, file_path.relative_to(start_directory)
+                self.start_directory, file_path.relative_to(self.start_directory)
             ),
             filter(
                 lambda file_path: self._include_path_in_result(file_path)
                 and not file_path.is_dir(),
-                start_directory.glob("*"),
+                self.start_directory.glob("*"),
             ),
         )
 
 
 class RecursiveFileGatherer(FilesystemGatherer):
-    def gather_in(self, start_directory: Path) -> Iterable[File]:
-        yield from self._gather_in(start_directory, start_directory)
+    def __init__(self, start_directory: Path):
+        self.start_directory = start_directory
 
-    def _gather_in(self, directory: Path, start_directory: Path) -> Iterable[File]:
+    def gather_files(self) -> Iterable[File]:
+        yield from self._gather_in(self.start_directory)
+
+    def _gather_in(self, directory: Path) -> Iterable[File]:
         for dir_entry in directory.iterdir():
             if not self._include_path_in_result(dir_entry):
                 continue
 
             if dir_entry.is_dir():
-                yield from self._gather_in(dir_entry, start_directory)
+                yield from self._gather_in(dir_entry)
             else:
-                yield File(start_directory, dir_entry.relative_to(start_directory))
+                yield File(
+                    self.start_directory, dir_entry.relative_to(self.start_directory)
+                )
 
 
 class FileRenamer:

@@ -21,21 +21,21 @@ def file_to_absolute_path(file: File) -> Path:
 
 class FilesystemFileGathererTests(ABC):
     @abstractmethod
-    def create_gatherer(self) -> FileGatherer:
+    def create_gatherer(self, start_directory: Path) -> FileGatherer:
         raise NotImplementedError()
 
     def test_empty_directory(self, tmp_path: Path):
-        gatherer = self.create_gatherer()
+        gatherer = self.create_gatherer(tmp_path)
 
-        file_iterator = iter(gatherer.gather_in(tmp_path))
+        file_iterator = iter(gatherer.gather_files())
 
         with pytest.raises(StopIteration):
             next(file_iterator)
 
     def test_flat_directory(self, text_data_dir: Path):
-        gatherer = self.create_gatherer()
+        gatherer = self.create_gatherer(text_data_dir)
 
-        files = set(map(file_to_absolute_path, gatherer.gather_in(text_data_dir)))
+        files = set(map(file_to_absolute_path, gatherer.gather_files()))
 
         test_files = {
             text_data_dir / "hello.txt",
@@ -44,17 +44,17 @@ class FilesystemFileGathererTests(ABC):
         assert files == test_files
 
     def test_returned_files_are_relative_to_input_directory(self, text_data_dir: Path):
-        gatherer = self.create_gatherer()
+        gatherer = self.create_gatherer(text_data_dir)
 
-        files = list(gatherer.gather_in(text_data_dir))
+        files = list(gatherer.gather_files())
 
         for file in files:
             assert file.input_directory == text_data_dir
 
     def test_hidden_files_are_skipped_by_default(self, hidden_data_dir: Path):
-        gatherer = self.create_gatherer()
+        gatherer = self.create_gatherer(hidden_data_dir)
 
-        files = set(map(file_to_absolute_path, gatherer.gather_in(hidden_data_dir)))
+        files = set(map(file_to_absolute_path, gatherer.gather_files()))
 
         test_files = {
             hidden_data_dir / "visible.txt",
@@ -63,14 +63,14 @@ class FilesystemFileGathererTests(ABC):
 
 
 class TestFlatFileGatherer(FilesystemFileGathererTests):
-    def create_gatherer(self) -> FileGatherer:
-        return FlatFileGatherer()
+    def create_gatherer(self, start_directory: Path) -> FileGatherer:
+        return FlatFileGatherer(start_directory)
 
     def test_hidden_files_can_be_found_with_include_hidden(self, hidden_data_dir: Path):
-        gatherer = self.create_gatherer()
+        gatherer = self.create_gatherer(hidden_data_dir)
         gatherer.include_hidden = True
 
-        files = set(map(file_to_absolute_path, gatherer.gather_in(hidden_data_dir)))
+        files = set(map(file_to_absolute_path, gatherer.gather_files()))
 
         test_files = {
             hidden_data_dir / ".hidden.txt",
@@ -79,9 +79,9 @@ class TestFlatFileGatherer(FilesystemFileGathererTests):
         assert files == test_files
 
     def test_nested_files(self, nested_data_dir: Path):
-        gatherer = self.create_gatherer()
+        gatherer = self.create_gatherer(nested_data_dir)
 
-        files = set(map(file_to_absolute_path, gatherer.gather_in(nested_data_dir)))
+        files = set(map(file_to_absolute_path, gatherer.gather_files()))
 
         test_files = {
             nested_data_dir / "level-1.file",
@@ -90,14 +90,14 @@ class TestFlatFileGatherer(FilesystemFileGathererTests):
 
 
 class TestRecursiveFileGatherer(FilesystemFileGathererTests):
-    def create_gatherer(self) -> FileGatherer:
-        return RecursiveFileGatherer()
+    def create_gatherer(self, start_directory: Path) -> FileGatherer:
+        return RecursiveFileGatherer(start_directory)
 
     def test_hidden_files_can_be_found_with_include_hidden(self, hidden_data_dir: Path):
-        gatherer = self.create_gatherer()
+        gatherer = self.create_gatherer(hidden_data_dir)
         gatherer.include_hidden = True
 
-        files = set(map(file_to_absolute_path, gatherer.gather_in(hidden_data_dir)))
+        files = set(map(file_to_absolute_path, gatherer.gather_files()))
 
         test_files = {
             hidden_data_dir / ".hidden.txt",
@@ -108,9 +108,9 @@ class TestRecursiveFileGatherer(FilesystemFileGathererTests):
         assert files == test_files
 
     def test_nested_files(self, nested_data_dir: Path):
-        gatherer = self.create_gatherer()
+        gatherer = self.create_gatherer(nested_data_dir)
 
-        files = set(map(file_to_absolute_path, gatherer.gather_in(nested_data_dir)))
+        files = set(map(file_to_absolute_path, gatherer.gather_files()))
 
         test_files = {
             nested_data_dir / "level-1.file",

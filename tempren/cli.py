@@ -19,7 +19,7 @@ from .pipeline import (
     InvalidDestinationError,
     OperationMode,
     RuntimeConfiguration,
-    build_pipeline,
+    build_pipelines,
     build_tag_registry,
 )
 from .template.tree_builder import (
@@ -430,7 +430,7 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
 
     configuration = RuntimeConfiguration(
         template=args.template,
-        input_files=args.file[0],
+        input_paths=args.file,
         recursive=args.recursive,
         include_hidden=args.include_hidden,
         dry_run=args.dry_run,
@@ -525,10 +525,11 @@ def main() -> int:
     try:
         config = process_cli_configuration(argv)
         registry = build_tag_registry()
-        pipeline = build_pipeline(
+        pipelines = build_pipelines(
             config, registry, manual_conflict_resolver=cli_prompt_conflict_resolver
         )
-        pipeline.execute()
+        for pipeline in pipelines:
+            pipeline.execute()
         log.info("Done")
         return ErrorCode.SUCCESS
     # TODO: Clean up exception hierarchy
