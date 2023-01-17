@@ -110,11 +110,7 @@ class Pipeline:
     def execute(self):
         all_files = []
 
-        # Tags will receive a relative path to the processed files,
-        # to make it valid we need to change the current directory before processing:
-        self.log.info(f"Gathering paths in {self.file_gatherer.start_directory}")
-        os.chdir(self.file_gatherer.start_directory)
-
+        self.log.info(f"Gathering paths...")
         for file in self.file_gatherer.gather_files():
             self.log.debug("Checking %s", file)
             if not self.file_filter(file):
@@ -134,6 +130,11 @@ class Pipeline:
         # transitional conflicts.
         backlog = []
         for file in all_files:
+            # Renamer will receive a relative path,
+            # to make it valid we need to change the current directory before processing:
+            # TODO: Make renamer operate on File instances instead
+            os.chdir(file.input_directory)
+
             try:
                 self.log.debug("Generating new name for %r", file)
                 new_relative_path = self.path_generator.generate(file)
@@ -242,7 +243,6 @@ def build_pipelines(
     registry: TagRegistry,
     manual_conflict_resolver: ManualConflictResolver,  # TODO: Move to the RuntimeConfiguration
 ) -> List[Pipeline]:
-
     input_directories = filter(lambda p: p.is_dir(), config.input_paths)
     input_files = filter(lambda p: p.is_file(), config.input_paths)
     if any(input_files):
@@ -268,7 +268,7 @@ def _build_pipeline(
     registry: TagRegistry,
     manual_conflict_resolver: ManualConflictResolver,  # TODO: Move to the RuntimeConfiguration
 ) -> Pipeline:
-    log.debug("Building pipeline for %s", file_gatherer.start_directory)
+    log.debug("Building pipeline")
     tree_builder = TagTreeBuilder()
     pipeline = Pipeline()
     pipeline.file_gatherer = file_gatherer

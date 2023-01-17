@@ -1,10 +1,12 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
+from typing import List
 
 import pytest
 
 from tempren.filesystem import (
     DryRunRenamer,
+    ExplicitFileGatherer,
     FileGatherer,
     FileMover,
     FileRenamer,
@@ -119,6 +121,35 @@ class TestRecursiveFileGatherer(FilesystemFileGathererTests):
             nested_data_dir / "second" / "third" / "level-3.file",
         }
         assert files == test_files
+
+
+class TestExplicitFileGatherer:
+    def create_gatherer(self, files: List[Path]) -> FileGatherer:
+        return ExplicitFileGatherer(files)
+
+    def test_returned_files_are_relative_to_parent_directory(self, text_data_dir: Path):
+        text_files = [
+            text_data_dir / "hello.txt",
+            text_data_dir / "markdown.md",
+        ]
+        gatherer = self.create_gatherer(text_files)
+
+        files = list(gatherer.gather_files())
+
+        for file in files:
+            assert file.input_directory == text_data_dir
+
+    def test_returned_files_are_provided_in_order(self, text_data_dir: Path):
+        text_files = [
+            text_data_dir / "hello.txt",
+            text_data_dir / "markdown.md",
+        ]
+        gatherer = self.create_gatherer(text_files)
+
+        files = list(gatherer.gather_files())
+
+        for original_file, gathered_file in zip(text_files, files):
+            assert gathered_file.relative_path == Path(original_file.name)
 
 
 class TestFileRenamer:

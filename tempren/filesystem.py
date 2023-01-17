@@ -3,7 +3,7 @@ import os
 import shutil
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Callable, Iterable, Set
+from typing import Callable, Iterable, List, Set
 
 from tempren.path_generator import File
 
@@ -25,15 +25,15 @@ class FileGatherer(ABC):
     include_hidden: bool = False
     """Include hidden files and directories when making the search"""
 
-    start_directory: Path
-    """Common base directory for gathered files"""
-
     @abstractmethod
     def gather_files(self) -> Iterable[File]:
         raise NotImplementedError()
 
 
 class FilesystemGatherer(FileGatherer, ABC):
+    _start_directory: Path
+    """Common base directory for gathered files"""
+
     def _include_path_in_result(self, path: Path) -> bool:
         if not self.include_hidden:
             return not path.name.startswith(".")
@@ -42,27 +42,27 @@ class FilesystemGatherer(FileGatherer, ABC):
 
 class FlatFileGatherer(FilesystemGatherer):
     def __init__(self, start_directory: Path):
-        self.start_directory = start_directory
+        self._start_directory = start_directory
 
     def gather_files(self) -> Iterable[File]:
         yield from map(
             lambda file_path: File(
-                self.start_directory, file_path.relative_to(self.start_directory)
+                self._start_directory, file_path.relative_to(self._start_directory)
             ),
             filter(
                 lambda file_path: self._include_path_in_result(file_path)
                 and not file_path.is_dir(),
-                self.start_directory.glob("*"),
+                self._start_directory.glob("*"),
             ),
         )
 
 
 class RecursiveFileGatherer(FilesystemGatherer):
     def __init__(self, start_directory: Path):
-        self.start_directory = start_directory
+        self._start_directory = start_directory
 
     def gather_files(self) -> Iterable[File]:
-        yield from self._gather_in(self.start_directory)
+        yield from self._gather_in(self._start_directory)
 
     def _gather_in(self, directory: Path) -> Iterable[File]:
         for dir_entry in directory.iterdir():
@@ -73,8 +73,17 @@ class RecursiveFileGatherer(FilesystemGatherer):
                 yield from self._gather_in(dir_entry)
             else:
                 yield File(
-                    self.start_directory, dir_entry.relative_to(self.start_directory)
+                    self._start_directory, dir_entry.relative_to(self._start_directory)
                 )
+
+
+class ExplicitFileGatherer(FilesystemGatherer):
+    def __init__(self, files: List[Path]):
+        self._files_to_provide = files
+
+    def gather_files(self) -> Iterable[File]:
+        for file in self._files_to_provide:
+            yield File(file.parent, Path(file.name))
 
 
 class FileRenamer:
