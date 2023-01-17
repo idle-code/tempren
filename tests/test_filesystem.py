@@ -5,6 +5,7 @@ from typing import List
 import pytest
 
 from tempren.filesystem import (
+    CombinedFileGatherer,
     DryRunRenamer,
     ExplicitFileGatherer,
     FileGatherer,
@@ -124,15 +125,12 @@ class TestRecursiveFileGatherer(FilesystemFileGathererTests):
 
 
 class TestExplicitFileGatherer:
-    def create_gatherer(self, files: List[Path]) -> FileGatherer:
-        return ExplicitFileGatherer(files)
-
     def test_returned_files_are_relative_to_parent_directory(self, text_data_dir: Path):
         text_files = [
             text_data_dir / "hello.txt",
             text_data_dir / "markdown.md",
         ]
-        gatherer = self.create_gatherer(text_files)
+        gatherer = ExplicitFileGatherer(text_files)
 
         files = list(gatherer.gather_files())
 
@@ -144,12 +142,40 @@ class TestExplicitFileGatherer:
             text_data_dir / "hello.txt",
             text_data_dir / "markdown.md",
         ]
-        gatherer = self.create_gatherer(text_files)
+        gatherer = ExplicitFileGatherer(text_files)
 
         files = list(gatherer.gather_files())
 
         for original_file, gathered_file in zip(text_files, files):
             assert gathered_file.relative_path == Path(original_file.name)
+
+
+class TestCombinedFileGatherer:
+    def test_no_gatherers_provided(self):
+        with pytest.raises(ValueError):
+            CombinedFileGatherer([])
+
+    def test_gatherers_inherit_include_hidden_property(
+        self, text_data_dir: Path, nested_data_dir: Path
+    ):
+        first = ExplicitFileGatherer([text_data_dir / "hello.txt"])
+        second = RecursiveFileGatherer(nested_data_dir)
+        combined = CombinedFileGatherer([first, second])
+        assert not first.include_hidden and not second.include_hidden
+
+        combined.include_hidden = True
+
+        assert first.include_hidden and second.include_hidden
+
+    def test_gatherers_are_chained(self, text_data_dir: Path, nested_data_dir: Path):
+        first = ExplicitFileGatherer([text_data_dir / "hello.txt"])
+        second = RecursiveFileGatherer(nested_data_dir)
+        combined = CombinedFileGatherer([first, second])
+
+        combined_files = list(combined.gather_files())
+
+        assert combined_files[0].relative_path == Path("hello.txt")
+        assert combined_files[1].input_directory == nested_data_dir
 
 
 class TestFileRenamer:

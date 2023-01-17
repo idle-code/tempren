@@ -15,8 +15,10 @@ from tempren.file_filters import (
 )
 from tempren.file_sorters import TemplateFileSorter
 from tempren.filesystem import (
+    CombinedFileGatherer,
     DestinationAlreadyExistsError,
     DryRunRenamer,
+    ExplicitFileGatherer,
     FileGatherer,
     FileMover,
     FileRenamer,
@@ -238,40 +240,27 @@ def build_tag_registry() -> TagRegistry:
     return registry
 
 
-def build_pipelines(
+def build_pipeline(
     config: RuntimeConfiguration,
-    registry: TagRegistry,
-    manual_conflict_resolver: ManualConflictResolver,  # TODO: Move to the RuntimeConfiguration
-) -> List[Pipeline]:
-    input_directories = filter(lambda p: p.is_dir(), config.input_paths)
-    input_files = filter(lambda p: p.is_file(), config.input_paths)
-    if any(input_files):
-        raise NotImplementedError("Explicit file processing not implemented")  # yet
-
-    pipelines = []
-    file_gatherer: FileGatherer
-    for directory in input_directories:
-        if config.recursive:
-            file_gatherer = RecursiveFileGatherer(directory)
-        else:
-            file_gatherer = FlatFileGatherer(directory)
-
-        pipelines.append(
-            _build_pipeline(config, file_gatherer, registry, manual_conflict_resolver)
-        )
-    return pipelines
-
-
-def _build_pipeline(
-    config: RuntimeConfiguration,
-    file_gatherer: FileGatherer,
     registry: TagRegistry,
     manual_conflict_resolver: ManualConflictResolver,  # TODO: Move to the RuntimeConfiguration
 ) -> Pipeline:
     log.debug("Building pipeline")
     tree_builder = TagTreeBuilder()
     pipeline = Pipeline()
-    pipeline.file_gatherer = file_gatherer
+
+    file_gatherers: List[FileGatherer] = []
+    input_directories = filter(lambda p: p.is_dir(), config.input_paths)
+    for directory in input_directories:
+        if config.recursive:
+            file_gatherers.append(RecursiveFileGatherer(directory))
+        else:
+            file_gatherers.append(FlatFileGatherer(directory))
+
+    input_files = list(filter(lambda p: p.is_file(), config.input_paths))
+    if any(input_files):
+        file_gatherers.append(ExplicitFileGatherer(input_files))
+    pipeline.file_gatherer = CombinedFileGatherer(file_gatherers)
     pipeline.file_gatherer.include_hidden = config.include_hidden
 
     def _compile_template(template_text: str) -> Pattern:

@@ -464,6 +464,17 @@ class CommonModeTestsBase:
         assert (text_data_dir / "HELLO.TXT").exists()
         assert (nested_data_dir / "LEVEL-1.FILE").exists()
 
+    def test_explicit_files_can_be_passed(self, nested_data_dir: Path, mode_flag: str):
+        files = [
+            nested_data_dir / "level-1.file",
+            nested_data_dir / "first" / "level-2.file",
+        ]
+        stdout, stderr, error_code = run_tempren(mode_flag, "%Name()|%Upper()", *files)
+
+        assert error_code == ErrorCode.SUCCESS
+        assert (nested_data_dir / "LEVEL-1.FILE").exists()
+        assert (nested_data_dir / "first" / "LEVEL-2.FILE").exists()
+
 
 @pytest.mark.parametrize("mode_flag", ["-n", "--name", None])
 class TestNameMode(CommonModeTestsBase):
@@ -514,6 +525,19 @@ class TestPathMode(CommonModeTestsBase):
         assert error_code == ErrorCode.INVALID_DESTINATION_ERROR
         assert "Path generated for" in stderr
         assert "is not relative to the input directory" in stderr
+
+    def test_explicit_files_use_parent_as_input_directory(
+        self, nested_data_dir: Path, mode_flag: str
+    ):
+        files = [
+            nested_data_dir / "level-1.file",
+            nested_data_dir / "first" / "level-2.file",
+        ]
+        stdout, stderr, error_code = run_tempren(mode_flag, "subdir/%Name()", *files)
+
+        assert error_code == ErrorCode.SUCCESS
+        assert (nested_data_dir / "subdir" / "level-1.file").exists()
+        assert (nested_data_dir / "first" / "subdir" / "level-2.file").exists()
 
 
 class TestConflictResolution:

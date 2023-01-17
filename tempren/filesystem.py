@@ -22,8 +22,19 @@ class DestinationAlreadyExistsError(FileExistsError):
 
 
 class FileGatherer(ABC):
-    include_hidden: bool = False
-    """Include hidden files and directories when making the search"""
+    _include_hidden: bool = (
+        False  # CHECK: Make this a parameter to the gather_files method?
+    )
+
+    @property
+    def include_hidden(self) -> bool:
+        """Include hidden files and directories when making the search"""
+        return self._include_hidden
+
+    @include_hidden.setter
+    def include_hidden(self, include: bool):
+        """Include hidden files and directories when making the search"""
+        self._include_hidden = include
 
     @abstractmethod
     def gather_files(self) -> Iterable[File]:
@@ -77,13 +88,33 @@ class RecursiveFileGatherer(FilesystemGatherer):
                 )
 
 
-class ExplicitFileGatherer(FilesystemGatherer):
+class ExplicitFileGatherer(FileGatherer):
     def __init__(self, files: List[Path]):
         self._files_to_provide = files
 
     def gather_files(self) -> Iterable[File]:
         for file in self._files_to_provide:
             yield File(file.parent, Path(file.name))
+
+
+class CombinedFileGatherer(FileGatherer):
+    @property
+    def include_hidden(self) -> bool:
+        raise NotImplementedError()
+
+    @include_hidden.setter
+    def include_hidden(self, include: bool):
+        for gatherer in self._gatherers:
+            gatherer.include_hidden = include
+
+    def __init__(self, gatherers: List[FileGatherer]):
+        if not gatherers:
+            raise ValueError("No subsequent file gatherers provided")
+        self._gatherers = gatherers
+
+    def gather_files(self) -> Iterable[File]:
+        for gatherer in self._gatherers:
+            yield from gatherer.gather_files()
 
 
 class FileRenamer:
