@@ -18,15 +18,20 @@ project_root_path = os.getcwd()
 def run_tempren_process(*args) -> Tuple[str, str, int]:
     """Run tempren with provided arguments as separate process"""
     args = list(map(str, filter(lambda v: v is not None, args)))
-    print("Running: tempren", " ".join(args))
+    print("CWD:", os.getcwd())
+    print("COMMAND: tempren", " ".join(args))
     completed_process = subprocess.run(
         [sys.executable, "-m", "tempren.cli"] + args,
         capture_output=True,
     )
 
+    captured_stdout = completed_process.stdout.decode("utf-8")
+    print("STDOUT:\n" + captured_stdout)
+    captured_stderr = completed_process.stderr.decode("utf-8")
+    print("STDERR:\n" + captured_stderr)
     return (
-        completed_process.stdout.decode("utf-8"),
-        completed_process.stderr.decode("utf-8"),
+        captured_stdout,
+        captured_stderr,
         completed_process.returncode,
     )
 
