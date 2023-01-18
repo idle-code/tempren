@@ -53,7 +53,7 @@ class FilesystemGatherer(FileGatherer, ABC):
 
 class FlatFileGatherer(FilesystemGatherer):
     def __init__(self, start_directory: Path):
-        self._start_directory = start_directory
+        self._start_directory = start_directory.absolute()
 
     def gather_files(self) -> Iterable[File]:
         yield from map(
@@ -70,7 +70,7 @@ class FlatFileGatherer(FilesystemGatherer):
 
 class RecursiveFileGatherer(FilesystemGatherer):
     def __init__(self, start_directory: Path):
-        self._start_directory = start_directory
+        self._start_directory = start_directory.absolute()
 
     def gather_files(self) -> Iterable[File]:
         yield from self._gather_in(self._start_directory)
@@ -94,7 +94,7 @@ class ExplicitFileGatherer(FileGatherer):
 
     def gather_files(self) -> Iterable[File]:
         for file in self._files_to_provide:
-            yield File(file.parent, Path(file.name))
+            yield File(file.parent.absolute(), Path(file.name))
 
 
 class CombinedFileGatherer(FileGatherer):

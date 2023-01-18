@@ -18,7 +18,6 @@ project_root_path = os.getcwd()
 def run_tempren_process(*args) -> Tuple[str, str, int]:
     """Run tempren with provided arguments as separate process"""
     args = list(map(str, filter(lambda v: v is not None, args)))
-    os.chdir(project_root_path)
     print("Running: tempren", " ".join(args))
     completed_process = subprocess.run(
         [sys.executable, "-m", "tempren.cli"] + args,
@@ -65,6 +64,12 @@ def run_tempren(*args) -> Tuple[str, str, int]:
         sys.argv = old_sys_argv
 
     return stdout.getvalue(), stderr.getvalue(), error_code
+
+
+def make_relative(path: Path) -> Path:
+    os.chdir(path.parent)
+    cwd = os.getcwd()
+    return path.relative_to(cwd)
 
 
 class TestVariousFlags:
@@ -168,9 +173,16 @@ class TestVariousFlags:
         assert not (nested_data_dir / "first" / "LEVEL-2.FILE").exists()
 
     @pytest.mark.parametrize("flag", ["-r", "--recursive"])
-    def test_recursive_traversal(self, flag: str, nested_data_dir: Path):
+    @pytest.mark.parametrize("pass_relative", [False, True])
+    def test_recursive_traversal(
+        self, flag: str, pass_relative: bool, nested_data_dir: Path
+    ):
+        nested_dir = (
+            make_relative(nested_data_dir) if pass_relative else nested_data_dir
+        )
+
         stdout, stderr, error_code = run_tempren_process(
-            "--name", flag, "%Upper(){%Name()}", nested_data_dir
+            "--name", flag, "%Upper(){%Name()}", nested_dir
         )
 
         assert error_code == ErrorCode.SUCCESS
@@ -453,21 +465,41 @@ class CommonModeTestsBase:
         assert "hello.txt" in stdout
         assert "source and destination are the same" in stdout
 
+    @pytest.mark.parametrize("pass_relative", [False, True])
     def test_multiple_directories_can_be_passed(
-        self, text_data_dir: Path, nested_data_dir: Path, mode_flag: str
+        self,
+        text_data_dir: Path,
+        nested_data_dir: Path,
+        mode_flag: str,
+        pass_relative: bool,
     ):
+        assert text_data_dir.parent == nested_data_dir.parent
+        first_directory = (
+            make_relative(text_data_dir) if pass_relative else text_data_dir
+        )
+        second_directory = (
+            make_relative(nested_data_dir) if pass_relative else nested_data_dir
+        )
+
         stdout, stderr, error_code = run_tempren(
-            mode_flag, "%Name()|%Upper()", text_data_dir, nested_data_dir
+            mode_flag, "%Name()|%Upper()", first_directory, second_directory
         )
 
         assert error_code == ErrorCode.SUCCESS
         assert (text_data_dir / "HELLO.TXT").exists()
         assert (nested_data_dir / "LEVEL-1.FILE").exists()
 
-    def test_explicit_files_can_be_passed(self, nested_data_dir: Path, mode_flag: str):
+    @pytest.mark.parametrize("pass_relative", [False, True])
+    def test_explicit_files_can_be_passed(
+        self, nested_data_dir: Path, mode_flag: str, pass_relative: bool
+    ):
+        nested_dir = (
+            make_relative(nested_data_dir) if pass_relative else nested_data_dir
+        )
+
         files = [
-            nested_data_dir / "level-1.file",
-            nested_data_dir / "first" / "level-2.file",
+            nested_dir / "level-1.file",
+            nested_dir / "first" / "level-2.file",
         ]
         stdout, stderr, error_code = run_tempren(mode_flag, "%Name()|%Upper()", *files)
 
