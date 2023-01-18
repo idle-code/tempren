@@ -14,6 +14,13 @@ from tempren.cli import ErrorCode
 
 project_root_path = os.getcwd()
 
+# Both tests and tempren process manipulate CurrentWorkingDirectory setting.
+# Following environment allows for running tempren out of the main repository directory.
+tempren_process_env = os.environ.copy()
+tempren_process_env["PYTHONPATH"] = ":".join(
+    [project_root_path, tempren_process_env.get("PYTHONPATH", "")]
+)
+
 
 def run_tempren_process(*args) -> Tuple[str, str, int]:
     """Run tempren with provided arguments as separate process"""
@@ -23,6 +30,7 @@ def run_tempren_process(*args) -> Tuple[str, str, int]:
     completed_process = subprocess.run(
         [sys.executable, "-m", "tempren.cli"] + args,
         capture_output=True,
+        env=tempren_process_env,
     )
 
     captured_stdout = completed_process.stdout.decode("utf-8")
@@ -46,7 +54,7 @@ def start_tempren_process(*args) -> subprocess.Popen:
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        cwd=project_root_path,
+        env=tempren_process_env,
         bufsize=1,
         universal_newlines=True,
     )
