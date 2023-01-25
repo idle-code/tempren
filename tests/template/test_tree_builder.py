@@ -1,12 +1,13 @@
 import pytest
 
+from tempren.template.parser import TemplateParser
 from tempren.template.tree_builder import *
 from tempren.template.tree_elements import Pattern, RawText, TagPlaceholder
 
 
 def parse(text: str) -> Pattern:
-    ast_builder = TagTreeBuilder()
-    return ast_builder.parse(text)
+    parser = TemplateParser()
+    return parser.parse(text)
 
 
 class TestTreeBuilder:

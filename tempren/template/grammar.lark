@@ -1,0 +1,26 @@
+pattern : (raw_text | tag)*
+raw_text : RAW_TEXT
+tag : "%" tag_id argument_list context?
+tag_id : (TAG_CATEGORY ".")? TAG_NAME
+argument_list : "(" WS? (argument (WS? "," WS? argument)*)? WS? ")"
+argument : positional_argument
+         | named_argument
+?positional_argument : arg_value
+named_argument : ARG_NAME WS? ("=" WS? arg_value)?
+arg_value : numeric_value
+          | string_value
+          | BOOLEAN_VALUE -> boolean_value
+context : "{" pattern "}"
+
+%import common (LETTER, DIGIT, CNAME, ESCAPED_STRING, SIGNED_INT, WS)
+
+numeric_value : SIGNED_INT
+string_value : QUOTED_STRING
+
+TAG_CATEGORY : CNAME
+TAG_NAME : CNAME
+ARG_NAME : CNAME
+BOOLEAN_VALUE : /([Tt]rue|[Ff]alse)/
+RAW_TEXT : /(\\\{|\\}|\\\||[^%|{}\\]+)/
+// TODO: de-pythonify following:
+QUOTED_STRING : /([ubf]?r?|r[ubf])("(?!"").*?(?<!\\)(\\\\)*?"|'(?!'').*?(?<!\\)(\\\\)*?')/i

@@ -9,7 +9,20 @@ from tempren.path_generator import File
 
 
 @dataclass
+class Location:
+    line: int
+    column: int
+    length: int
+
+    def __str__(self) -> str:
+        if self.length == 1:
+            return f"line {self.line}:{self.column}"
+        return f"line {self.line}:{self.column}-{self.column + self.length}"
+
+
+@dataclass
 class TagName:
+    location: Location = field(init=False, compare=False)
     name: str
     category: Optional[str] = None
 
@@ -23,18 +36,6 @@ class TagName:
         if self.category:
             return f"{self.category}.{self.name}"
         return f"{self.name}"
-
-
-@dataclass
-class Location:
-    line: int
-    column: int
-    length: int
-
-    def __str__(self) -> str:
-        if self.length == 1:
-            return f"line {self.line}:{self.column}"
-        return f"line {self.line}:{self.column}-{self.column + self.length}"
 
 
 class PatternElement(ABC):
