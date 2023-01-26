@@ -1,5 +1,6 @@
-pattern : (raw_text | tag)*
+pattern : (raw_text | tag | pipe_list)*
 raw_text : RAW_TEXT
+pipe_list : tag ("|" tag)+
 tag : "%" tag_id argument_list context?
 tag_id : (TAG_CATEGORY ".")? TAG_NAME
 argument_list : "(" WS? (argument (WS? "," WS? argument)*)? WS? ")"
@@ -21,6 +22,6 @@ TAG_CATEGORY : CNAME
 TAG_NAME : CNAME
 ARG_NAME : CNAME
 BOOLEAN_VALUE : /([Tt]rue|[Ff]alse)/
-RAW_TEXT : /(\\\{|\\}|\\\||[^%|{}\\]+)/
+RAW_TEXT : /(\\\{|\\}|\\\||[^%|{}\\]+)+/
 // TODO: de-pythonify following:
 QUOTED_STRING : /([ubf]?r?|r[ubf])("(?!"").*?(?<!\\)(\\\\)*?"|'(?!'').*?(?<!\\)(\\\\)*?')/i

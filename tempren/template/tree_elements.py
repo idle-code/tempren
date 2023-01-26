@@ -41,6 +41,8 @@ class TagName:
 class PatternElement(ABC):
     """Represents element of template pattern"""
 
+    location: Location = field(init=False, compare=False)
+
     @abstractmethod
     def process(self, file: File) -> Any:
         raise NotImplementedError()
@@ -50,7 +52,6 @@ class PatternElement(ABC):
 class RawText(PatternElement):
     """Represents constant text (non-tag) part of the template"""
 
-    location: Location = field(init=False, compare=False)
     text: str
 
     def process(self, file: File) -> str:
@@ -102,7 +103,6 @@ class Pattern(PatternElement):
 class TagPlaceholder(PatternElement):
     """Represents unbound tag"""
 
-    location: Location = field(init=False, compare=False)
     tag_name: TagName
     context: Optional[Pattern] = None
     args: List[Any] = field(default_factory=list)

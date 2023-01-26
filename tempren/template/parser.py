@@ -17,6 +17,11 @@ grammar_path = Path(__file__).resolve().parent / "grammar.lark"
 template_parser = Lark(open(grammar_path), start="pattern")  # , ambiguity='explicit')
 
 
+def pairwise(iterable):
+    # TODO: For Python 3.10 use pairwise from itertools
+    return zip(iterable, iterable[1:])
+
+
 class TemplateParser:
     def parse(self, text: str) -> Pattern:
         print(f"Parsed text: {text!r}")
@@ -39,14 +44,23 @@ def without_whitespaces(items: List) -> List:
     ]
 
 
+# noinspection PyMethodMayBeStatic
 class TreeTransformer(Transformer):
     def pattern(self, items) -> Pattern:
         return Pattern(items)
 
     def raw_text(self, tokens) -> RawText:
-        raw_text = RawText(tokens[0].value)
+        raw_text = RawText(unescape(tokens[0].value))
         raw_text.location = _location_from_token(tokens[0])
         return raw_text
+
+    def pipe_list(self, items) -> TagPlaceholder:
+        pipe_tags: List[TagPlaceholder] = list(
+            filter(lambda i: isinstance(i, TagPlaceholder), items)
+        )
+        for inner, outer in pairwise(pipe_tags):
+            outer.context = Pattern([inner])
+        return pipe_tags[-1]
 
     def tag(self, items) -> TagPlaceholder:
         print("tag item: ", items)
