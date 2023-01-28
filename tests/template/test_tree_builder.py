@@ -1,8 +1,9 @@
 import pytest
 
+from tempren.template.ast import Pattern, RawText, TagPlaceholder
+from tempren.template.exceptions import TemplateSemanticError
 from tempren.template.parser import TemplateParser
 from tempren.template.tree_builder import *
-from tempren.template.tree_elements import Pattern, RawText, TagPlaceholder
 
 
 def parse(text: str) -> Pattern:

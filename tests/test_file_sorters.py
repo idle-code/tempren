@@ -4,7 +4,7 @@ import pytest
 
 from tempren.file_sorters import TemplateFileSorter
 from tempren.path_generator import File, TemplateEvaluationError
-from tempren.template.tree_elements import Pattern, RawText, TagInstance
+from tempren.template.ast import Pattern, RawText, TagInstance
 
 from .template.mocks import GeneratorTag
 

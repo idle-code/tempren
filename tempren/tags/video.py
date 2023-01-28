@@ -6,11 +6,8 @@ from typing import Any, Optional
 from pymediainfo import MediaInfo
 
 from tempren.path_generator import File
-from tempren.template.tree_elements import (
-    FileNotSupportedError,
-    MissingMetadataError,
-    Tag,
-)
+from tempren.template.ast import FileNotSupportedError, MissingMetadataError
+from tempren.template.tree_elements import Tag
 
 if not MediaInfo.can_parse():
     raise NotImplementedError("MediaInfo library not found")

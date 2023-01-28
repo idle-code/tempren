@@ -12,7 +12,14 @@ from typing import Any, List, NoReturn, Optional, Sequence, Text, Union
 
 from tempren.filesystem import DestinationAlreadyExistsError
 from tempren.path_generator import TemplateEvaluationError
-from tempren.template.tree_elements import TagName
+from tempren.template.exceptions import (
+    AmbiguousTagError,
+    TagError,
+    TagName,
+    TemplateError,
+    UnknownCategoryError,
+    UnknownTagError,
+)
 
 from .pipeline import (
     ConflictResolutionStrategy,
@@ -22,13 +29,6 @@ from .pipeline import (
     RuntimeConfiguration,
     build_pipeline,
     build_tag_registry,
-)
-from .template.tree_builder import (
-    AmbiguousTagError,
-    TagError,
-    TemplateError,
-    UnknownCategoryError,
-    UnknownTagError,
 )
 
 log = logging.getLogger("CLI")

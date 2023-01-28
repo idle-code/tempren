@@ -8,7 +8,7 @@ from tempren.path_generator import (
     TemplateEvaluationError,
     evaluate_expression,
 )
-from tempren.template.tree_elements import Pattern
+from tempren.template.ast import Pattern
 
 
 class FileSorter(ABC):

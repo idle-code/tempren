@@ -18,7 +18,7 @@ from tempren.tags.audio import (
     TrackTag,
     YearTag,
 )
-from tempren.template.tree_elements import MissingMetadataError
+from tempren.template.ast import MissingMetadataError
 
 
 @pytest.mark.parametrize("sample_name", ["sample.flac", "sample.mp3"])

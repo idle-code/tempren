@@ -1,42 +1,60 @@
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
 
-from lark import Lark, Token, Transformer
-
-from tempren.template.tree_builder import merge_locations, unescape
-from tempren.template.tree_elements import (
-    Location,
-    Pattern,
-    RawText,
-    TagName,
-    TagPlaceholder,
+from lark import (
+    Lark,
+    Token,
+    Transformer,
+    UnexpectedCharacters,
+    UnexpectedEOF,
+    UnexpectedInput,
+    UnexpectedToken,
 )
+
+from tempren.template.ast import Pattern, RawText, TagPlaceholder
+from tempren.template.exceptions import Location, TagName, TemplateSyntaxError
+from tempren.template.tree_builder import merge_locations, unescape
 
 grammar_path = Path(__file__).resolve().parent / "grammar.lark"
 
 template_parser = Lark(open(grammar_path), start="pattern")  # , ambiguity='explicit')
 
 
-def pairwise(iterable):
-    # TODO: For Python 3.10 use pairwise from itertools
-    return zip(iterable, iterable[1:])
-
-
 class TemplateParser:
     def parse(self, text: str) -> Pattern:
         print(f"Parsed text: {text!r}")
-        tree = template_parser.parse(text)
-        print(tree.pretty())
-        root_pattern = TreeTransformer().transform(tree)
-        print(root_pattern)
-        return root_pattern
+        try:
+            tree = template_parser.parse(text)
+            print(tree.pretty())
+            root_pattern = TreeTransformer().transform(tree)
+
+            print(root_pattern)
+            return root_pattern
+        except UnexpectedInput as parsing_error:
+            context = parsing_error.get_context(text)
+            exception = parsing_error.match_examples(
+                template_parser.parse,
+                {
+                    TemplateSyntaxError(
+                        message="missing closing argument list bracket"
+                    ): ["Some %TAG( text", "%TAG("]
+                },
+                use_accepts=True,
+            )
+            location = Location(parsing_error.line, parsing_error.column - 1, length=1)
+            raise exception.with_location(location) from parsing_error
+
+
+def _pairwise(iterable):
+    # TODO: For Python 3.10 use pairwise from itertools
+    return zip(iterable, iterable[1:])
 
 
 def _location_from_token(token: Token) -> Location:
     return Location(token.line, token.column, token.end_pos - token.start_pos)
 
 
-def without_whitespaces(items: List) -> List:
+def _without_whitespaces(items: List) -> List:
     return [
         token
         for token in items
@@ -58,7 +76,7 @@ class TreeTransformer(Transformer):
         pipe_tags: List[TagPlaceholder] = list(
             filter(lambda i: isinstance(i, TagPlaceholder), items)
         )
-        for inner, outer in pairwise(pipe_tags):
+        for inner, outer in _pairwise(pipe_tags):
             outer.context = Pattern([inner])
         return pipe_tags[-1]
 
@@ -94,7 +112,7 @@ class TreeTransformer(Transformer):
     def argument_list(self, items) -> Tuple[List, Dict]:
         args = []
         kwargs = {}
-        for name, value in without_whitespaces(items):
+        for name, value in _without_whitespaces(items):
             if name is None:
                 args.append(value)
             elif value is None:
@@ -113,7 +131,7 @@ class TreeTransformer(Transformer):
         return None, items[0]
 
     def named_argument(self, items) -> Tuple[str, Any]:
-        items = without_whitespaces(items)
+        items = _without_whitespaces(items)
         if len(items) == 2:
             return items[0].value, items[1]
         else:

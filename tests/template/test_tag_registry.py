@@ -4,24 +4,18 @@ from typing import Optional
 
 import pytest
 
-from tempren.template.tree_builder import (
+from tempren.template.ast import Pattern, RawText, TagInstance
+from tempren.template.exceptions import (
     AmbiguousTagError,
     ConfigurationError,
     ContextForbiddenError,
     ContextMissingError,
-    TagCategory,
-    TagRegistry,
+    TagName,
     UnknownCategoryError,
     UnknownTagError,
 )
-from tempren.template.tree_elements import (
-    Pattern,
-    RawText,
-    Tag,
-    TagFactoryFromClass,
-    TagInstance,
-    TagName,
-)
+from tempren.template.tree_builder import TagCategory, TagRegistry
+from tempren.template.tree_elements import Tag, TagFactoryFromClass
 
 from .mocks import MockTag
 from .test_tree_builder import parse

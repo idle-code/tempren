@@ -14,11 +14,8 @@ from tempren.tags.video import (
     VideoCodecTag,
     WidthTag,
 )
-from tempren.template.tree_elements import (
-    FileNotSupportedError,
-    MissingMetadataError,
-    Tag,
-)
+from tempren.template.ast import FileNotSupportedError, MissingMetadataError
+from tempren.template.tree_elements import Tag
 
 
 class VideoInfoTagTests:

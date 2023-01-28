@@ -29,12 +29,13 @@ from tempren.filesystem import (
     RecursiveFileGatherer,
 )
 from tempren.path_generator import File, InvalidFilenameError, PathGenerator
+from tempren.template.ast import Pattern
+from tempren.template.exceptions import TemplateError
 from tempren.template.path_generators import (
     TemplateNameGenerator,
     TemplatePathGenerator,
 )
-from tempren.template.tree_builder import TagRegistry, TagTreeBuilder, TemplateError
-from tempren.template.tree_elements import Pattern
+from tempren.template.tree_builder import TagRegistry, TagTreeBuilder
 
 log = logging.getLogger(__name__)
 

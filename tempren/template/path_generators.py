@@ -3,7 +3,7 @@ from abc import ABC
 from pathlib import Path
 
 from tempren.path_generator import File, InvalidFilenameError, PathGenerator
-from tempren.template.tree_elements import Pattern
+from tempren.template.ast import Pattern
 
 
 class TemplateGenerator(PathGenerator, ABC):

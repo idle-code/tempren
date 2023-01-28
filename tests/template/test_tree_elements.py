@@ -1,13 +1,12 @@
 from pytest import raises
 
 from tempren.path_generator import File
-from tempren.template.tree_elements import (
+from tempren.template.ast import (
     MissingMetadataError,
     Pattern,
     RawText,
     TagInstance,
     TagName,
-    TagPlaceholder,
 )
 
 from .mocks import GeneratorTag, MockTag

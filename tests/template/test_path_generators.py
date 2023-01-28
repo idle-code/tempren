@@ -4,11 +4,11 @@ from pathlib import Path
 import pytest
 
 from tempren.path_generator import File, InvalidFilenameError
+from tempren.template.ast import Pattern, RawText
 from tempren.template.path_generators import (
     TemplateNameGenerator,
     TemplatePathGenerator,
 )
-from tempren.template.tree_elements import Pattern, RawText
 
 
 def static_pattern(text: str) -> Pattern:
