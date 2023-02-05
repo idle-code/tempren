@@ -2,7 +2,7 @@ pattern : (raw_text | tag | pipe_list)*
 raw_text : RAW_TEXT
 pipe_list : tag ("|" tag)+
 tag : "%" tag_id argument_list context?
-tag_id : (TAG_CATEGORY ".")? TAG_NAME
+tag_id : IDENTIFIER ("." IDENTIFIER)?
 argument_list : "(" WS? (argument (WS? "," WS? argument)*)? WS? ")"
 argument : positional_argument
          | named_argument
@@ -19,9 +19,9 @@ numeric_value : SIGNED_INT
 string_value : QUOTED_STRING
 
 TAG_CATEGORY : CNAME
-TAG_NAME : CNAME
+IDENTIFIER : CNAME
 ARG_NAME : CNAME
-BOOLEAN_VALUE : /([Tt]rue|[Ff]alse)/
+BOOLEAN_VALUE.2 : /([Tt]rue|[Ff]alse)/
 RAW_TEXT : /(\\\{|\\}|\\\||[^%|{}\\]+)+/
 // TODO: de-pythonify following:
 QUOTED_STRING : /([ubf]?r?|r[ubf])("(?!"").*?(?<!\\)(\\\\)*?"|'(?!'').*?(?<!\\)(\\\\)*?')/i

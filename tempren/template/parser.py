@@ -17,7 +17,9 @@ from tempren.template.tree_builder import merge_locations, unescape
 
 grammar_path = Path(__file__).resolve().parent / "grammar.lark"
 
-template_parser = Lark(open(grammar_path), start="pattern")  # , ambiguity='explicit')
+template_parser = Lark(
+    open(grammar_path), parser="lalr", start="pattern"
+)  # , ambiguity='explicit')
 
 
 class TemplateParser:
@@ -98,8 +100,6 @@ class TreeTransformer(Transformer):
 
     def tag_id(self, items) -> TagName:
         if len(items) == 2:
-            assert items[0].type == "TAG_CATEGORY"
-            assert items[1].type == "TAG_NAME"
             tag_name = TagName(items[1].value, items[0].value)
             category_location = _location_from_token(items[0])
             name_location = _location_from_token(items[1])
