@@ -1158,7 +1158,6 @@ def serializedATN():
 
 
 class TagTemplateParser(Parser):
-
     grammarFileName = "TagTemplateParser.g4"
 
     atn = ATNDeserializer().deserialize(serializedATN())
@@ -1287,7 +1286,6 @@ class TagTemplateParser(Parser):
                 return visitor.visitChildren(self)
 
     def rootPattern(self):
-
         localctx = TagTemplateParser.RootPatternContext(self, self._ctx, self.state)
         self.enterRule(localctx, 0, self.RULE_rootPattern)
         try:
@@ -1353,7 +1351,6 @@ class TagTemplateParser(Parser):
                 return visitor.visitChildren(self)
 
     def tag(self):
-
         localctx = TagTemplateParser.TagContext(self, self._ctx, self.state)
         self.enterRule(localctx, 2, self.RULE_tag)
         self._la = 0  # Token type
@@ -1523,7 +1520,6 @@ class TagTemplateParser(Parser):
                 return visitor.visitChildren(self)
 
     def pipeList(self):
-
         localctx = TagTemplateParser.PipeListContext(self, self._ctx, self.state)
         self.enterRule(localctx, 4, self.RULE_pipeList)
         try:
@@ -1613,7 +1609,6 @@ class TagTemplateParser(Parser):
                 return visitor.visitChildren(self)
 
     def pattern(self):
-
         localctx = TagTemplateParser.PatternContext(self, self._ctx, self.state)
         self.enterRule(localctx, 6, self.RULE_pattern)
         try:
@@ -1694,7 +1689,6 @@ class TagTemplateParser(Parser):
                 return visitor.visitChildren(self)
 
     def argumentList(self):
-
         localctx = TagTemplateParser.ArgumentListContext(self, self._ctx, self.state)
         self.enterRule(localctx, 8, self.RULE_argumentList)
         self._la = 0  # Token type
@@ -1798,7 +1792,6 @@ class TagTemplateParser(Parser):
                 return visitor.visitChildren(self)
 
     def argument(self):
-
         localctx = TagTemplateParser.ArgumentContext(self, self._ctx, self.state)
         self.enterRule(localctx, 10, self.RULE_argument)
         try:
@@ -1863,7 +1856,6 @@ class TagTemplateParser(Parser):
                 return visitor.visitChildren(self)
 
     def argumentValue(self):
-
         localctx = TagTemplateParser.ArgumentValueContext(self, self._ctx, self.state)
         self.enterRule(localctx, 12, self.RULE_argumentValue)
         self._la = 0  # Token type
@@ -1919,7 +1911,6 @@ class TagTemplateParser(Parser):
                 return visitor.visitChildren(self)
 
     def rawText(self):
-
         localctx = TagTemplateParser.RawTextContext(self, self._ctx, self.state)
         self.enterRule(localctx, 14, self.RULE_rawText)
         try:

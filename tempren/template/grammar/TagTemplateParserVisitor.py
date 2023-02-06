@@ -10,7 +10,6 @@ else:
 
 
 class TagTemplateParserVisitor(ParseTreeVisitor):
-
     # Visit a parse tree produced by TagTemplateParser#rootPattern.
     def visitRootPattern(self, ctx: TagTemplateParser.RootPatternContext):
         return self.visitChildren(ctx)
