@@ -150,6 +150,8 @@ class _TreeVisitor(TagTemplateParserVisitor):
     def visitArgumentList(
         self, ctx: TagTemplateParser.ArgumentListContext
     ) -> Tuple[List[ArgValue], Mapping[str, ArgValue]]:
+        if ctx is None:
+            return [], {}
         if ctx.errorUnclosedArgumentList:
             raise TemplateSyntaxError(
                 message="missing closing argument list bracket"

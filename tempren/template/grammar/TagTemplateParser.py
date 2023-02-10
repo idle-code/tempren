@@ -16,7 +16,7 @@ def serializedATN():
         4,
         1,
         19,
-        109,
+        125,
         2,
         0,
         7,
@@ -89,6 +89,17 @@ def serializedATN():
         1,
         1,
         1,
+        3,
+        1,
+        36,
+        8,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
         1,
         1,
         1,
@@ -113,163 +124,186 @@ def serializedATN():
         1,
         3,
         1,
-        47,
-        8,
-        1,
-        1,
-        2,
-        1,
-        2,
-        4,
-        2,
-        51,
-        8,
-        2,
-        11,
-        2,
-        12,
-        2,
         52,
+        8,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        3,
+        1,
+        63,
+        8,
+        1,
         1,
         2,
         1,
         2,
         4,
         2,
-        57,
+        67,
         8,
         2,
         11,
         2,
         12,
         2,
-        58,
-        3,
-        2,
-        61,
-        8,
-        2,
-        1,
-        3,
-        1,
-        3,
-        5,
-        3,
-        65,
-        8,
-        3,
-        10,
-        3,
-        12,
-        3,
         68,
-        9,
-        3,
         1,
-        3,
-        3,
-        3,
-        71,
-        8,
-        3,
+        2,
         1,
-        4,
-        1,
-        4,
-        1,
-        4,
-        1,
-        4,
-        1,
-        4,
-        1,
-        4,
-        5,
-        4,
-        79,
-        8,
-        4,
-        10,
-        4,
-        12,
-        4,
-        82,
-        9,
-        4,
-        1,
-        4,
-        1,
-        4,
-        1,
-        4,
-        1,
-        4,
-        1,
-        4,
-        1,
-        4,
-        1,
-        4,
-        5,
-        4,
-        91,
-        8,
-        4,
-        10,
-        4,
-        12,
-        4,
-        94,
-        9,
-        4,
-        3,
-        4,
-        96,
-        8,
-        4,
-        1,
-        5,
-        1,
-        5,
-        1,
-        5,
-        1,
-        5,
-        1,
-        5,
-        3,
-        5,
-        103,
-        8,
-        5,
-        1,
-        6,
-        1,
-        6,
-        1,
-        7,
-        1,
-        7,
-        1,
-        7,
-        0,
-        0,
-        8,
-        0,
         2,
         4,
-        6,
+        2,
+        73,
         8,
-        10,
+        2,
+        11,
+        2,
         12,
-        14,
-        0,
+        2,
+        74,
+        3,
+        2,
+        77,
+        8,
+        2,
         1,
+        3,
         1,
-        0,
-        15,
-        17,
+        3,
+        5,
+        3,
+        81,
+        8,
+        3,
+        10,
+        3,
+        12,
+        3,
+        84,
+        9,
+        3,
+        1,
+        3,
+        3,
+        3,
+        87,
+        8,
+        3,
+        1,
+        4,
+        1,
+        4,
+        1,
+        4,
+        1,
+        4,
+        1,
+        4,
+        1,
+        4,
+        5,
+        4,
+        95,
+        8,
+        4,
+        10,
+        4,
+        12,
+        4,
+        98,
+        9,
+        4,
+        1,
+        4,
+        1,
+        4,
+        1,
+        4,
+        1,
+        4,
+        1,
+        4,
+        1,
+        4,
+        1,
+        4,
+        5,
+        4,
+        107,
+        8,
+        4,
+        10,
+        4,
+        12,
+        4,
+        110,
+        9,
+        4,
+        3,
+        4,
+        112,
+        8,
+        4,
+        1,
+        5,
+        1,
+        5,
+        1,
+        5,
+        1,
+        5,
+        1,
+        5,
+        3,
+        5,
         119,
+        8,
+        5,
+        1,
+        6,
+        1,
+        6,
+        1,
+        7,
+        1,
+        7,
+        1,
+        7,
+        0,
+        0,
+        8,
+        0,
+        2,
+        4,
+        6,
+        8,
+        10,
+        12,
+        14,
+        0,
+        1,
+        1,
+        0,
+        15,
+        17,
+        139,
         0,
         16,
         1,
@@ -277,43 +311,43 @@ def serializedATN():
         0,
         0,
         2,
-        46,
+        62,
         1,
         0,
         0,
         0,
         4,
-        60,
+        76,
         1,
         0,
         0,
         0,
         6,
-        66,
+        82,
         1,
         0,
         0,
         0,
         8,
-        95,
+        111,
         1,
         0,
         0,
         0,
         10,
-        102,
+        118,
         1,
         0,
         0,
         0,
         12,
-        104,
+        120,
         1,
         0,
         0,
         0,
         14,
-        106,
+        122,
         1,
         0,
         0,
@@ -421,43 +455,49 @@ def serializedATN():
         0,
         0,
         31,
-        47,
+        63,
         1,
         0,
         0,
         0,
         32,
-        33,
+        35,
         5,
         2,
         0,
         0,
         33,
         34,
+        5,
+        11,
+        0,
+        0,
+        34,
+        36,
         5,
         10,
         0,
         0,
-        34,
         35,
-        5,
-        11,
+        33,
+        1,
         0,
         0,
+        0,
         35,
-        47,
-        3,
-        8,
-        4,
+        36,
+        1,
+        0,
+        0,
         0,
         36,
         37,
-        5,
-        2,
+        1,
+        0,
         0,
         0,
         37,
-        47,
+        38,
         5,
         11,
         0,
@@ -465,101 +505,83 @@ def serializedATN():
         38,
         39,
         5,
-        2,
+        5,
         0,
         0,
         39,
         40,
-        5,
-        11,
-        0,
-        0,
-        40,
-        41,
-        3,
-        8,
-        4,
-        0,
-        41,
-        42,
-        5,
-        5,
-        0,
-        0,
-        42,
-        43,
         3,
         6,
         3,
         0,
-        43,
-        47,
+        40,
+        41,
+        5,
+        6,
+        0,
+        0,
+        41,
+        63,
         1,
         0,
+        0,
+        0,
+        42,
+        43,
+        5,
+        2,
+        0,
+        0,
+        43,
+        44,
+        5,
+        10,
         0,
         0,
         44,
         45,
         5,
-        2,
+        11,
         0,
         0,
         45,
-        47,
+        63,
         3,
         8,
         4,
         0,
         46,
-        19,
-        1,
-        0,
-        0,
-        0,
-        46,
-        32,
-        1,
-        0,
-        0,
-        0,
-        46,
-        36,
-        1,
-        0,
-        0,
-        0,
-        46,
-        38,
-        1,
-        0,
-        0,
-        0,
-        46,
-        44,
-        1,
-        0,
+        47,
+        5,
+        2,
         0,
         0,
         47,
-        3,
-        1,
-        0,
+        63,
+        5,
+        11,
         0,
         0,
         48,
         49,
         5,
-        3,
+        2,
         0,
         0,
         49,
         51,
-        3,
-        2,
-        1,
+        5,
+        11,
+        0,
         0,
         50,
-        48,
+        52,
+        3,
+        8,
+        4,
+        0,
+        51,
+        50,
         1,
         0,
         0,
@@ -571,304 +593,328 @@ def serializedATN():
         0,
         0,
         52,
-        50,
-        1,
-        0,
-        0,
-        0,
-        52,
         53,
         1,
         0,
         0,
         0,
         53,
-        61,
-        1,
-        0,
-        0,
-        0,
         54,
-        55,
         5,
-        3,
+        5,
         0,
+        0,
+        54,
+        63,
+        3,
+        6,
+        3,
         0,
         55,
-        57,
+        56,
+        5,
+        2,
+        0,
+        0,
+        56,
+        63,
         3,
-        14,
-        7,
-        0,
-        56,
-        54,
-        1,
-        0,
-        0,
+        8,
+        4,
         0,
         57,
         58,
-        1,
-        0,
-        0,
-        0,
-        58,
-        56,
-        1,
-        0,
+        5,
+        2,
         0,
         0,
         58,
         59,
-        1,
-        0,
+        5,
+        5,
         0,
         0,
         59,
-        61,
-        1,
-        0,
-        0,
+        60,
+        3,
+        6,
+        3,
         0,
         60,
-        50,
-        1,
-        0,
-        0,
-        0,
-        60,
-        56,
-        1,
-        0,
-        0,
-        0,
         61,
         5,
+        6,
+        0,
+        0,
+        61,
+        63,
         1,
         0,
         0,
         0,
         62,
-        65,
-        3,
-        14,
-        7,
+        19,
+        1,
+        0,
+        0,
+        0,
+        62,
+        32,
+        1,
+        0,
+        0,
+        0,
+        62,
+        42,
+        1,
+        0,
+        0,
+        0,
+        62,
+        46,
+        1,
+        0,
+        0,
+        0,
+        62,
+        48,
+        1,
+        0,
+        0,
+        0,
+        62,
+        55,
+        1,
+        0,
+        0,
+        0,
+        62,
+        57,
+        1,
+        0,
+        0,
         0,
         63,
+        3,
+        1,
+        0,
+        0,
+        0,
+        64,
         65,
+        5,
+        3,
+        0,
+        0,
+        65,
+        67,
         3,
         2,
         1,
         0,
+        66,
         64,
-        62,
         1,
         0,
         0,
         0,
-        64,
-        63,
-        1,
-        0,
-        0,
-        0,
-        65,
+        67,
         68,
-        1,
-        0,
-        0,
-        0,
-        66,
-        64,
-        1,
-        0,
-        0,
-        0,
-        66,
-        67,
-        1,
-        0,
-        0,
-        0,
-        67,
-        70,
         1,
         0,
         0,
         0,
         68,
         66,
+        1,
+        0,
+        0,
+        0,
+        68,
+        69,
         1,
         0,
         0,
         0,
         69,
+        77,
+        1,
+        0,
+        0,
+        0,
+        70,
         71,
+        5,
+        3,
+        0,
+        0,
+        71,
+        73,
+        3,
+        14,
+        7,
+        0,
+        72,
+        70,
+        1,
+        0,
+        0,
+        0,
+        73,
+        74,
+        1,
+        0,
+        0,
+        0,
+        74,
+        72,
+        1,
+        0,
+        0,
+        0,
+        74,
+        75,
+        1,
+        0,
+        0,
+        0,
+        75,
+        77,
+        1,
+        0,
+        0,
+        0,
+        76,
+        66,
+        1,
+        0,
+        0,
+        0,
+        76,
+        72,
+        1,
+        0,
+        0,
+        0,
+        77,
+        5,
+        1,
+        0,
+        0,
+        0,
+        78,
+        81,
+        3,
+        14,
+        7,
+        0,
+        79,
+        81,
+        3,
+        2,
+        1,
+        0,
+        80,
+        78,
+        1,
+        0,
+        0,
+        0,
+        80,
+        79,
+        1,
+        0,
+        0,
+        0,
+        81,
+        84,
+        1,
+        0,
+        0,
+        0,
+        82,
+        80,
+        1,
+        0,
+        0,
+        0,
+        82,
+        83,
+        1,
+        0,
+        0,
+        0,
+        83,
+        86,
+        1,
+        0,
+        0,
+        0,
+        84,
+        82,
+        1,
+        0,
+        0,
+        0,
+        85,
+        87,
         3,
         4,
         2,
         0,
-        70,
-        69,
+        86,
+        85,
         1,
         0,
         0,
         0,
-        70,
-        71,
+        86,
+        87,
         1,
         0,
         0,
         0,
-        71,
+        87,
         7,
         1,
         0,
         0,
         0,
-        72,
-        73,
+        88,
+        89,
         5,
         9,
         0,
         0,
-        73,
-        96,
+        89,
+        112,
         5,
         13,
         0,
         0,
-        74,
-        75,
+        90,
+        91,
         5,
         9,
         0,
         0,
-        75,
-        80,
+        91,
+        96,
         3,
         10,
         5,
         0,
-        76,
-        77,
+        92,
+        93,
         5,
         14,
         0,
         0,
-        77,
-        79,
-        3,
-        10,
-        5,
-        0,
-        78,
-        76,
-        1,
-        0,
-        0,
-        0,
-        79,
-        82,
-        1,
-        0,
-        0,
-        0,
-        80,
-        78,
-        1,
-        0,
-        0,
-        0,
-        80,
-        81,
-        1,
-        0,
-        0,
-        0,
-        81,
-        83,
-        1,
-        0,
-        0,
-        0,
-        82,
-        80,
-        1,
-        0,
-        0,
-        0,
-        83,
-        84,
-        5,
-        13,
-        0,
-        0,
-        84,
-        96,
-        1,
-        0,
-        0,
-        0,
-        85,
-        96,
-        5,
-        9,
-        0,
-        0,
-        86,
-        87,
-        5,
-        9,
-        0,
-        0,
-        87,
-        92,
-        3,
-        10,
-        5,
-        0,
-        88,
-        89,
-        5,
-        14,
-        0,
-        0,
-        89,
-        91,
-        3,
-        10,
-        5,
-        0,
-        90,
-        88,
-        1,
-        0,
-        0,
-        0,
-        91,
-        94,
-        1,
-        0,
-        0,
-        0,
-        92,
-        90,
-        1,
-        0,
-        0,
-        0,
-        92,
         93,
-        1,
-        0,
-        0,
-        0,
-        93,
-        96,
-        1,
-        0,
-        0,
+        95,
+        3,
+        10,
+        5,
         0,
         94,
         92,
@@ -877,127 +923,237 @@ def serializedATN():
         0,
         0,
         95,
-        72,
-        1,
-        0,
-        0,
-        0,
-        95,
-        74,
-        1,
-        0,
-        0,
-        0,
-        95,
-        85,
-        1,
-        0,
-        0,
-        0,
-        95,
-        86,
+        98,
         1,
         0,
         0,
         0,
         96,
+        94,
+        1,
+        0,
+        0,
+        0,
+        96,
+        97,
+        1,
+        0,
+        0,
+        0,
+        97,
+        99,
+        1,
+        0,
+        0,
+        0,
+        98,
+        96,
+        1,
+        0,
+        0,
+        0,
+        99,
+        100,
+        5,
+        13,
+        0,
+        0,
+        100,
+        112,
+        1,
+        0,
+        0,
+        0,
+        101,
+        112,
+        5,
         9,
-        1,
         0,
         0,
-        0,
-        97,
-        98,
-        5,
-        18,
-        0,
-        0,
-        98,
-        99,
-        5,
-        19,
-        0,
-        0,
-        99,
+        102,
         103,
+        5,
+        9,
+        0,
+        0,
+        103,
+        108,
         3,
-        12,
-        6,
-        0,
-        100,
-        103,
+        10,
         5,
-        18,
-        0,
-        0,
-        101,
-        103,
-        3,
-        12,
-        6,
-        0,
-        102,
-        97,
-        1,
-        0,
-        0,
-        0,
-        102,
-        100,
-        1,
-        0,
-        0,
-        0,
-        102,
-        101,
-        1,
-        0,
-        0,
-        0,
-        103,
-        11,
-        1,
-        0,
-        0,
         0,
         104,
         105,
+        5,
+        14,
+        0,
+        0,
+        105,
+        107,
+        3,
+        10,
+        5,
+        0,
+        106,
+        104,
+        1,
+        0,
+        0,
+        0,
+        107,
+        110,
+        1,
+        0,
+        0,
+        0,
+        108,
+        106,
+        1,
+        0,
+        0,
+        0,
+        108,
+        109,
+        1,
+        0,
+        0,
+        0,
+        109,
+        112,
+        1,
+        0,
+        0,
+        0,
+        110,
+        108,
+        1,
+        0,
+        0,
+        0,
+        111,
+        88,
+        1,
+        0,
+        0,
+        0,
+        111,
+        90,
+        1,
+        0,
+        0,
+        0,
+        111,
+        101,
+        1,
+        0,
+        0,
+        0,
+        111,
+        102,
+        1,
+        0,
+        0,
+        0,
+        112,
+        9,
+        1,
+        0,
+        0,
+        0,
+        113,
+        114,
+        5,
+        18,
+        0,
+        0,
+        114,
+        115,
+        5,
+        19,
+        0,
+        0,
+        115,
+        119,
+        3,
+        12,
+        6,
+        0,
+        116,
+        119,
+        5,
+        18,
+        0,
+        0,
+        117,
+        119,
+        3,
+        12,
+        6,
+        0,
+        118,
+        113,
+        1,
+        0,
+        0,
+        0,
+        118,
+        116,
+        1,
+        0,
+        0,
+        0,
+        118,
+        117,
+        1,
+        0,
+        0,
+        0,
+        119,
+        11,
+        1,
+        0,
+        0,
+        0,
+        120,
+        121,
         7,
         0,
         0,
         0,
-        105,
+        121,
         13,
         1,
         0,
         0,
         0,
-        106,
-        107,
+        122,
+        123,
         5,
         4,
         0,
         0,
-        107,
+        123,
         15,
         1,
         0,
         0,
         0,
-        13,
+        15,
         22,
         30,
-        46,
-        52,
-        58,
-        60,
-        64,
-        66,
-        70,
+        35,
+        51,
+        62,
+        68,
+        74,
+        76,
         80,
-        92,
-        95,
-        102,
+        82,
+        86,
+        96,
+        108,
+        111,
+        118,
     ]
 
 
@@ -1202,9 +1358,9 @@ class TagTemplateParser(Parser):
         self.enterRule(localctx, 2, self.RULE_tag)
         self._la = 0  # Token type
         try:
-            self.state = 46
+            self.state = 62
             self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input, 2, self._ctx)
+            la_ = self._interp.adaptivePredict(self._input, 4, self._ctx)
             if la_ == 1:
                 self.enterOuterAlt(localctx, 1)
                 self.state = 19
@@ -1239,46 +1395,86 @@ class TagTemplateParser(Parser):
                 self.enterOuterAlt(localctx, 2)
                 self.state = 32
                 self.match(TagTemplateParser.TAG_START)
-                self.state = 33
-                localctx.errorMissingCategoryId = self.match(
-                    TagTemplateParser.CATEGORY_SEPARATOR
-                )
-                self.state = 34
-                localctx.tagId = self.match(TagTemplateParser.TAG_ID)
                 self.state = 35
-                self.argumentList()
+                self._errHandler.sync(self)
+                la_ = self._interp.adaptivePredict(self._input, 2, self._ctx)
+                if la_ == 1:
+                    self.state = 33
+                    localctx.categoryId = self.match(TagTemplateParser.TAG_ID)
+                    self.state = 34
+                    self.match(TagTemplateParser.CATEGORY_SEPARATOR)
+
+                self.state = 37
+                localctx.tagId = self.match(TagTemplateParser.TAG_ID)
+                self.state = 38
+                self.match(TagTemplateParser.CONTEXT_START)
+                self.state = 39
+                self.pattern()
+                self.state = 40
+                self.match(TagTemplateParser.CONTEXT_END)
                 pass
 
             elif la_ == 3:
                 self.enterOuterAlt(localctx, 3)
-                self.state = 36
+                self.state = 42
                 self.match(TagTemplateParser.TAG_START)
-                self.state = 37
-                localctx.errorNoArgumentList = self.match(TagTemplateParser.TAG_ID)
+                self.state = 43
+                localctx.errorMissingCategoryId = self.match(
+                    TagTemplateParser.CATEGORY_SEPARATOR
+                )
+                self.state = 44
+                localctx.tagId = self.match(TagTemplateParser.TAG_ID)
+                self.state = 45
+                self.argumentList()
                 pass
 
             elif la_ == 4:
                 self.enterOuterAlt(localctx, 4)
-                self.state = 38
+                self.state = 46
                 self.match(TagTemplateParser.TAG_START)
-                self.state = 39
-                localctx.tagId = self.match(TagTemplateParser.TAG_ID)
-                self.state = 40
-                self.argumentList()
-                self.state = 41
-                localctx.errorUnclosedContext = self.match(
-                    TagTemplateParser.CONTEXT_START
-                )
-                self.state = 42
-                self.pattern()
+                self.state = 47
+                localctx.errorNoArgumentList = self.match(TagTemplateParser.TAG_ID)
                 pass
 
             elif la_ == 5:
                 self.enterOuterAlt(localctx, 5)
-                self.state = 44
+                self.state = 48
+                self.match(TagTemplateParser.TAG_START)
+                self.state = 49
+                localctx.tagId = self.match(TagTemplateParser.TAG_ID)
+                self.state = 51
+                self._errHandler.sync(self)
+                _la = self._input.LA(1)
+                if _la == TagTemplateParser.ARGS_START:
+                    self.state = 50
+                    self.argumentList()
+
+                self.state = 53
+                localctx.errorUnclosedContext = self.match(
+                    TagTemplateParser.CONTEXT_START
+                )
+                self.state = 54
+                self.pattern()
+                pass
+
+            elif la_ == 6:
+                self.enterOuterAlt(localctx, 6)
+                self.state = 55
                 localctx.errorMissingTagId = self.match(TagTemplateParser.TAG_START)
-                self.state = 45
+                self.state = 56
                 self.argumentList()
+                pass
+
+            elif la_ == 7:
+                self.enterOuterAlt(localctx, 7)
+                self.state = 57
+                localctx.errorMissingTagId = self.match(TagTemplateParser.TAG_START)
+                self.state = 58
+                self.match(TagTemplateParser.CONTEXT_START)
+                self.state = 59
+                self.pattern()
+                self.state = 60
+                self.match(TagTemplateParser.CONTEXT_END)
                 pass
 
         except RecognitionException as re:
@@ -1331,46 +1527,46 @@ class TagTemplateParser(Parser):
         localctx = TagTemplateParser.PipeListContext(self, self._ctx, self.state)
         self.enterRule(localctx, 4, self.RULE_pipeList)
         try:
-            self.state = 60
+            self.state = 76
             self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input, 5, self._ctx)
+            la_ = self._interp.adaptivePredict(self._input, 7, self._ctx)
             if la_ == 1:
                 self.enterOuterAlt(localctx, 1)
-                self.state = 50
+                self.state = 66
                 self._errHandler.sync(self)
                 _alt = 1
                 while _alt != 2 and _alt != ATN.INVALID_ALT_NUMBER:
                     if _alt == 1:
-                        self.state = 48
+                        self.state = 64
                         self.match(TagTemplateParser.PIPE)
-                        self.state = 49
+                        self.state = 65
                         self.tag()
 
                     else:
                         raise NoViableAltException(self)
-                    self.state = 52
+                    self.state = 68
                     self._errHandler.sync(self)
-                    _alt = self._interp.adaptivePredict(self._input, 3, self._ctx)
+                    _alt = self._interp.adaptivePredict(self._input, 5, self._ctx)
 
                 pass
 
             elif la_ == 2:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 56
+                self.state = 72
                 self._errHandler.sync(self)
                 _alt = 1
                 while _alt != 2 and _alt != ATN.INVALID_ALT_NUMBER:
                     if _alt == 1:
-                        self.state = 54
+                        self.state = 70
                         self.match(TagTemplateParser.PIPE)
-                        self.state = 55
+                        self.state = 71
                         localctx.errorNonTagInPipeList = self.rawText()
 
                     else:
                         raise NoViableAltException(self)
-                    self.state = 58
+                    self.state = 74
                     self._errHandler.sync(self)
-                    _alt = self._interp.adaptivePredict(self._input, 4, self._ctx)
+                    _alt = self._interp.adaptivePredict(self._input, 6, self._ctx)
 
                 pass
 
@@ -1422,34 +1618,34 @@ class TagTemplateParser(Parser):
         self.enterRule(localctx, 6, self.RULE_pattern)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 66
+            self.state = 82
             self._errHandler.sync(self)
-            _alt = self._interp.adaptivePredict(self._input, 7, self._ctx)
+            _alt = self._interp.adaptivePredict(self._input, 9, self._ctx)
             while _alt != 2 and _alt != ATN.INVALID_ALT_NUMBER:
                 if _alt == 1:
-                    self.state = 64
+                    self.state = 80
                     self._errHandler.sync(self)
                     token = self._input.LA(1)
                     if token in [TagTemplateParser.TEXT]:
-                        self.state = 62
+                        self.state = 78
                         self.rawText()
                         pass
                     elif token in [TagTemplateParser.TAG_START]:
-                        self.state = 63
+                        self.state = 79
                         self.tag()
                         pass
                     else:
                         raise NoViableAltException(self)
 
-                self.state = 68
+                self.state = 84
                 self._errHandler.sync(self)
-                _alt = self._interp.adaptivePredict(self._input, 7, self._ctx)
+                _alt = self._interp.adaptivePredict(self._input, 9, self._ctx)
 
-            self.state = 70
+            self.state = 86
             self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input, 8, self._ctx)
+            la_ = self._interp.adaptivePredict(self._input, 10, self._ctx)
             if la_ == 1:
-                self.state = 69
+                self.state = 85
                 localctx.pipe_list = self.pipeList()
 
         except RecognitionException as re:
@@ -1503,42 +1699,42 @@ class TagTemplateParser(Parser):
         self.enterRule(localctx, 8, self.RULE_argumentList)
         self._la = 0  # Token type
         try:
-            self.state = 95
+            self.state = 111
             self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input, 11, self._ctx)
+            la_ = self._interp.adaptivePredict(self._input, 13, self._ctx)
             if la_ == 1:
                 self.enterOuterAlt(localctx, 1)
-                self.state = 72
+                self.state = 88
                 self.match(TagTemplateParser.ARGS_START)
-                self.state = 73
+                self.state = 89
                 self.match(TagTemplateParser.ARGS_END)
                 pass
 
             elif la_ == 2:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 74
+                self.state = 90
                 self.match(TagTemplateParser.ARGS_START)
-                self.state = 75
+                self.state = 91
                 self.argument()
-                self.state = 80
+                self.state = 96
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
                 while _la == TagTemplateParser.ARG_SEPARATOR:
-                    self.state = 76
+                    self.state = 92
                     self.match(TagTemplateParser.ARG_SEPARATOR)
-                    self.state = 77
+                    self.state = 93
                     self.argument()
-                    self.state = 82
+                    self.state = 98
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
 
-                self.state = 83
+                self.state = 99
                 self.match(TagTemplateParser.ARGS_END)
                 pass
 
             elif la_ == 3:
                 self.enterOuterAlt(localctx, 3)
-                self.state = 85
+                self.state = 101
                 localctx.errorUnclosedArgumentList = self.match(
                     TagTemplateParser.ARGS_START
                 )
@@ -1546,21 +1742,21 @@ class TagTemplateParser(Parser):
 
             elif la_ == 4:
                 self.enterOuterAlt(localctx, 4)
-                self.state = 86
+                self.state = 102
                 localctx.errorUnclosedArgumentList = self.match(
                     TagTemplateParser.ARGS_START
                 )
-                self.state = 87
+                self.state = 103
                 self.argument()
-                self.state = 92
+                self.state = 108
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
                 while _la == TagTemplateParser.ARG_SEPARATOR:
-                    self.state = 88
+                    self.state = 104
                     self.match(TagTemplateParser.ARG_SEPARATOR)
-                    self.state = 89
+                    self.state = 105
                     self.argument()
-                    self.state = 94
+                    self.state = 110
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
 
@@ -1606,28 +1802,28 @@ class TagTemplateParser(Parser):
         localctx = TagTemplateParser.ArgumentContext(self, self._ctx, self.state)
         self.enterRule(localctx, 10, self.RULE_argument)
         try:
-            self.state = 102
+            self.state = 118
             self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input, 12, self._ctx)
+            la_ = self._interp.adaptivePredict(self._input, 14, self._ctx)
             if la_ == 1:
                 self.enterOuterAlt(localctx, 1)
-                self.state = 97
+                self.state = 113
                 self.match(TagTemplateParser.ARG_NAME)
-                self.state = 98
+                self.state = 114
                 self.match(TagTemplateParser.ARG_EQUALS)
-                self.state = 99
+                self.state = 115
                 self.argumentValue()
                 pass
 
             elif la_ == 2:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 100
+                self.state = 116
                 self.match(TagTemplateParser.ARG_NAME)
                 pass
 
             elif la_ == 3:
                 self.enterOuterAlt(localctx, 3)
-                self.state = 101
+                self.state = 117
                 self.argumentValue()
                 pass
 
@@ -1673,7 +1869,7 @@ class TagTemplateParser(Parser):
         self._la = 0  # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 104
+            self.state = 120
             _la = self._input.LA(1)
             if not (
                 (
@@ -1728,7 +1924,7 @@ class TagTemplateParser(Parser):
         self.enterRule(localctx, 14, self.RULE_rawText)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 106
+            self.state = 122
             self.match(TagTemplateParser.TEXT)
         except RecognitionException as re:
             localctx.exception = re
