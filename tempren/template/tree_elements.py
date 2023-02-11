@@ -196,6 +196,7 @@ class TagFactoryFromClass(TagFactory):
     def _create_configuration_signature(self) -> str:
         import inspect
 
+        # TODO: do not display empty argument list
         signature = inspect.signature(self._tag_class.configure)
         parameters_without_self = list(
             filter(lambda param: param.name != "self", signature.parameters.values())
@@ -205,6 +206,10 @@ class TagFactoryFromClass(TagFactory):
             context_metavar = "[{...}]"
         elif self._tag_class.require_context is True:
             context_metavar = "{...}"  # TODO: test?
+            if not signature.parameters:
+                signature = (
+                    ""  # Empty argument list can be skipped for context-only tags
+                )
         else:
             context_metavar = ""
         single_line_signature = f"%{self._tag_name}{signature}{context_metavar}"
