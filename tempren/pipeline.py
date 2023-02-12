@@ -1,9 +1,9 @@
 import logging
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Callable, Iterable, List, Optional, Union
+from typing import Callable, Dict, Iterable, List, Optional, Union
 
 from tempren.file_filters import (
     FileFilterInverter,
@@ -82,6 +82,7 @@ class RuntimeConfiguration:
     sort_invert: bool = False
     sort: Optional[str] = None
     mode: OperationMode = OperationMode.name
+    adhoc_tags: Dict[str, Path] = field(default_factory=dict)
 
 
 class ConfigurationError(Exception):

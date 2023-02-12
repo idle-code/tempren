@@ -2,13 +2,15 @@
 import argparse
 import logging
 import os
+import re
+import shutil
 import sys
 from argparse import ArgumentParser, Namespace
 from enum import IntEnum
 from logging import LogRecord
 from pathlib import Path
 from textwrap import indent
-from typing import Any, List, NoReturn, Optional, Sequence, Text, Union
+from typing import Any, List, NoReturn, Optional, Sequence, Text, Tuple, Union
 
 from tempren.filesystem import DestinationAlreadyExistsError
 from tempren.path_generator import TemplateEvaluationError
@@ -81,8 +83,25 @@ def existing_file(val: str) -> Path:
 
 def nonempty_string(val: str) -> str:
     if not val:
-        raise argparse.ArgumentTypeError(f"Non-empty argument required")
+        raise argparse.ArgumentTypeError("Non-empty argument required")
     return val
+
+
+def adhoc_tag(val: str) -> Tuple[str, Path]:
+    val = nonempty_string(val)
+    explicit_name, exec_path_str = val.split("=", maxsplit=1)
+    if not exec_path_str:
+        exec_path_str = explicit_name
+        explicit_name = None
+    exec_path = Path(exec_path_str)
+    if not exec_path.exists():
+        exec_path_str = shutil.which(exec_path_str)
+        if not exec_path_str:
+            raise argparse.ArgumentTypeError(f"Executable '{exec_path}' doesn't exists")
+        exec_path = Path(exec_path_str)
+    if not explicit_name:
+        explicit_name = exec_path.name
+    return explicit_name, exec_path.absolute()
 
 
 class SystemExitError(Exception):
@@ -244,6 +263,14 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         "--include-hidden",
         action="store_true",
         help="Consider hidden files and directories when scanning for files in input directory",
+    )
+    parser.add_argument(
+        "-ah",
+        "--ad-hoc",
+        nargs="*",
+        type=adhoc_tag,
+        default=list(),
+        help="Add command or executable as an ad-hoc tag",
     )
     parser.add_argument(
         "-v",
@@ -436,6 +463,7 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         sort_invert=args.sort_invert,
         sort=args.sort,
         mode=args.mode,
+        adhoc_tags=dict(args.ad_hoc),
     )
 
     return configuration

@@ -769,3 +769,15 @@ class TestConflictResolution:
         assert "foobar" in stderr
 
         tempren_process.wait()
+
+
+@pytest.mark.parametrize("flag", ["-ah", "--ad-hoc"])
+class TestAdHocTags:
+    def test_tag_from_standard_command(self, flag: str, text_data_dir: Path):
+        stdout, stderr, error_code = run_tempren(
+            flag, "cut", "%cut('-c', '3')_%Name()%Ext()", text_data_dir
+        )
+
+        assert error_code == ErrorCode.SUCCESS
+        assert (text_data_dir / "l_hello.txt").exists()
+        assert (text_data_dir / "Tr  c_markdown.md").exists()
