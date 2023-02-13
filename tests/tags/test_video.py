@@ -21,6 +21,7 @@ from tempren.template.tree_elements import (
 )
 
 
+# noinspection PyMethodMayBeStatic
 class VideoInfoTagTests:
     def test_invalid_file_type(self, tag: Tag, text_data_dir: Path):
         text_file = File(text_data_dir, Path("hello.txt"))
