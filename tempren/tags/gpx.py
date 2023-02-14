@@ -30,7 +30,7 @@ class GpxTagBase(Tag, ABC):
 
 
 class StartTimeTag(GpxTagBase):
-    """Start time of the first segment in file (in ISO 8601 format)"""
+    """Start time of the first segment in the file (in ISO 8601 format)"""
 
     def extract_metadata(self, gpx: GPX) -> Any:
         time_bounds = gpx.get_time_bounds()
@@ -40,7 +40,7 @@ class StartTimeTag(GpxTagBase):
 
 
 class EndTimeTag(GpxTagBase):
-    """End time of the last segment in file (in ISO 8601 format)"""
+    """End time of the last segment in the file (in ISO 8601 format)"""
 
     def extract_metadata(self, gpx: GPX) -> Any:
         time_bounds = gpx.get_time_bounds()
@@ -56,8 +56,6 @@ class ActivityTag(GpxTagBase):
         if not gpx.tracks:
             raise MissingMetadataError()
         track = gpx.tracks[0]
-        if not track.type:
-            raise MissingMetadataError()
         return track.type
 
 
@@ -69,3 +67,24 @@ class DurationTag(GpxTagBase):
         if not duration_seconds:
             raise MissingMetadataError()
         return timedelta(seconds=duration_seconds)
+
+
+class DistanceTag(GpxTagBase):
+    """Total distance travelled (in meters)"""
+
+    def extract_metadata(self, gpx: GPX) -> float:
+        distance_meters = gpx.length_3d()
+        gpx.get_elevation_extremes()
+        if distance_meters == 0:
+            raise MissingMetadataError()
+        return distance_meters
+
+
+class ElevationChangeTag(GpxTagBase):
+    """Maximum elevation change (in meters)"""
+
+    def extract_metadata(self, gpx: GPX) -> float:
+        extremes = gpx.get_elevation_extremes()
+        if not extremes.minimum or not extremes.maximum:
+            raise MissingMetadataError()
+        return extremes.maximum - extremes.minimum

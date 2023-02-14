@@ -4,8 +4,19 @@ from pathlib import Path
 import pytest
 
 from tempren.path_generator import File
-from tempren.tags.gpx import ActivityTag, DurationTag, EndTimeTag, StartTimeTag
-from tempren.template.tree_elements import FileNotSupportedError, Tag
+from tempren.tags.gpx import (
+    ActivityTag,
+    DistanceTag,
+    DurationTag,
+    ElevationChangeTag,
+    EndTimeTag,
+    StartTimeTag,
+)
+from tempren.template.tree_elements import (
+    FileNotSupportedError,
+    MissingMetadataError,
+    Tag,
+)
 
 
 # noinspection PyMethodMayBeStatic
@@ -21,6 +32,12 @@ class GpxTagTests:
 
         with pytest.raises(FileNotSupportedError):
             tag.process(text_file, None)
+
+    def test_missing_fields(self, tag: Tag, gpx_data_dir: Path):
+        empty_file = File(gpx_data_dir, Path("empty.gpx"))
+
+        with pytest.raises(MissingMetadataError):
+            tag.process(empty_file, None)
 
 
 class TestStartTimeTag(GpxTagTests):
@@ -53,7 +70,7 @@ class TestEndTimeTag(GpxTagTests):
         )
 
 
-class TestActivityTagTag(GpxTagTests):
+class TestActivityTag(GpxTagTests):
     @pytest.fixture
     def tag(self) -> ActivityTag:
         return ActivityTag()
@@ -66,7 +83,7 @@ class TestActivityTagTag(GpxTagTests):
         assert result == "spacer"
 
 
-class TestDurationTagTag(GpxTagTests):
+class TestDurationTag(GpxTagTests):
     @pytest.fixture
     def tag(self) -> DurationTag:
         return DurationTag()
@@ -77,3 +94,29 @@ class TestDurationTagTag(GpxTagTests):
         result = tag.process(walk_file, None)
 
         assert result == timedelta(minutes=26, seconds=42, microseconds=274000)
+
+
+class TestDistanceTag(GpxTagTests):
+    @pytest.fixture
+    def tag(self) -> DistanceTag:
+        return DistanceTag()
+
+    def test_distance(self, tag: DistanceTag, gpx_data_dir: Path):
+        walk_file = File(gpx_data_dir, Path("walk.gpx"))
+
+        result = tag.process(walk_file, None)
+
+        assert abs(result - 1695.65) < 0.01
+
+
+class TestElevationChangeTag(GpxTagTests):
+    @pytest.fixture
+    def tag(self) -> ElevationChangeTag:
+        return ElevationChangeTag()
+
+    def test_distance(self, tag: ElevationChangeTag, gpx_data_dir: Path):
+        walk_file = File(gpx_data_dir, Path("walk.gpx"))
+
+        result = tag.process(walk_file, None)
+
+        assert abs(result - 33.79) < 0.01
