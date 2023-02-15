@@ -2,9 +2,11 @@ from pathlib import Path
 from typing import Optional
 
 import pytest
+from pint import UndefinedUnitError
 
 from tempren.path_generator import ExpressionEvaluationError, File
 from tempren.tags.core import (
+    AsDistanceTag,
     AsDurationTag,
     AsIntTag,
     AsSizeTag,
@@ -642,3 +644,40 @@ class TestAsIntTag:
         number = tag.process(nonexistent_file, "776")
 
         assert number == "111111110"
+
+
+class TestAsDistanceTag:
+    def test_invalid_target_unit(self):
+        tag = AsDistanceTag()
+
+        with pytest.raises(UndefinedUnitError):
+            tag.configure("foobar")
+
+    def test_invalid_source_unit(self):
+        tag = AsDistanceTag()
+
+        with pytest.raises(UndefinedUnitError):
+            tag.configure("km", "foobar")
+
+    def test_invalid_input(self, nonexistent_file: File):
+        tag = AsDistanceTag()
+        tag.configure("km")
+
+        with pytest.raises(ValueError):
+            tag.process(nonexistent_file, "foobar")
+
+    def test_meters_to_foot(self, nonexistent_file: File):
+        tag = AsDistanceTag()
+        tag.configure("ft")
+
+        result = tag.process(nonexistent_file, "1")
+
+        assert abs(result - 3.28) < 0.01
+
+    def test_miles_to_kilometers(self, nonexistent_file: File):
+        tag = AsDistanceTag()
+        tag.configure("km", "mile")
+
+        result = tag.process(nonexistent_file, "10")
+
+        assert abs(result - 16.09) < 0.01

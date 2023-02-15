@@ -88,3 +88,13 @@ class ElevationChangeTag(GpxTagBase):
         if not extremes.minimum or not extremes.maximum:
             raise MissingMetadataError()
         return extremes.maximum - extremes.minimum
+
+
+class AverageSpeedTag(GpxTagBase):
+    """Average speed (in meters/second)"""
+
+    def extract_metadata(self, gpx: GPX) -> float:
+        moving_data = gpx.get_moving_data()
+        if moving_data.moving_distance == 0 or moving_data.moving_time == 0:
+            raise MissingMetadataError()
+        return moving_data.moving_distance / moving_data.moving_time

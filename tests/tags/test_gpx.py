@@ -6,6 +6,7 @@ import pytest
 from tempren.path_generator import File
 from tempren.tags.gpx import (
     ActivityTag,
+    AverageSpeedTag,
     DistanceTag,
     DurationTag,
     ElevationChangeTag,
@@ -120,3 +121,16 @@ class TestElevationChangeTag(GpxTagTests):
         result = tag.process(walk_file, None)
 
         assert abs(result - 33.79) < 0.01
+
+
+class TestAverageSpeedTag(GpxTagTests):
+    @pytest.fixture
+    def tag(self) -> AverageSpeedTag:
+        return AverageSpeedTag()
+
+    def test_average_speed(self, tag: AverageSpeedTag, gpx_data_dir: Path):
+        walk_file = File(gpx_data_dir, Path("walk.gpx"))
+
+        result = tag.process(walk_file, None)
+
+        assert abs(result - 1.05) < 0.01
