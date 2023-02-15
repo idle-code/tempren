@@ -148,7 +148,6 @@ class _ShowHelp(argparse.Action):
                 tag_factory = registry.get_tag_factory(tag_name)
             except TagError as tag_error:
                 parser.exit(ErrorCode.USAGE_ERROR, str(tag_error))
-                return
             log.info("")
             log.info(indent(tag_factory.configuration_signature, "  "))
             log.info("")
@@ -179,12 +178,7 @@ class _ShowVersion(argparse.Action):
 
             return importlib.metadata.version(package_name)
         except ModuleNotFoundError:
-            try:
-                import importlib_metadata
-
-                return importlib_metadata.version(package_name)
-            except ModuleNotFoundError:
-                return "0.0.0"
+            return "0.0.0"
 
 
 class _IncreaseLogVerbosity(argparse.Action):
@@ -550,7 +544,7 @@ def main() -> int:
     except InvalidDestinationError as exc:
         log.error(f"Error: {exc}")
         return ErrorCode.INVALID_DESTINATION_ERROR
-    except Exception as exc:
+    except Exception as exc:  # NOCOVER: not really testable - final fallback
         log.error(f"Unknown error: {exc.__class__.__name__} {exc}")
         return ErrorCode.UNKNOWN_ERROR
     finally:

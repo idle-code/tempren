@@ -9,6 +9,7 @@ from typing import Any, Optional, Union
 import isodate
 import magic
 import pathvalidate
+import pint as pint
 
 from tempren.path_generator import evaluate_expression
 from tempren.template.path_generators import File
@@ -295,9 +296,6 @@ class EvalTag(Tag):
 
     require_context = True
 
-    def configure(self):
-        super().configure()
-
     def process(self, file: File, context: Optional[str]) -> Any:  # type ignore
         assert context is not None
         return evaluate_expression(context)
@@ -433,3 +431,30 @@ class AsIntTag(Tag):
 
         parsed_number = int(context, base=self.src_base)
         return format(parsed_number, _supported_bases[self.dst_base])
+
+
+class AsDistanceTag(Tag):
+    """Re-format provided distance (in meters)"""
+
+    require_context = True
+
+    _dst_unit: pint.Unit
+    _src_unit: pint.Unit
+
+    _ureg = pint.UnitRegistry()
+
+    # noinspection PyMethodOverriding
+    def configure(self, dst_unit: str, src_unit: str = "meter"):  # type: ignore
+        """
+        :param dst_unit: unit name to convert to
+        :param src_unit: source value unit name
+
+        """
+        self._dst_unit = self._ureg.parse_units(dst_unit)
+        self._src_unit = self._ureg.parse_units(src_unit)
+
+    def process(self, file: File, context: Optional[str]) -> float:
+        assert context is not None
+        src_value = float(context) * self._src_unit
+        dst_value = src_value.to(self._dst_unit)
+        return dst_value.magnitude

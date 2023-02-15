@@ -205,7 +205,7 @@ class TagFactoryFromClass(TagFactory):
             context_metavar = "[{...}]"
         elif self._tag_class.require_context is True:
             context_metavar = "{...}"  # TODO: test?
-            if not signature.parameters:
+            if not parameters_without_self:
                 # Empty argument list can be skipped for context-only tags
                 signature_str = ""
         else:
