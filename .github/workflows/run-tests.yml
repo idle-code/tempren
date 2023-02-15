@@ -8,7 +8,7 @@ jobs:
       - name: Install python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.7
+          python-version: 3.8
       - name: Install poetry
         uses: snok/install-poetry@v1
         with:
