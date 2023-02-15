@@ -441,7 +441,13 @@ class AsDistanceTag(Tag):
     _dst_unit: pint.Unit
     _src_unit: pint.Unit
 
-    _ureg = pint.UnitRegistry()
+    _ureg_instance: Optional[pint.UnitRegistry] = None
+
+    @property
+    def _ureg(self) -> pint.UnitRegistry:
+        if self._ureg_instance is None:
+            self._ureg_instance = pint.UnitRegistry()
+        return self._ureg_instance
 
     # noinspection PyMethodOverriding
     def configure(self, dst_unit: str, src_unit: str = "meter"):  # type: ignore
