@@ -31,7 +31,7 @@ class TestTagCategory:
     def test_register_tag__use_provided_name(self):
         category = TagCategory("TestCategory")
 
-        category.register_tag(MockTag, "FooBar")
+        category.register_tag_class(MockTag, "FooBar")
 
         foobar_tag = category.find_tag_factory("FooBar")
         assert foobar_tag
@@ -39,7 +39,7 @@ class TestTagCategory:
     def test_register_tag__generate_name_based_on_class(self):
         category = TagCategory("TestCategory")
 
-        category.register_tag(MockTag)
+        category.register_tag_class(MockTag)
 
         mock_tag = category.find_tag_factory("Mock")
         assert mock_tag
@@ -55,14 +55,14 @@ class TestTagCategory:
         category = TagCategory("TestCategory")
 
         with pytest.raises(ValueError):
-            category.register_tag(FakeExtractor)
+            category.register_tag_class(FakeExtractor)
 
     def test_register_tag__register_existing_tag(self):
         category = TagCategory("TestCategory")
-        category.register_tag(MockTag)
+        category.register_tag_class(MockTag)
 
         with pytest.raises(ValueError) as exc:
-            category.register_tag(MockTag)
+            category.register_tag_class(MockTag)
 
         assert exc.match("already registered")
 
@@ -94,18 +94,16 @@ class TestTagRegistry:
     def test_get_tag_factory__single_tag_no_category(self):
         registry = TagRegistry()
         category = registry.register_category("Category")
-        mock_tag_factory = TagFactoryFromClass(MockTag)
-        category.register_tag_factory(mock_tag_factory)
+        category.register_tag_class(MockTag)
 
         tag_factory = registry.get_tag_factory(TagName("Mock"))
 
-        assert tag_factory is mock_tag_factory
+        assert tag_factory is not None
 
     def test_get_tag_factory__single_tag_invalid_category(self):
         registry = TagRegistry()
         category = registry.register_category("Category")
-        mock_tag_factory = TagFactoryFromClass(MockTag)
-        category.register_tag_factory(mock_tag_factory)
+        category.register_tag_class(MockTag)
 
         with pytest.raises(UnknownCategoryError):
             registry.get_tag_factory(TagName("Mock", "OtherCategory"))
@@ -114,10 +112,8 @@ class TestTagRegistry:
         registry = TagRegistry()
         category_a = registry.register_category("CategoryA")
         category_b = registry.register_category("CategoryB")
-        mock_tag_a_factory = TagFactoryFromClass(MockTag)
-        mock_tag_b_factory = TagFactoryFromClass(MockTag)
-        category_a.register_tag_factory(mock_tag_a_factory)
-        category_b.register_tag_factory(mock_tag_b_factory)
+        category_a.register_tag_class(MockTag)
+        category_b.register_tag_class(MockTag)
 
         with pytest.raises(AmbiguousTagError):
             registry.get_tag_factory(TagName("Mock"))
@@ -126,14 +122,12 @@ class TestTagRegistry:
         registry = TagRegistry()
         category_a = registry.register_category("CategoryA")
         category_b = registry.register_category("CategoryB")
-        mock_tag_a_factory = TagFactoryFromClass(MockTag)
-        mock_tag_b_factory = TagFactoryFromClass(MockTag)
-        category_a.register_tag_factory(mock_tag_a_factory)
-        category_b.register_tag_factory(mock_tag_b_factory)
+        category_a.register_tag_class(MockTag)
+        category_b.register_tag_class(MockTag)
 
         tag_b_factory = registry.get_tag_factory(TagName("Mock", "CategoryB"))
 
-        assert tag_b_factory is mock_tag_b_factory
+        assert tag_b_factory is not None
 
     def test_bind__missing_tag(self):
         pattern = parse("%Nonexistent()")
@@ -149,8 +143,8 @@ class TestTagRegistry:
         registry = TagRegistry()
         category_a = registry.register_category("CategoryA")
         category_b = registry.register_category("CategoryB")
-        category_a.register_tag_factory(TagFactoryFromClass(MockTag))
-        category_b.register_tag_factory(TagFactoryFromClass(MockTag))
+        category_a.register_tag_class(MockTag)
+        category_b.register_tag_class(MockTag)
 
         with pytest.raises(AmbiguousTagError) as exc:
             registry.bind(pattern)
@@ -231,7 +225,7 @@ class TestTagRegistry:
         pattern = parse("%Mock(1, b='text')")
         registry = TagRegistry()
         category = registry.register_category("Test")
-        category.register_tag(MockTag, "Mock")
+        category.register_tag_class(MockTag, "Mock")
 
         bound_pattern = registry.bind(pattern)
 
@@ -250,7 +244,7 @@ class TestTagRegistry:
             def process(self, path: Path, context: Optional[str]) -> str:
                 pass
 
-        category.register_tag(FooTag)
+        category.register_tag_class(FooTag)
 
         with pytest.raises(ConfigurationError):
             registry.bind(pattern)
@@ -267,7 +261,7 @@ class TestTagRegistry:
             def process(self, path: Path, context: Optional[str]) -> str:
                 pass
 
-        category.register_tag(FooTag)
+        category.register_tag_class(FooTag)
 
         with pytest.raises(ConfigurationError) as exc:
             registry.bind(pattern)
@@ -278,8 +272,8 @@ class TestTagRegistry:
         pattern = parse("%Outer(name='outer'){%Inner(name='inner')}")
         registry = TagRegistry()
         category = registry.register_category("Test")
-        category.register_tag(MockTag, "Outer")
-        category.register_tag(MockTag, "Inner")
+        category.register_tag_class(MockTag, "Outer")
+        category.register_tag_class(MockTag, "Inner")
 
         bound_pattern = registry.bind(pattern)
 

@@ -5,6 +5,7 @@ import pkgutil
 from dataclasses import dataclass
 from functools import reduce
 from logging import Logger
+from pathlib import Path
 from types import ModuleType
 from typing import Dict, List, Mapping, Optional, Tuple, Type, Union
 
@@ -22,6 +23,7 @@ from .tree_elements import (
     Tag,
     TagFactory,
     TagFactoryFromClass,
+    TagFactoryFromExecutable,
     TagInstance,
     TagName,
     TagPlaceholder,
@@ -337,12 +339,19 @@ class TagCategory:
         self.name = name
         self.description = description
 
-    def register_tag(self, tag_class: Type[Tag], tag_name: Optional[str] = None):
-        _simple_tag_factory = TagFactoryFromClass(tag_class, tag_name)
+    def register_tag_class(self, tag_class: Type[Tag], tag_name: Optional[str] = None):
+        class_tag_factory = TagFactoryFromClass(tag_class, tag_name)
         self.log.debug(
-            f"Registering class {tag_class} as {_simple_tag_factory.tag_name} tag"
+            f"Registering class {tag_class} as {class_tag_factory.tag_name} tag"
         )
-        self.register_tag_factory(_simple_tag_factory, tag_name)
+        self.register_tag_factory(class_tag_factory, tag_name)
+
+    def register_tag_from_executable(self, exec_path: Path, tag_name: str):
+        executable_tag_factory = TagFactoryFromExecutable(exec_path, tag_name)
+        self.log.debug(
+            f"Registering executable {exec_path} as {executable_tag_factory.tag_name} tag"
+        )
+        self.register_tag_factory(executable_tag_factory, tag_name)
 
     def register_tag_factory(
         self, tag_factory: TagFactory, tag_name: Optional[str] = None
@@ -493,7 +502,7 @@ class TagRegistry:
         # TODO: do not register empty modules
         module_category = self.register_category(category_name)
         for _, tag_class in inspect.getmembers(module, is_tag_class):
-            module_category.register_tag(tag_class)
+            module_category.register_tag_class(tag_class)
 
     def register_tags_in_package(self, package):
         self.log.debug(f"Discovering tags in package '{package}'")

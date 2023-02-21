@@ -781,3 +781,9 @@ class TestAdHocTags:
         assert error_code == ErrorCode.SUCCESS
         assert (text_data_dir / "l_hello.txt").exists()
         assert (text_data_dir / "Tr  c_markdown.md").exists()
+
+    def test_multiple_tags(self, flag: str, text_data_dir: Path):
+        pass
+
+    def test_multiple_tags_same_name(self, flag: str, text_data_dir: Path):
+        pass

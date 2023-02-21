@@ -241,6 +241,16 @@ def build_tag_registry() -> TagRegistry:
     return registry
 
 
+def register_adhoc_tags(registry: TagRegistry, adhoc_tags: Dict[str, Path]):
+    if not adhoc_tags:
+        return
+    log.debug("Generating ad-hoc tag factories")
+
+    adhoc_category = registry.register_category("AdHoc")
+    for tag_name, exec_path in sorted(adhoc_tags.items()):
+        adhoc_category.register_tag_from_executable(exec_path, tag_name)
+
+
 def build_pipeline(
     config: RuntimeConfiguration,
     registry: TagRegistry,

@@ -1,7 +1,9 @@
+import subprocess
 import textwrap
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, List, Mapping, Optional, Type
+from pathlib import Path
+from typing import Any, List, Mapping, Optional, Tuple, Type
 
 from docstring_parser import parse as parse_docstring
 
@@ -254,6 +256,68 @@ class TagFactoryFromClass(TagFactory):
         tag = self._tag_class()
         tag.configure(*args, **kwargs)  # type: ignore
         return tag
+
+
+class TagFactoryFromExecutable(TagFactory):
+    _executable_path: Path
+    _tag_name: str
+
+    @property
+    def tag_name(self) -> str:
+        return self._tag_name
+
+    @property
+    def configuration_signature(self) -> str:
+        pass
+
+    @property
+    def short_description(self) -> str:
+        pass
+
+    @property
+    def long_description(self) -> Optional[str]:
+        pass
+
+    def __call__(self, *args, **kwargs) -> Tag:
+        pass
+
+    def __init__(self, exec_path: Path, tag_name: str):
+        assert exec_path.exists()
+        self._executable_path = exec_path
+        self._tag_name = tag_name
+
+
+class AdHocTag(Tag):
+    executable: Path
+    args: Tuple[str, ...] = ()
+
+    def __init__(self, executable: Path):
+        assert (
+            executable.exists()
+        ), "Provided executable doesn't exists in the filesystem"
+        self.executable = executable
+
+    def configure(self, *positional_args: str):
+        self.args = positional_args
+
+    def process(self, file: File, context: Optional[str]) -> str:
+        if context is None:
+            completed_process = subprocess.run(
+                [str(self.executable)] + list(self.args) + [str(file.absolute_path)],
+                capture_output=True,
+            )
+        else:
+            completed_process = subprocess.run(
+                [str(self.executable)] + list(self.args),
+                input=context.encode("utf-8"),
+                capture_output=True,
+            )
+
+        captured_stdout = completed_process.stdout.decode("utf-8")
+        if completed_process.returncode != 0:
+            captured_stderr = completed_process.stderr.decode("utf-8")
+            raise MissingMetadataError(captured_stderr)
+        return captured_stdout.strip()
 
 
 @dataclass

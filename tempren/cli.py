@@ -74,7 +74,7 @@ def configure_logging():
     logging.root.addHandler(stderr_handler)
 
 
-def existing_file(val: str) -> Path:
+def existing_path(val: str) -> Path:
     input_path = Path(val)
     if not input_path.exists():
         raise argparse.ArgumentTypeError(f"Path '{val}' doesn't exists")
@@ -89,19 +89,21 @@ def nonempty_string(val: str) -> str:
 
 def adhoc_tag(val: str) -> Tuple[str, Path]:
     val = nonempty_string(val)
-    explicit_name, exec_path_str = val.split("=", maxsplit=1)
-    if not exec_path_str:
-        exec_path_str = explicit_name
-        explicit_name = None
+    components = val.split("=", maxsplit=1)
+    if len(components) == 1:
+        tag_name = None
+        exec_path_str = components[0]
+    else:
+        tag_name, exec_path_str = components
     exec_path = Path(exec_path_str)
     if not exec_path.exists():
-        exec_path_str = shutil.which(exec_path_str)
-        if not exec_path_str:
+        system_exec_path_str = shutil.which(exec_path_str)
+        if not system_exec_path_str:
             raise argparse.ArgumentTypeError(f"Executable '{exec_path}' doesn't exists")
-        exec_path = Path(exec_path_str)
-    if not explicit_name:
-        explicit_name = exec_path.name
-    return explicit_name, exec_path.absolute()
+        exec_path = Path(system_exec_path_str)
+    if not tag_name:
+        tag_name = exec_path.name  # TODO: remove extension and non-tag-name characters
+    return tag_name, exec_path.absolute()
 
 
 class SystemExitError(Exception):
@@ -267,7 +269,7 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
     parser.add_argument(
         "-ah",
         "--ad-hoc",
-        nargs="*",
+        nargs=1,
         type=adhoc_tag,
         default=list(),
         help="Add command or executable as an ad-hoc tag",
@@ -386,8 +388,8 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         help="Template used to generate new filename/path",
     )
     parser.add_argument(
-        "file",
-        type=existing_file,
+        "path",
+        type=existing_path,
         nargs="+",
         help="Input files or directories where files to rename are stored",
     )
@@ -452,7 +454,7 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
 
     configuration = RuntimeConfiguration(
         template=args.template,
-        input_paths=args.file,
+        input_paths=args.path,
         recursive=args.recursive,
         include_hidden=args.include_hidden,
         dry_run=args.dry_run,

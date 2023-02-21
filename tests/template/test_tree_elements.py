@@ -1,13 +1,16 @@
+from pathlib import Path
+
+import pytest
 from pytest import raises
 
 from tempren.path_generator import File
 from tempren.template.tree_elements import (
+    AdHocTag,
     MissingMetadataError,
     Pattern,
     RawText,
     TagInstance,
     TagName,
-    TagPlaceholder,
 )
 
 from .mocks import GeneratorTag, MockTag
@@ -114,3 +117,52 @@ class TestTagInstance:
         element = TagInstance(tag=throwing_tag)
 
         assert element.process(nonexistent_file) == ""
+
+
+class TestAdHocTag:
+    def test_invalid_executable_path(self, nonexistent_absolute_path: Path):
+        with pytest.raises(AssertionError):
+            AdHocTag(nonexistent_absolute_path)
+
+    def test_executable_is_invoked(self, text_data_dir: Path):
+        new_file = File(text_data_dir, Path("new.file"))
+        assert not new_file.absolute_path.exists()
+        touch_tag = AdHocTag(Path("/usr/bin/touch"))
+
+        result = touch_tag.process(new_file, None)
+
+        assert result is ""
+        assert new_file.absolute_path.exists()
+
+    def test_stdout_is_returned(self, text_data_dir: Path):
+        hello_file = File(text_data_dir, Path("hello.txt"))
+        cat_tag = AdHocTag(Path("/usr/bin/cat"))
+
+        result = cat_tag.process(hello_file, None)
+
+        assert result == "Hello"
+
+    def test_error_code_raises_error(self, nonexistent_file: File):
+        ping_tag = AdHocTag(Path("/usr/bin/ping"))
+
+        with pytest.raises(MissingMetadataError) as exc:
+            ping_tag.process(nonexistent_file, None)
+
+        assert exc.match("Name or service not known")
+
+    def test_positional_arguments_are_passed(self, text_data_dir: Path):
+        markdown_file = File(text_data_dir, Path("markdown.md"))
+        tail_tag = AdHocTag(Path("/usr/bin/tail"))
+        tail_tag.configure("-n", "1")
+
+        result = tail_tag.process(markdown_file, None)
+
+        assert result == "Second, a bit longer paragraph."
+
+    def test_context_replaces_file_argument(self, text_data_dir: Path):
+        hello_file = File(text_data_dir, Path("hello.txt"))
+        cat_tag = AdHocTag(Path("/usr/bin/cat"))
+
+        result = cat_tag.process(hello_file, "foobar")
+
+        assert result == "foobar"
