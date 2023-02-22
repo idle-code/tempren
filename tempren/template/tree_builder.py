@@ -333,6 +333,8 @@ class TagCategory:
     description: Optional[str] = None
     tag_map: Dict[str, TagFactory]
 
+    _tag_class_suffix = "Tag"
+
     def __init__(self, name: str, description: Optional[str] = None):
         self.log = logging.getLogger(self.__class__.__name__)
         self.tag_map = {}
@@ -340,6 +342,15 @@ class TagCategory:
         self.description = description
 
     def register_tag_class(self, tag_class: Type[Tag], tag_name: Optional[str] = None):
+        if not tag_name:
+            tag_class_name = tag_class.__name__
+            if tag_class_name.endswith(self._tag_class_suffix):
+                tag_name = tag_class_name[: -len(self._tag_class_suffix)]
+            else:
+                raise ValueError(
+                    f"Could not determine tag name from tag class: {tag_class_name}"
+                )
+
         class_tag_factory = TagFactoryFromClass(tag_class, tag_name)
         self.log.debug(
             f"Registering class {tag_class} as {class_tag_factory.tag_name} tag"

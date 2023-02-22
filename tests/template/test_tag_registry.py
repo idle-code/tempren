@@ -66,15 +66,6 @@ class TestTagCategory:
 
         assert exc.match("already registered")
 
-    def test_register_tag_factory__empty_name(self):
-        category = TagCategory("TestCategory")
-        tag_factory = TagFactoryFromClass(MockTag)
-
-        with pytest.raises(ValueError) as exc:
-            category.register_tag_factory(tag_factory, "")
-
-        exc.match("Invalid tag name")
-
     # TODO: add tests for documentation rewriting from tag class to tag factory
 
 

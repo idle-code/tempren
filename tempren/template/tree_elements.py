@@ -179,7 +179,6 @@ class TagFactory(ABC):
 
 
 class TagFactoryFromClass(TagFactory):
-    _tag_class_suffix = "Tag"
     _tag_class: Type[Tag]
     _tag_name: str
 
@@ -239,24 +238,15 @@ class TagFactoryFromClass(TagFactory):
     def long_description(self) -> Optional[str]:
         return self._parsed_class_docstring.long_description
 
-    def __init__(self, tag_class: Type[Tag], tag_name: Optional[str] = None):
+    def __init__(self, tag_class: Type[Tag], tag_name: str):
         self._tag_class = tag_class
+        self._tag_name = tag_name
         self._parsed_class_docstring = parse_docstring(
             tag_class.__doc__ if tag_class.__doc__ else ""
         )
         self._parsed_configure_docstring = parse_docstring(
             tag_class.configure.__doc__ if tag_class.configure.__doc__ else ""
         )
-        if tag_name:
-            self._tag_name = tag_name
-        else:
-            tag_class_name = tag_class.__name__
-            if tag_class_name.endswith(self._tag_class_suffix):
-                self._tag_name = tag_class_name[: -len(self._tag_class_suffix)]
-            else:
-                raise ValueError(
-                    f"Could not determine tag name from tag class: {tag_class_name}"
-                )
 
     def __call__(self, *args, **kwargs) -> Tag:
         tag = self._tag_class()
@@ -264,33 +254,18 @@ class TagFactoryFromClass(TagFactory):
         return tag
 
 
-class TagFactoryFromExecutable(TagFactory):
+class TagFactoryFromExecutable(TagFactoryFromClass):
     _executable_path: Path
-    _tag_name: str
-
-    @property
-    def tag_name(self) -> str:
-        return self._tag_name
-
-    @property
-    def configuration_signature(self) -> str:
-        pass
-
-    @property
-    def short_description(self) -> str:
-        pass
-
-    @property
-    def long_description(self) -> Optional[str]:
-        pass
-
-    def __call__(self, *args, **kwargs) -> Tag:
-        pass
 
     def __init__(self, exec_path: Path, tag_name: str):
         assert exec_path.exists()
+        super().__init__(AdHocTag, tag_name)
         self._executable_path = exec_path
-        self._tag_name = tag_name
+
+    def __call__(self, *args, **kwargs) -> Tag:
+        tag = AdHocTag(self._executable_path)
+        tag.configure(*args, **kwargs)  # type: ignore
+        return tag
 
 
 class AdHocTag(Tag):
