@@ -6,6 +6,7 @@ from pytest import raises
 from tempren.path_generator import File
 from tempren.template.tree_elements import (
     AdHocTag,
+    ExecutionTimeoutError,
     MissingMetadataError,
     Pattern,
     RawText,
@@ -142,13 +143,14 @@ class TestAdHocTag:
 
         assert result == "Hello"
 
-    def test_error_code_raises_error(self, nonexistent_file: File):
-        ping_tag = AdHocTag(Path("/usr/bin/ping"))
+    def test_error_code_raises_error(self, text_data_dir: Path):
+        hello_file = File(text_data_dir, Path("hello.txt"))
+        false_tag = AdHocTag(Path("/usr/bin/false"))
 
         with pytest.raises(MissingMetadataError) as exc:
-            ping_tag.process(nonexistent_file, None)
+            false_tag.process(hello_file, None)
 
-        assert exc.match("Name or service not known")
+        assert exc.match(r"error code \(1\)")
 
     def test_positional_arguments_are_passed(self, text_data_dir: Path):
         markdown_file = File(text_data_dir, Path("markdown.md"))
@@ -166,3 +168,32 @@ class TestAdHocTag:
         result = cat_tag.process(hello_file, "foobar")
 
         assert result == "foobar"
+
+    def test_executable_default_timeout(self, text_data_dir: Path):
+        hello_file = File(text_data_dir, Path("hello.txt"))
+        sleep_tag = AdHocTag(Path("/usr/bin/sleep"))
+        sleep_tag.configure("4s")
+
+        with pytest.raises(ExecutionTimeoutError) as exc:
+            sleep_tag.process(hello_file, "")
+
+        assert exc.match("timeout")
+
+    def test_executable_explicit_timeout_increase(self, text_data_dir: Path):
+        hello_file = File(text_data_dir, Path("hello.txt"))
+        sleep_tag = AdHocTag(Path("/usr/bin/sleep"))
+        sleep_tag.configure("1s", timeout_ms=2000)
+
+        result = sleep_tag.process(hello_file, "")
+
+        assert result == ""
+
+    def test_executable_explicit_timeout_exceeded(self, text_data_dir: Path):
+        hello_file = File(text_data_dir, Path("hello.txt"))
+        sleep_tag = AdHocTag(Path("/usr/bin/sleep"))
+        sleep_tag.configure("3s", timeout_ms=2000)
+
+        with pytest.raises(ExecutionTimeoutError) as exc:
+            sleep_tag.process(hello_file, "")
+
+        assert exc.match("timeout")

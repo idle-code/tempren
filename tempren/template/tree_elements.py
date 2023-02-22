@@ -127,6 +127,12 @@ class MissingMetadataError(Exception):
     pass
 
 
+class ExecutionTimeoutError(MissingMetadataError):  # TODO: Fix hierarchy?
+    """Tag execution time exceeded"""
+
+    pass
+
+
 class Tag(ABC):
     require_context: Optional[bool] = None
     """Determine if tag requires context
@@ -290,6 +296,7 @@ class TagFactoryFromExecutable(TagFactory):
 class AdHocTag(Tag):
     executable: Path
     args: Tuple[str, ...] = ()
+    timeout_ms: int = 3000
 
     def __init__(self, executable: Path):
         assert (
@@ -297,26 +304,45 @@ class AdHocTag(Tag):
         ), "Provided executable doesn't exists in the filesystem"
         self.executable = executable
 
-    def configure(self, *positional_args: str):
+    def configure(self, *positional_args: str, timeout_ms: int = 3000):
+        """
+        :param positional_args: arguments to be passed to the executable
+        :param timeout_ms: execution timeout in milliseconds
+        """
         self.args = positional_args
+        self.timeout_ms = timeout_ms
 
     def process(self, file: File, context: Optional[str]) -> str:
         if context is None:
-            completed_process = subprocess.run(
-                [str(self.executable)] + list(self.args) + [str(file.absolute_path)],
-                capture_output=True,
+            command_line = (
+                [str(self.executable)] + list(self.args) + [str(file.relative_path)]
             )
         else:
+            command_line = [str(self.executable)] + list(self.args)
+
+        try:
             completed_process = subprocess.run(
-                [str(self.executable)] + list(self.args),
-                input=context.encode("utf-8"),
+                command_line,
+                input=context.encode("utf-8") if context else None,
                 capture_output=True,
+                timeout=self.timeout_ms / 1000,
+                cwd=file.input_directory,
+            )
+        except subprocess.TimeoutExpired:
+            raise ExecutionTimeoutError(
+                "`{}` command execution exceeded timeout {}ms".format(
+                    " ".join(command_line), self.timeout_ms
+                )
             )
 
         captured_stdout = completed_process.stdout.decode("utf-8")
         if completed_process.returncode != 0:
             captured_stderr = completed_process.stderr.decode("utf-8")
-            raise MissingMetadataError(captured_stderr)
+            raise MissingMetadataError(
+                "Command failed due to error code ({}): \n{}".format(
+                    completed_process.returncode, captured_stderr
+                )
+            )
         return captured_stdout.strip()
 
 
