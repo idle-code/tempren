@@ -232,23 +232,18 @@ class Pipeline:
             )
 
 
-def build_tag_registry() -> TagRegistry:
+def build_tag_registry(adhoc_tags: Dict[str, Path]) -> TagRegistry:
     log.debug("Building tag registry")
     import tempren.tags
 
     registry = TagRegistry()
     registry.register_tags_in_package(tempren.tags)
+    if adhoc_tags:
+        log.debug("Registering ad-hoc tags")
+        adhoc_category = registry.register_category("AdHoc")
+        for tag_name, exec_path in sorted(adhoc_tags.items()):
+            adhoc_category.register_tag_from_executable(exec_path, tag_name)
     return registry
-
-
-def register_adhoc_tags(registry: TagRegistry, adhoc_tags: Dict[str, Path]):
-    if not adhoc_tags:
-        return
-    log.debug("Generating ad-hoc tag factories")
-
-    adhoc_category = registry.register_category("AdHoc")
-    for tag_name, exec_path in sorted(adhoc_tags.items()):
-        adhoc_category.register_tag_from_executable(exec_path, tag_name)
 
 
 def build_pipeline(

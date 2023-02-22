@@ -122,7 +122,7 @@ class _ListAvailableTags(argparse.Action):
         values: Union[Text, Sequence[Any], None],
         option_string: Optional[Text] = None,
     ):
-        registry = build_tag_registry()
+        registry = build_tag_registry(dict(namespace.ad_hoc))
         log.info("Available tags:")
         for category_name in sorted(registry.category_map.keys()):
             log.info(f"{category_name.capitalize()}:")
@@ -158,7 +158,7 @@ class _ShowHelp(argparse.Action):
             parser.print_help()
         else:
             raw_tag_name = str(values)
-            registry = build_tag_registry()
+            registry = build_tag_registry(dict(namespace.ad_hoc))
 
             try:
                 if "." in raw_tag_name:
@@ -550,7 +550,7 @@ def main() -> int:
     original_cwd = os.getcwd()
     try:
         config = process_cli_configuration(argv)
-        registry = build_tag_registry()
+        registry = build_tag_registry(config.adhoc_tags)
         pipeline = build_pipeline(
             config, registry, manual_conflict_resolver=cli_prompt_conflict_resolver
         )

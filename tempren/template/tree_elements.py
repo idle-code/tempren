@@ -259,8 +259,8 @@ class TagFactoryFromExecutable(TagFactoryFromClass):
 
     def __init__(self, exec_path: Path, tag_name: str):
         assert exec_path.exists()
-        super().__init__(AdHocTag, tag_name)
         self._executable_path = exec_path
+        super().__init__(AdHocTag, tag_name)
 
     def __call__(self, *args, **kwargs) -> Tag:
         tag = AdHocTag(self._executable_path)
