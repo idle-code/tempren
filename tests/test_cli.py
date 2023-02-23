@@ -773,17 +773,57 @@ class TestConflictResolution:
 
 @pytest.mark.parametrize("flag", ["-ah", "--ad-hoc"])
 class TestAdHocTags:
-    def test_tag_from_standard_command(self, flag: str, text_data_dir: Path):
+    def test_nonexistent_command(self, flag: str, text_data_dir: Path):
         stdout, stderr, error_code = run_tempren(
-            flag, "cut", "%Sanitize{%cut('-c', '3')}_%Name()", text_data_dir
+            flag, "unknown_command", "%Sanitize{%cut('-c', '3')}_%Name()", text_data_dir
         )
+
+        assert error_code == ErrorCode.USAGE_ERROR
+        assert "unknown_command" in stderr
+
+    @pytest.mark.parametrize("custom_name", [False, True])
+    def test_tag_from_standard_command(
+        self, flag: str, custom_name: bool, text_data_dir: Path
+    ):
+        if custom_name:
+            stdout, stderr, error_code = run_tempren(
+                flag, "Cut=cut", "%Sanitize{%Cut('-c', '3')}_%Name()", text_data_dir
+            )
+        else:
+            stdout, stderr, error_code = run_tempren(
+                flag, "cut", "%Sanitize{%cut('-c', '3')}_%Name()", text_data_dir
+            )
 
         assert error_code == ErrorCode.SUCCESS
         assert (text_data_dir / "l_hello.txt").exists()
         assert (text_data_dir / "Tr c_markdown.md").exists()
 
+    @pytest.mark.parametrize("custom_name", [False, True])
+    def test_tag_from_script(
+        self, flag: str, custom_name: bool, tags_data_dir: Path, text_data_dir: Path
+    ):
+        script_path = tags_data_dir / "my_script.sh"
+        if custom_name:
+            stdout, stderr, error_code = run_tempren(
+                flag, f"MyScript={script_path}", "%MyScript()_%Name()", text_data_dir
+            )
+        else:
+            stdout, stderr, error_code = run_tempren(
+                flag, script_path, "%my_script()_%Name()", text_data_dir
+            )
+
+        assert error_code == ErrorCode.SUCCESS
+        assert (text_data_dir / "1_hello.txt").exists()
+        assert (text_data_dir / "3_markdown.md").exists()
+
     def test_multiple_tags(self, flag: str, text_data_dir: Path):
         pass
 
     def test_multiple_tags_same_name(self, flag: str, text_data_dir: Path):
+        pass
+
+    def test_documentation(self, flag: str):
+        pass
+
+    def test_invalid_explicit_name(self, flag: str):
         pass

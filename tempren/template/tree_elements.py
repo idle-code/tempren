@@ -257,6 +257,17 @@ class TagFactoryFromClass(TagFactory):
 class TagFactoryFromExecutable(TagFactoryFromClass):
     _executable_path: Path
 
+    @property
+    def short_description(self) -> str:
+        return self._render_description(super().short_description)
+
+    @property
+    def long_description(self) -> Optional[str]:
+        long_description = super().long_description
+        if long_description:
+            long_description = self._render_description(long_description)
+        return long_description
+
     def __init__(self, exec_path: Path, tag_name: str):
         assert exec_path.exists()
         self._executable_path = exec_path
@@ -267,8 +278,31 @@ class TagFactoryFromExecutable(TagFactoryFromClass):
         tag.configure(*args, **kwargs)  # type: ignore
         return tag
 
+    def _render_description(self, description: str) -> str:
+        return description.format(
+            executable_name=self._executable_path.name,
+            executable_path=self._executable_path,
+            tag_name=self.tag_name,
+        )
+
 
 class AdHocTag(Tag):
+    """Invoke `{executable_name}` executable
+
+    Execute `{executable_name}` and extract its output.
+    If context is given, tag invocation:
+        %{tag_name}("--flag", "arg"){{Context}}
+    is equivalent to:
+        echo "Context" | {executable_name} --flag arg
+
+    If no context is present, tag invocation:
+        %{tag_name}("--flag", "arg")
+    results in equivalent command:
+        {executable_name} --flag arg <relative path to the processed file>
+
+    Program executable is located at: `{executable_path}`
+    """
+
     executable: Path
     args: Tuple[str, ...] = ()
     timeout_ms: int = 3000
@@ -281,7 +315,7 @@ class AdHocTag(Tag):
 
     def configure(self, *positional_args: str, timeout_ms: int = 3000):
         """
-        :param positional_args: arguments to be passed to the executable
+        :param positional_args: command line arguments to be passed to the executable
         :param timeout_ms: execution timeout in milliseconds
         """
         self.args = positional_args

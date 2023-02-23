@@ -272,6 +272,7 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         nargs=1,
         type=adhoc_tag,
         default=list(),
+        metavar="[name=]program",
         help="Add command or executable as an ad-hoc tag",
     )
     parser.add_argument(

@@ -2,4 +2,4 @@
 
 FILEPATH=$1
 
-file --brief "$FILEPATH"
+grep --count l "$FILEPATH"
