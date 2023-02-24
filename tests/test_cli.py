@@ -816,14 +816,44 @@ class TestAdHocTags:
         assert (text_data_dir / "1_hello.txt").exists()
         assert (text_data_dir / "3_markdown.md").exists()
 
-    def test_multiple_tags(self, flag: str, text_data_dir: Path):
+    def test_multiple_tags(self, flag: str, tags_data_dir: Path, text_data_dir: Path):
+        script_path = tags_data_dir / "my_script.sh"
+        stdout, stderr, error_code = run_tempren(
+            flag,
+            f"First={script_path}",
+            flag,
+            f"Second={script_path}",
+            "%First()%Second()_%Name()",
+            text_data_dir,
+        )
+
+        assert error_code == ErrorCode.SUCCESS
+        assert (text_data_dir / "11_hello.txt").exists()
+        assert (text_data_dir / "33_markdown.md").exists()
+
+    def test_multiple_tags_same_name(
+        self, flag: str, tags_data_dir: Path, text_data_dir: Path
+    ):
+        script_path = tags_data_dir / "my_script.sh"
+        stdout, stderr, error_code = run_tempren(
+            flag,
+            f"Same={script_path}",
+            flag,
+            f"Same=cut",
+            "%Same()_%Name()",
+            text_data_dir,
+        )
+
+        assert error_code == ErrorCode.USAGE_ERROR
+        assert "Same" in stderr
+        assert "cut" in stderr
+        assert "my_script.sh" in stderr
+
+    def test_invalid_explicit_name(self, flag: str):
         pass
 
-    def test_multiple_tags_same_name(self, flag: str, text_data_dir: Path):
+    def test_invalid_exec_name(self, flag: str):
         pass
 
     def test_documentation(self, flag: str):
-        pass
-
-    def test_invalid_explicit_name(self, flag: str):
         pass

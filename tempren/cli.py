@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 import argparse
 import logging
-import os
-import re
+import os.path
 import shutil
 import sys
 from argparse import ArgumentParser, Namespace
 from enum import IntEnum
+from itertools import chain
 from logging import LogRecord
 from pathlib import Path
 from textwrap import indent
-from typing import Any, List, NoReturn, Optional, Sequence, Text, Tuple, Union
+from typing import Any, Dict, List, NoReturn, Optional, Sequence, Text, Tuple, Union
 
 from tempren.filesystem import DestinationAlreadyExistsError
 from tempren.path_generator import TemplateEvaluationError
@@ -87,6 +87,11 @@ def nonempty_string(val: str) -> str:
     return val
 
 
+def tag_name_from_executable(exec_path: Path) -> str:
+    base_name = os.path.splitext(exec_path.name)[0]
+    return base_name
+
+
 def adhoc_tag(val: str) -> Tuple[str, Path]:
     val = nonempty_string(val)
     components = val.split("=", maxsplit=1)
@@ -102,8 +107,32 @@ def adhoc_tag(val: str) -> Tuple[str, Path]:
             raise argparse.ArgumentTypeError(f"Executable '{exec_path}' doesn't exists")
         exec_path = Path(system_exec_path_str)
     if not tag_name:
-        tag_name = exec_path.name  # TODO: remove extension and non-tag-name characters
+        tag_name = tag_name_from_executable(exec_path)
     return tag_name, exec_path.absolute()
+
+
+def validate_adhoc_tags(adhoc_tags: List[List[Tuple[str, Path]]]) -> Dict[str, Path]:
+    if not adhoc_tags:
+        return dict()
+    list_of_tuples = list(chain(*adhoc_tags))
+    names = list(map(lambda pair: pair[0], list_of_tuples))
+    unique_names = set(names)
+    if len(names) > len(unique_names):
+        repeating_names = [name for name in unique_names if names.count(name) > 1]
+        for duplicate_name in repeating_names:
+            executables_with_the_same_name = list(
+                map(
+                    lambda pair: str(pair[1]),
+                    filter(lambda pair: pair[0] == duplicate_name, list_of_tuples),
+                )
+            )
+            # CHECK: report more errors at once?
+            raise SystemExitError(
+                ErrorCode.USAGE_ERROR,
+                f"Adhoc tags created from executables {' and '.join(executables_with_the_same_name)} cannot have the same name {duplicate_name}",
+            )
+
+    return dict(list_of_tuples)
 
 
 class SystemExitError(Exception):
@@ -118,11 +147,11 @@ class _ListAvailableTags(argparse.Action):
     def __call__(
         self,
         parser: ArgumentParser,
-        namespace: Namespace,
+        args: Namespace,
         values: Union[Text, Sequence[Any], None],
         option_string: Optional[Text] = None,
     ):
-        registry = build_tag_registry(dict(namespace.ad_hoc))
+        registry = build_tag_registry(validate_adhoc_tags(args.ad_hoc))
         log.info("Available tags:")
         for category_name in sorted(registry.category_map.keys()):
             log.info(f"{category_name.capitalize()}:")
@@ -150,7 +179,7 @@ class _ShowHelp(argparse.Action):
     def __call__(
         self,
         parser: ArgumentParser,
-        namespace: Namespace,
+        args: Namespace,
         values: Union[str, Sequence[Any], None],
         option_string: Optional[Text] = None,
     ):
@@ -158,7 +187,7 @@ class _ShowHelp(argparse.Action):
             parser.print_help()
         else:
             raw_tag_name = str(values)
-            registry = build_tag_registry(dict(namespace.ad_hoc))
+            registry = build_tag_registry(validate_adhoc_tags(args.ad_hoc))
 
             try:
                 if "." in raw_tag_name:
@@ -271,7 +300,7 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         "--ad-hoc",
         nargs=1,
         type=adhoc_tag,
-        default=list(),
+        action="append",
         metavar="[name=]program",
         help="Add command or executable as an ad-hoc tag",
     )
@@ -466,7 +495,7 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         sort_invert=args.sort_invert,
         sort=args.sort,
         mode=args.mode,
-        adhoc_tags=dict(args.ad_hoc),
+        adhoc_tags=validate_adhoc_tags(args.ad_hoc),
     )
 
     return configuration
@@ -577,6 +606,7 @@ def main() -> int:
         return ErrorCode.INVALID_DESTINATION_ERROR
     except Exception as exc:  # NOCOVER: not really testable - final fallback
         log.error(f"Unknown error: {exc.__class__.__name__} {exc}")
+        raise
         return ErrorCode.UNKNOWN_ERROR
     finally:
         os.chdir(original_cwd)
