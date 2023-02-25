@@ -4,11 +4,14 @@ import pytest
 from pytest import raises
 
 from tempren.path_generator import File
+from tempren.template.tree_builder import TagCategory
 from tempren.template.tree_elements import (
     AdHocTag,
+    CategoryName,
     ExecutionTimeoutError,
     MissingMetadataError,
     Pattern,
+    QualifiedTagName,
     RawText,
     TagInstance,
     TagName,
@@ -70,13 +73,27 @@ class TestPattern:
 
 
 class TestTagName:
-    def test_invalid_tag_name(self):
-        with raises(ValueError):
-            TagName("")
+    @property
+    def _name_instance(self):
+        return TagName
 
-    def test_invalid_tag_category(self):
+    def test_empty(self):
         with raises(ValueError):
-            TagName("TAG", "")
+            self._name_instance("")
+
+    def test_invalid(self):
+        with raises(ValueError):
+            self._name_instance("Foo-Bar")
+
+    def test_number_start(self):
+        with raises(ValueError):
+            self._name_instance("3D")
+
+
+class TestTagCategory(TestTagName):
+    @property
+    def _name_instance(self):
+        return CategoryName
 
 
 class TestTagInstance:

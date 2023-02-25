@@ -23,37 +23,45 @@ class TestTreeBuilder:
     def test_just_tag(self):
         pattern = parse("%JUST_TAG()")
 
-        assert pattern == Pattern([TagPlaceholder(TagName("JUST_TAG"))])
+        assert pattern == Pattern([TagPlaceholder(QualifiedTagName("JUST_TAG"))])
 
     def test_category_prefixed_tag(self):
         pattern = parse("%CATEGORY.TAG()")
 
-        assert pattern == Pattern([TagPlaceholder(TagName("TAG", "CATEGORY"))])
+        assert pattern == Pattern([TagPlaceholder(QualifiedTagName("TAG", "CATEGORY"))])
 
     def test_text_and_tag(self):
         pattern = parse("Text with a %TAG()")
 
         assert pattern == Pattern(
-            [RawText("Text with a "), TagPlaceholder(TagName("TAG"))]
+            [RawText("Text with a "), TagPlaceholder(QualifiedTagName("TAG"))]
         )
 
     def test_tag_with_text_context(self):
         pattern = parse("%TAG(){Context text}")
 
         tag_context = Pattern([RawText("Context text")])
-        assert pattern == Pattern([TagPlaceholder(TagName("TAG"), context=tag_context)])
+        assert pattern == Pattern(
+            [TagPlaceholder(QualifiedTagName("TAG"), context=tag_context)]
+        )
 
     def test_tag_with_tag_context(self):
         pattern = parse("%TAG(){Context %SUB_TAG()}")
 
-        tag_context = Pattern([RawText("Context "), TagPlaceholder(TagName("SUB_TAG"))])
-        assert pattern == Pattern([TagPlaceholder(TagName("TAG"), context=tag_context)])
+        tag_context = Pattern(
+            [RawText("Context "), TagPlaceholder(QualifiedTagName("SUB_TAG"))]
+        )
+        assert pattern == Pattern(
+            [TagPlaceholder(QualifiedTagName("TAG"), context=tag_context)]
+        )
 
     def test_tag_with_just_tag_context(self):
         pattern = parse("%TAG{Context text}")
 
         tag_context = Pattern([RawText("Context text")])
-        assert pattern == Pattern([TagPlaceholder(TagName("TAG"), context=tag_context)])
+        assert pattern == Pattern(
+            [TagPlaceholder(QualifiedTagName("TAG"), context=tag_context)]
+        )
 
     def test_parenthesis_escaping(self):
         pattern = parse("Text with (parentheses)")
@@ -74,20 +82,24 @@ class TestTreeBuilder:
     def test_numeric_argument(self):
         pattern = parse("%TAG(123)")
 
-        assert pattern == Pattern([TagPlaceholder(TagName("TAG"), args=[123])])
+        assert pattern == Pattern([TagPlaceholder(QualifiedTagName("TAG"), args=[123])])
 
     def test_negative_numeric_argument(self):
         pattern = parse("%TAG(-123)")
 
-        assert pattern == Pattern([TagPlaceholder(TagName("TAG"), args=[-123])])
+        assert pattern == Pattern(
+            [TagPlaceholder(QualifiedTagName("TAG"), args=[-123])]
+        )
 
     def test_boolean_arguments(self):
         true_pattern = parse("%TRUE(true)")
         false_pattern = parse("%FALSE(false)")
 
-        assert true_pattern == Pattern([TagPlaceholder(TagName("TRUE"), args=[True])])
+        assert true_pattern == Pattern(
+            [TagPlaceholder(QualifiedTagName("TRUE"), args=[True])]
+        )
         assert false_pattern == Pattern(
-            [TagPlaceholder(TagName("FALSE"), args=[False])]
+            [TagPlaceholder(QualifiedTagName("FALSE"), args=[False])]
         )
 
     def test_boolean_capital_arguments(self):
@@ -95,45 +107,47 @@ class TestTreeBuilder:
         capital_false_pattern = parse("%FALSE(False)")
 
         assert capital_true_pattern == Pattern(
-            [TagPlaceholder(TagName("TRUE"), args=[True])]
+            [TagPlaceholder(QualifiedTagName("TRUE"), args=[True])]
         )
         assert capital_false_pattern == Pattern(
-            [TagPlaceholder(TagName("FALSE"), args=[False])]
+            [TagPlaceholder(QualifiedTagName("FALSE"), args=[False])]
         )
 
     def test_boolean_flag(self):
         bool_flag_pattern = parse("%TAG(flag_name)")
 
         assert bool_flag_pattern == Pattern(
-            [TagPlaceholder(TagName("TAG"), kwargs={"flag_name": True})]
+            [TagPlaceholder(QualifiedTagName("TAG"), kwargs={"flag_name": True})]
         )
 
     def test_string_argument(self):
         pattern = parse("%TAG('text value')")
 
-        assert pattern == Pattern([TagPlaceholder(TagName("TAG"), args=["text value"])])
+        assert pattern == Pattern(
+            [TagPlaceholder(QualifiedTagName("TAG"), args=["text value"])]
+        )
 
     def test_double_quoted_string_argument(self):
         pattern = parse('%TAG("quoted value")')
 
         assert pattern == Pattern(
-            [TagPlaceholder(TagName("TAG"), args=["quoted value"])]
+            [TagPlaceholder(QualifiedTagName("TAG"), args=["quoted value"])]
         )
 
     def test_empty_string_argument(self):
         pattern = parse("%TAG('')")
 
-        assert pattern == Pattern([TagPlaceholder(TagName("TAG"), args=[""])])
+        assert pattern == Pattern([TagPlaceholder(QualifiedTagName("TAG"), args=[""])])
 
     def test_escape_sequence_in_string_argument(self):
         quote_pattern = parse("%TAG('Don\\'t')")
         backslash_pattern = parse("%TAG('C:\\\\Windows')")
 
         assert quote_pattern == Pattern(
-            [TagPlaceholder(TagName("TAG"), args=["Don't"])]
+            [TagPlaceholder(QualifiedTagName("TAG"), args=["Don't"])]
         )
         assert backslash_pattern == Pattern(
-            [TagPlaceholder(TagName("TAG"), args=["C:\\Windows"])]
+            [TagPlaceholder(QualifiedTagName("TAG"), args=["C:\\Windows"])]
         )
 
     def test_invalid_escape_sequence_in_string_argument(self):
@@ -141,16 +155,18 @@ class TestTreeBuilder:
         escaped_quote_pattern = parse("%TAG('Quote: \\\"')")
 
         assert quote_pattern == Pattern(
-            [TagPlaceholder(TagName("TAG"), args=['Quote: "'])]
+            [TagPlaceholder(QualifiedTagName("TAG"), args=['Quote: "'])]
         )
         assert escaped_quote_pattern == Pattern(
-            [TagPlaceholder(TagName("TAG"), args=['Quote: \\"'])]
+            [TagPlaceholder(QualifiedTagName("TAG"), args=['Quote: \\"'])]
         )
 
     def test_multiple_positional_arguments(self):
         pattern = parse("%TAG(123, true)")
 
-        assert pattern == Pattern([TagPlaceholder(TagName("TAG"), args=[123, True])])
+        assert pattern == Pattern(
+            [TagPlaceholder(QualifiedTagName("TAG"), args=[123, True])]
+        )
 
     def test_named_arguments(self):
         pattern = parse("%TAG(foo=123, bar='spam', baz=true)")
@@ -158,7 +174,8 @@ class TestTreeBuilder:
         assert pattern == Pattern(
             [
                 TagPlaceholder(
-                    TagName("TAG"), kwargs={"foo": 123, "bar": "spam", "baz": True}
+                    QualifiedTagName("TAG"),
+                    kwargs={"foo": 123, "bar": "spam", "baz": True},
                 )
             ]
         )
@@ -167,7 +184,11 @@ class TestTreeBuilder:
         pattern = parse("%TAG(123, bar='spam', true)")
 
         assert pattern == Pattern(
-            [TagPlaceholder(TagName("TAG"), args=[123, True], kwargs={"bar": "spam"})]
+            [
+                TagPlaceholder(
+                    QualifiedTagName("TAG"), args=[123, True], kwargs={"bar": "spam"}
+                )
+            ]
         )
 
     def test_single_pipe(self):

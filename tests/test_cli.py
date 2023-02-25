@@ -849,8 +849,16 @@ class TestAdHocTags:
         assert "cut" in stderr
         assert "my_script.sh" in stderr
 
-    def test_invalid_explicit_name(self, flag: str):
-        pass
+    def test_invalid_tag_name(self, flag: str, text_data_dir: Path):
+        stdout, stderr, error_code = run_tempren(
+            flag,
+            f"Cut.Me=cut",
+            "%Cut.Me()_%Name()",
+            text_data_dir,
+        )
+
+        assert error_code == ErrorCode.USAGE_ERROR
+        assert "'Cut.Me' cannot be used as tag name" in stderr
 
     def test_invalid_exec_name(self, flag: str):
         pass

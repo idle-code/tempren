@@ -1,3 +1,4 @@
+import re
 import subprocess
 import textwrap
 from abc import ABC, abstractmethod
@@ -9,17 +10,24 @@ from docstring_parser import parse as parse_docstring
 
 from tempren.path_generator import File
 
+tag_name_regex = re.compile(r"^[_a-z][0-9_a-z]*$", re.IGNORECASE)
+
+
+class TagName(str):
+    def __new__(cls, name: str) -> "TagName":
+        if not tag_name_regex.match(name):
+            raise ValueError(f"Invalid name: {repr(name)}")
+        return super().__new__(cls, name)  # type: ignore
+
+
+class CategoryName(TagName):
+    pass
+
 
 @dataclass
-class TagName:
-    name: str
-    category: Optional[str] = None
-
-    def __post_init__(self):
-        if len(self.name) < 1:
-            raise ValueError(f"Invalid tag name: ${repr(self.name)}")
-        if self.category is not None and len(self.category) < 1:
-            raise ValueError(f"Invalid category name: ${repr(self.category)}")
+class QualifiedTagName:
+    name: TagName
+    category: Optional[CategoryName] = None
 
     def __str__(self) -> str:
         if self.category:
@@ -104,12 +112,12 @@ class TagPlaceholder(PatternElement):
     """Represents unbound tag"""
 
     location: Location = field(init=False, compare=False)
-    tag_name: TagName
+    tag_name: QualifiedTagName
     context: Optional[Pattern] = None
     args: List[Any] = field(default_factory=list)
     kwargs: Mapping[str, Any] = field(default_factory=dict)
 
-    def process(self, file: File) -> str:
+    def process(self, file: File) -> Any:
         raise NotImplementedError(
             "TagPlaceholder shouldn't be present in bound tag tree"
         )
@@ -127,7 +135,7 @@ class MissingMetadataError(Exception):
     pass
 
 
-class ExecutionTimeoutError(MissingMetadataError):  # TODO: Fix hierarchy?
+class ExecutionTimeoutError(MissingMetadataError):  # TODO: Fix exception hierarchy?
     """Tag execution time exceeded"""
 
     pass
@@ -155,7 +163,7 @@ class Tag(ABC):
 class TagFactory(ABC):
     @property
     @abstractmethod
-    def tag_name(self) -> str:
+    def tag_name(self) -> TagName:
         """Name of produced tags"""
 
     @property
@@ -180,10 +188,10 @@ class TagFactory(ABC):
 
 class TagFactoryFromClass(TagFactory):
     _tag_class: Type[Tag]
-    _tag_name: str
+    _tag_name: TagName
 
     @property
-    def tag_name(self) -> str:
+    def tag_name(self) -> TagName:
         return self._tag_name
 
     @property
@@ -238,7 +246,7 @@ class TagFactoryFromClass(TagFactory):
     def long_description(self) -> Optional[str]:
         return self._parsed_class_docstring.long_description
 
-    def __init__(self, tag_class: Type[Tag], tag_name: str):
+    def __init__(self, tag_class: Type[Tag], tag_name: TagName):
         self._tag_class = tag_class
         self._tag_name = tag_name
         self._parsed_class_docstring = parse_docstring(
@@ -268,7 +276,7 @@ class TagFactoryFromExecutable(TagFactoryFromClass):
             long_description = self._render_description(long_description)
         return long_description
 
-    def __init__(self, exec_path: Path, tag_name: str):
+    def __init__(self, exec_path: Path, tag_name: TagName):
         assert exec_path.exists()
         self._executable_path = exec_path
         super().__init__(AdHocTag, tag_name)

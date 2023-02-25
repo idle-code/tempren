@@ -14,7 +14,7 @@ from typing import Any, Dict, List, NoReturn, Optional, Sequence, Text, Tuple, U
 
 from tempren.filesystem import DestinationAlreadyExistsError
 from tempren.path_generator import TemplateEvaluationError
-from tempren.template.tree_elements import TagName
+from tempren.template.tree_elements import CategoryName, QualifiedTagName, TagName
 
 from .pipeline import (
     ConflictResolutionStrategy,
@@ -92,7 +92,7 @@ def tag_name_from_executable(exec_path: Path) -> str:
     return base_name
 
 
-def adhoc_tag(val: str) -> Tuple[str, Path]:
+def adhoc_tag(val: str) -> Tuple[TagName, Path]:
     val = nonempty_string(val)
     components = val.split("=", maxsplit=1)
     if len(components) == 1:
@@ -108,10 +108,15 @@ def adhoc_tag(val: str) -> Tuple[str, Path]:
         exec_path = Path(system_exec_path_str)
     if not tag_name:
         tag_name = tag_name_from_executable(exec_path)
-    return tag_name, exec_path.absolute()
+    try:
+        return TagName(tag_name), exec_path.absolute()
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"'{tag_name}' cannot be used as tag name")
 
 
-def validate_adhoc_tags(adhoc_tags: List[List[Tuple[str, Path]]]) -> Dict[str, Path]:
+def validate_adhoc_tags(
+    adhoc_tags: List[List[Tuple[TagName, Path]]]
+) -> Dict[TagName, Path]:
     if not adhoc_tags:
         return dict()
     list_of_tuples = list(chain(*adhoc_tags))
@@ -191,13 +196,17 @@ class _ShowHelp(argparse.Action):
 
             try:
                 if "." in raw_tag_name:
-                    tag_name = TagName(*reversed(raw_tag_name.split(".")))
+                    category, name = raw_tag_name.split(".")
+                    qualified_name = QualifiedTagName(
+                        TagName(name), CategoryName(category)
+                    )
                 else:
-                    tag_name = TagName(raw_tag_name)
+                    qualified_name = QualifiedTagName(TagName(raw_tag_name))
 
-                tag_factory = registry.get_tag_factory(tag_name)
+                tag_factory = registry.get_tag_factory(qualified_name)
             except TagError as tag_error:
                 parser.exit(ErrorCode.USAGE_ERROR, str(tag_error))
+                raise
             log.info("")
             log.info(indent(tag_factory.configuration_signature, "  "))
             log.info("")
