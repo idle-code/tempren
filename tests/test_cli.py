@@ -860,8 +860,18 @@ class TestAdHocTags:
         assert error_code == ErrorCode.USAGE_ERROR
         assert "'Cut.Me' cannot be used as tag name" in stderr
 
-    def test_invalid_exec_name(self, flag: str):
-        pass
+    @pytest.mark.parametrize("custom_name", [False, True])
+    def test_documentation(self, flag: str, custom_name: bool, tags_data_dir: Path):
+        script_path = tags_data_dir / "my_script.sh"
+        if custom_name:
+            stdout, stderr, error_code = run_tempren(
+                flag, f"MyScript={script_path}", "--help", "MyScript"
+            )
+        else:
+            stdout, stderr, error_code = run_tempren(
+                flag, script_path, "--help", "my_script"
+            )
 
-    def test_documentation(self, flag: str):
-        pass
+        assert error_code == ErrorCode.SUCCESS
+        assert str(script_path) in stdout
+        assert str(script_path.absolute()) in stdout

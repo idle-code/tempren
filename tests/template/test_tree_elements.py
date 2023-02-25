@@ -4,14 +4,12 @@ import pytest
 from pytest import raises
 
 from tempren.path_generator import File
-from tempren.template.tree_builder import TagCategory
 from tempren.template.tree_elements import (
     AdHocTag,
     CategoryName,
     ExecutionTimeoutError,
     MissingMetadataError,
     Pattern,
-    QualifiedTagName,
     RawText,
     TagInstance,
     TagName,

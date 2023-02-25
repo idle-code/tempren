@@ -25,13 +25,7 @@ from .pipeline import (
     build_pipeline,
     build_tag_registry,
 )
-from .template.tree_builder import (
-    AmbiguousTagError,
-    TagError,
-    TemplateError,
-    UnknownCategoryError,
-    UnknownTagError,
-)
+from .template.tree_builder import TagError, TemplateError
 
 log = logging.getLogger("CLI")
 

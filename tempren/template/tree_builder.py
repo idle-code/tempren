@@ -2,7 +2,6 @@ import importlib
 import inspect
 import logging
 import pkgutil
-from dataclasses import dataclass
 from functools import reduce
 from logging import Logger
 from pathlib import Path

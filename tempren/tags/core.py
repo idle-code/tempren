@@ -1,5 +1,4 @@
 import datetime
-import itertools
 import mimetypes
 from collections import defaultdict
 from math import ceil, floor
