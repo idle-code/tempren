@@ -16,11 +16,11 @@ from tempren.template.tree_builder import (
 )
 from tempren.template.tree_elements import (
     Pattern,
+    QualifiedTagName,
     RawText,
     Tag,
     TagFactoryFromClass,
     TagInstance,
-    TagName,
 )
 
 from .mocks import MockTag
@@ -31,7 +31,7 @@ class TestTagCategory:
     def test_register_tag__use_provided_name(self):
         category = TagCategory("TestCategory")
 
-        category.register_tag(MockTag, "FooBar")
+        category.register_tag_class(MockTag, "FooBar")
 
         foobar_tag = category.find_tag_factory("FooBar")
         assert foobar_tag
@@ -39,7 +39,7 @@ class TestTagCategory:
     def test_register_tag__generate_name_based_on_class(self):
         category = TagCategory("TestCategory")
 
-        category.register_tag(MockTag)
+        category.register_tag_class(MockTag)
 
         mock_tag = category.find_tag_factory("Mock")
         assert mock_tag
@@ -55,25 +55,16 @@ class TestTagCategory:
         category = TagCategory("TestCategory")
 
         with pytest.raises(ValueError):
-            category.register_tag(FakeExtractor)
+            category.register_tag_class(FakeExtractor)
 
     def test_register_tag__register_existing_tag(self):
         category = TagCategory("TestCategory")
-        category.register_tag(MockTag)
+        category.register_tag_class(MockTag)
 
         with pytest.raises(ValueError) as exc:
-            category.register_tag(MockTag)
+            category.register_tag_class(MockTag)
 
         assert exc.match("already registered")
-
-    def test_register_tag_factory__empty_name(self):
-        category = TagCategory("TestCategory")
-        tag_factory = TagFactoryFromClass(MockTag)
-
-        with pytest.raises(ValueError) as exc:
-            category.register_tag_factory(tag_factory, "")
-
-        exc.match("Invalid tag name")
 
     # TODO: add tests for documentation rewriting from tag class to tag factory
 
@@ -83,57 +74,51 @@ class TestTagRegistry:
         registry = TagRegistry()
 
         with pytest.raises(UnknownTagError):
-            registry.get_tag_factory(TagName("Mock"))
+            registry.get_tag_factory(QualifiedTagName("Mock"))
 
     def test_get_tag_factory__unknown_category(self):
         registry = TagRegistry()
 
         with pytest.raises(UnknownCategoryError):
-            registry.get_tag_factory(TagName("Mock", "Category"))
+            registry.get_tag_factory(QualifiedTagName("Mock", "Category"))
 
     def test_get_tag_factory__single_tag_no_category(self):
         registry = TagRegistry()
         category = registry.register_category("Category")
-        mock_tag_factory = TagFactoryFromClass(MockTag)
-        category.register_tag_factory(mock_tag_factory)
+        category.register_tag_class(MockTag)
 
-        tag_factory = registry.get_tag_factory(TagName("Mock"))
+        tag_factory = registry.get_tag_factory(QualifiedTagName("Mock"))
 
-        assert tag_factory is mock_tag_factory
+        assert tag_factory is not None
 
     def test_get_tag_factory__single_tag_invalid_category(self):
         registry = TagRegistry()
         category = registry.register_category("Category")
-        mock_tag_factory = TagFactoryFromClass(MockTag)
-        category.register_tag_factory(mock_tag_factory)
+        category.register_tag_class(MockTag)
 
         with pytest.raises(UnknownCategoryError):
-            registry.get_tag_factory(TagName("Mock", "OtherCategory"))
+            registry.get_tag_factory(QualifiedTagName("Mock", "OtherCategory"))
 
     def test_get_tag_factory__multiple_tags_no_category(self):
         registry = TagRegistry()
         category_a = registry.register_category("CategoryA")
         category_b = registry.register_category("CategoryB")
-        mock_tag_a_factory = TagFactoryFromClass(MockTag)
-        mock_tag_b_factory = TagFactoryFromClass(MockTag)
-        category_a.register_tag_factory(mock_tag_a_factory)
-        category_b.register_tag_factory(mock_tag_b_factory)
+        category_a.register_tag_class(MockTag)
+        category_b.register_tag_class(MockTag)
 
         with pytest.raises(AmbiguousTagError):
-            registry.get_tag_factory(TagName("Mock"))
+            registry.get_tag_factory(QualifiedTagName("Mock"))
 
     def test_get_tag_factory__multiple_tags_explicit_category(self):
         registry = TagRegistry()
         category_a = registry.register_category("CategoryA")
         category_b = registry.register_category("CategoryB")
-        mock_tag_a_factory = TagFactoryFromClass(MockTag)
-        mock_tag_b_factory = TagFactoryFromClass(MockTag)
-        category_a.register_tag_factory(mock_tag_a_factory)
-        category_b.register_tag_factory(mock_tag_b_factory)
+        category_a.register_tag_class(MockTag)
+        category_b.register_tag_class(MockTag)
 
-        tag_b_factory = registry.get_tag_factory(TagName("Mock", "CategoryB"))
+        tag_b_factory = registry.get_tag_factory(QualifiedTagName("Mock", "CategoryB"))
 
-        assert tag_b_factory is mock_tag_b_factory
+        assert tag_b_factory is not None
 
     def test_bind__missing_tag(self):
         pattern = parse("%Nonexistent()")
@@ -149,8 +134,8 @@ class TestTagRegistry:
         registry = TagRegistry()
         category_a = registry.register_category("CategoryA")
         category_b = registry.register_category("CategoryB")
-        category_a.register_tag_factory(TagFactoryFromClass(MockTag))
-        category_b.register_tag_factory(TagFactoryFromClass(MockTag))
+        category_a.register_tag_class(MockTag)
+        category_b.register_tag_class(MockTag)
 
         with pytest.raises(AmbiguousTagError) as exc:
             registry.bind(pattern)
@@ -231,7 +216,7 @@ class TestTagRegistry:
         pattern = parse("%Mock(1, b='text')")
         registry = TagRegistry()
         category = registry.register_category("Test")
-        category.register_tag(MockTag, "Mock")
+        category.register_tag_class(MockTag, "Mock")
 
         bound_pattern = registry.bind(pattern)
 
@@ -250,7 +235,7 @@ class TestTagRegistry:
             def process(self, path: Path, context: Optional[str]) -> str:
                 pass
 
-        category.register_tag(FooTag)
+        category.register_tag_class(FooTag)
 
         with pytest.raises(ConfigurationError):
             registry.bind(pattern)
@@ -267,7 +252,7 @@ class TestTagRegistry:
             def process(self, path: Path, context: Optional[str]) -> str:
                 pass
 
-        category.register_tag(FooTag)
+        category.register_tag_class(FooTag)
 
         with pytest.raises(ConfigurationError) as exc:
             registry.bind(pattern)
@@ -278,8 +263,8 @@ class TestTagRegistry:
         pattern = parse("%Outer(name='outer'){%Inner(name='inner')}")
         registry = TagRegistry()
         category = registry.register_category("Test")
-        category.register_tag(MockTag, "Outer")
-        category.register_tag(MockTag, "Inner")
+        category.register_tag_class(MockTag, "Outer")
+        category.register_tag_class(MockTag, "Inner")
 
         bound_pattern = registry.bind(pattern)
 
@@ -351,7 +336,9 @@ class TestTagRegistry:
 
         registry.register_tags_in_module(first_level)
 
-        first_level_tag_factory = registry.get_tag_factory(TagName("FirstLevel"))
+        first_level_tag_factory = registry.get_tag_factory(
+            QualifiedTagName("FirstLevel")
+        )
         assert first_level_tag_factory
 
     def test_register_tags_in_module__excludes_abstract_tags(self):
@@ -361,7 +348,7 @@ class TestTagRegistry:
         registry.register_tags_in_module(first_level)
 
         with pytest.raises(UnknownTagError):
-            registry.get_tag_factory(TagName("Abstract"))
+            registry.get_tag_factory(QualifiedTagName("Abstract"))
 
     @staticmethod
     def _load_module_from_path(module_path: Path) -> ModuleType:
@@ -386,7 +373,7 @@ class TestTagRegistry:
         packageless_tags_category = registry.find_category("packageless_tags")
         assert packageless_tags_category is not None
 
-        assert registry.get_tag_factory(TagName("Test", "packageless_tags"))
+        assert registry.get_tag_factory(QualifiedTagName("Test", "packageless_tags"))
 
     def test_register_tags_in_package__finds_first_level_tags(self):
         registry = TagRegistry()
@@ -394,7 +381,9 @@ class TestTagRegistry:
 
         registry.register_tags_in_package(tests.template.test_module)
 
-        first_level_tag_factory = registry.get_tag_factory(TagName("FirstLevel"))
+        first_level_tag_factory = registry.get_tag_factory(
+            QualifiedTagName("FirstLevel")
+        )
         assert first_level_tag_factory
 
     def test_register_tags_in_package__skips_unsupported_modules(self):
@@ -404,7 +393,7 @@ class TestTagRegistry:
         registry.register_tags_in_package(tests.template.test_module)
 
         with pytest.raises(UnknownTagError):
-            registry.get_tag_factory(TagName("Unsupported"))
+            registry.get_tag_factory(QualifiedTagName("Unsupported"))
 
     def test_register_tags_in_package__finds_second_level_tags(self):
         registry = TagRegistry()
@@ -412,7 +401,9 @@ class TestTagRegistry:
 
         registry.register_tags_in_package(tests.template.test_module)
 
-        second_level_tag_factory = registry.get_tag_factory(TagName("SecondLevel"))
+        second_level_tag_factory = registry.get_tag_factory(
+            QualifiedTagName("SecondLevel")
+        )
         assert second_level_tag_factory
 
     def test_register_package__creates_categories(self):

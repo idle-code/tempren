@@ -1,6 +1,6 @@
 from abc import ABC
 from datetime import timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import mutagen
 import mutagen.mp3

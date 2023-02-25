@@ -2,9 +2,9 @@ import importlib
 import inspect
 import logging
 import pkgutil
-from dataclasses import dataclass
 from functools import reduce
 from logging import Logger
+from pathlib import Path
 from types import ModuleType
 from typing import Dict, List, Mapping, Optional, Tuple, Type, Union
 
@@ -15,13 +15,16 @@ from .grammar.TagTemplateLexer import TagTemplateLexer
 from .grammar.TagTemplateParser import TagTemplateParser
 from .grammar.TagTemplateParserVisitor import TagTemplateParserVisitor
 from .tree_elements import (
+    CategoryName,
     Location,
     Pattern,
     PatternElement,
+    QualifiedTagName,
     RawText,
     Tag,
     TagFactory,
     TagFactoryFromClass,
+    TagFactoryFromExecutable,
     TagInstance,
     TagName,
     TagPlaceholder,
@@ -121,7 +124,7 @@ class _TreeVisitor(TagTemplateParserVisitor):
             raise TemplateSyntaxError(
                 message=f"missing argument list for tag '{ctx.errorNoArgumentList.text}'"
             ).with_location(location_from_symbol(ctx.errorNoArgumentList))
-        tag_name: str = ctx.tagId.text  # type: ignore
+        tag_name = TagName(ctx.tagId.text)  # type: ignore
         if ctx.errorUnclosedContext:
             raise TemplateSyntaxError(
                 message=f"missing closing context bracket for tag '{tag_name}'"
@@ -133,7 +136,7 @@ class _TreeVisitor(TagTemplateParserVisitor):
             context = self.visitPattern(ctx.pattern())
 
         tag = TagPlaceholder(
-            tag_name=TagName(tag_name, category_name),
+            tag_name=QualifiedTagName(tag_name, category_name),
             args=args,
             kwargs=kwargs,
             context=context,
@@ -261,16 +264,16 @@ class TemplateSemanticError(TemplateError):
 
 
 class TagError(TemplateSemanticError):
-    tag_name: TagName
+    tag_name: QualifiedTagName
 
-    def __init__(self, tag_name: TagName, message: str):
+    def __init__(self, tag_name: QualifiedTagName, message: str):
         assert tag_name
         self.tag_name = tag_name
         super().__init__(f"Error in tag '{self.tag_name}': {message}")
 
 
 class UnknownTagError(TagError):
-    def __init__(self, tag_name: TagName):
+    def __init__(self, tag_name: QualifiedTagName):
         super().__init__(tag_name, f"Unknown tag name: {tag_name.name}")
 
     def with_location(self, whole_name_location: Location) -> "TemplateError":
@@ -285,7 +288,7 @@ class UnknownTagError(TagError):
 
 
 class UnknownCategoryError(TagError):
-    def __init__(self, tag_name: TagName):
+    def __init__(self, tag_name: QualifiedTagName):
         super().__init__(tag_name, f"Unknown category name: {tag_name.category}")
 
     def with_location(self, whole_name_location: Location) -> "TemplateError":
@@ -299,9 +302,9 @@ class UnknownCategoryError(TagError):
 
 
 class AmbiguousTagError(TagError):
-    category_names: List[str]
+    category_names: List[CategoryName]
 
-    def __init__(self, tag_name: TagName, category_names: List[str]):
+    def __init__(self, tag_name: QualifiedTagName, category_names: List[CategoryName]):
         super().__init__(
             tag_name,
             f"This tag name is present in multiple categories: {', '.join(category_names)}",
@@ -310,42 +313,62 @@ class AmbiguousTagError(TagError):
 
 
 class ContextMissingError(TagError):
-    def __init__(self, tag_name: TagName):
+    def __init__(self, tag_name: QualifiedTagName):
         super().__init__(tag_name, f"Context is required for this tag")
 
 
 class ContextForbiddenError(TagError):
-    def __init__(self, tag_name: TagName):
+    def __init__(self, tag_name: QualifiedTagName):
         super().__init__(tag_name, f"This tag cannot be used with context")
 
 
 class ConfigurationError(TagError):
-    def __init__(self, tag_name: TagName, message: str):
+    def __init__(self, tag_name: QualifiedTagName, message: str):
         super().__init__(tag_name, f"Configuration not valid: {message}")
 
 
 class TagCategory:
     log: Logger
 
-    name: str
+    name: CategoryName
     description: Optional[str] = None
     tag_map: Dict[str, TagFactory]
 
-    def __init__(self, name: str, description: Optional[str] = None):
+    _tag_class_suffix = "Tag"
+
+    def __init__(self, name: CategoryName, description: Optional[str] = None):
         self.log = logging.getLogger(self.__class__.__name__)
         self.tag_map = {}
         self.name = name
         self.description = description
 
-    def register_tag(self, tag_class: Type[Tag], tag_name: Optional[str] = None):
-        _simple_tag_factory = TagFactoryFromClass(tag_class, tag_name)
+    def register_tag_class(
+        self, tag_class: Type[Tag], tag_name: Optional[TagName] = None
+    ):
+        if not tag_name:
+            tag_class_name = tag_class.__name__
+            if tag_class_name.endswith(self._tag_class_suffix):
+                tag_name = TagName(tag_class_name[: -len(self._tag_class_suffix)])
+            else:
+                raise ValueError(
+                    f"Could not determine tag name from tag class: {tag_class_name}"
+                )
+
+        class_tag_factory = TagFactoryFromClass(tag_class, tag_name)
         self.log.debug(
-            f"Registering class {tag_class} as {_simple_tag_factory.tag_name} tag"
+            f"Registering class {tag_class} as {class_tag_factory.tag_name} tag"
         )
-        self.register_tag_factory(_simple_tag_factory, tag_name)
+        self.register_tag_factory(class_tag_factory, tag_name)
+
+    def register_tag_from_executable(self, exec_path: Path, tag_name: TagName):
+        executable_tag_factory = TagFactoryFromExecutable(exec_path, tag_name)
+        self.log.debug(
+            f"Registering executable {exec_path} as {executable_tag_factory.tag_name} tag"
+        )
+        self.register_tag_factory(executable_tag_factory, tag_name)
 
     def register_tag_factory(
-        self, tag_factory: TagFactory, tag_name: Optional[str] = None
+        self, tag_factory: TagFactory, tag_name: Optional[TagName] = None
     ):
         if tag_name is None:
             tag_name = tag_factory.tag_name
@@ -355,62 +378,66 @@ class TagCategory:
             raise ValueError(f"Factory for tag '{tag_name}' already registered")
         self.tag_map[tag_name] = tag_factory
 
-    def find_tag_factory(self, tag_name: str) -> Optional[TagFactory]:
+    def find_tag_factory(self, tag_name: TagName) -> Optional[TagFactory]:
         return self.tag_map.get(tag_name, None)
 
 
 class TagRegistry:
     log: Logger
     _tag_class_suffix = "Tag"
-    category_map: Dict[str, TagCategory]
+    category_map: Dict[CategoryName, TagCategory]
 
     def __init__(self):
         self.log = logging.getLogger(self.__class__.__name__)
         self.category_map = {}
 
     @property
-    def categories(self) -> List[str]:
+    def categories(self) -> List[CategoryName]:
         return sorted(self.category_map.keys())
 
-    def find_category(self, category_name: str) -> Optional[TagCategory]:
+    def find_category(self, category_name: CategoryName) -> Optional[TagCategory]:
         category = self.category_map.get(category_name, None)
         if category:
             return category
-        category_name = category_name.lower()
+        category_name = CategoryName(category_name.lower())
         return self.category_map.get(category_name, None)
 
-    def get_tag_factory(self, tag_name: TagName) -> TagFactory:
+    def get_tag_factory(self, tag_name: QualifiedTagName) -> TagFactory:
         if tag_name.category is None:
             return self._get_tag_factory_by_unique_name(tag_name)
         else:
-            return self._get_tag_factory_by_name_and_category(tag_name)
+            return self._get_tag_factory_by_qualified_name(tag_name)
 
-    def _get_tag_factory_by_unique_name(self, tag_name: TagName) -> TagFactory:
+    def _get_tag_factory_by_unique_name(
+        self, qualified_name: QualifiedTagName
+    ) -> TagFactory:
         # In case there are tags with the same name in multiple categories,
         # category name have to be specified explicitly
-        found_tag_factories: Dict[str, TagFactory] = {}
+        found_tag_factories: Dict[CategoryName, TagFactory] = {}
         for category in self.category_map.values():
-            tag_factory = category.find_tag_factory(tag_name.name)
+            tag_factory = category.find_tag_factory(qualified_name.name)
             if tag_factory:
                 found_tag_factories[category.name] = tag_factory
 
         if not found_tag_factories:
-            raise UnknownTagError(tag_name)
+            raise UnknownTagError(qualified_name)
         elif len(found_tag_factories) > 1:
             category_names = sorted(list(found_tag_factories.keys()))
-            raise AmbiguousTagError(tag_name, category_names)
+            raise AmbiguousTagError(qualified_name, category_names)
 
         return next(iter(found_tag_factories.values()))
 
-    def _get_tag_factory_by_name_and_category(self, tag_name: TagName) -> TagFactory:
-        assert tag_name.category
-        tag_category = self.find_category(tag_name.category)
+    def _get_tag_factory_by_qualified_name(
+        self, qualified_name: QualifiedTagName
+    ) -> TagFactory:
+        assert qualified_name.category
+        tag_category = self.find_category(qualified_name.category)
         if tag_category is None:
-            raise UnknownCategoryError(tag_name)
+            raise UnknownCategoryError(qualified_name)
 
-        tag_factory = tag_category.find_tag_factory(tag_name.name)
+        tag_factory = tag_category.find_tag_factory(qualified_name.name)
         if tag_factory is None:
-            raise UnknownTagError(tag_name)
+            raise UnknownTagError(qualified_name)
 
         return tag_factory
 
@@ -463,7 +490,7 @@ class TagRegistry:
         return TagInstance(tag, context=context_pattern)
 
     def register_category(
-        self, category_name: str, description: Optional[str] = None
+        self, category_name: CategoryName, description: Optional[str] = None
     ) -> TagCategory:
         # TODO: This method should receive already build (non-empty) TagCategory
         if self.find_category(category_name) is not None:
@@ -476,9 +503,9 @@ class TagRegistry:
         self.log.debug(f"Discovering tags in module '{module}'")
 
         if module.__package__:
-            category_name = module.__name__[len(module.__package__) + 1 :]
+            category_name = CategoryName(module.__name__[len(module.__package__) + 1 :])
         else:
-            category_name = module.__name__
+            category_name = CategoryName(module.__name__)
 
         def is_tag_class(klass: type):
             if (
@@ -493,7 +520,7 @@ class TagRegistry:
         # TODO: do not register empty modules
         module_category = self.register_category(category_name)
         for _, tag_class in inspect.getmembers(module, is_tag_class):
-            module_category.register_tag(tag_class)
+            module_category.register_tag_class(tag_class)
 
     def register_tags_in_package(self, package):
         self.log.debug(f"Discovering tags in package '{package}'")

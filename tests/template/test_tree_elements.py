@@ -1,13 +1,18 @@
+from pathlib import Path
+
+import pytest
 from pytest import raises
 
 from tempren.path_generator import File
 from tempren.template.tree_elements import (
+    AdHocTag,
+    CategoryName,
+    ExecutionTimeoutError,
     MissingMetadataError,
     Pattern,
     RawText,
     TagInstance,
     TagName,
-    TagPlaceholder,
 )
 
 from .mocks import GeneratorTag, MockTag
@@ -66,13 +71,27 @@ class TestPattern:
 
 
 class TestTagName:
-    def test_invalid_tag_name(self):
-        with raises(ValueError):
-            TagName("")
+    @property
+    def _name_instance(self):
+        return TagName
 
-    def test_invalid_tag_category(self):
+    def test_empty(self):
         with raises(ValueError):
-            TagName("TAG", "")
+            self._name_instance("")
+
+    def test_invalid(self):
+        with raises(ValueError):
+            self._name_instance("Foo-Bar")
+
+    def test_number_start(self):
+        with raises(ValueError):
+            self._name_instance("3D")
+
+
+class TestTagCategory(TestTagName):
+    @property
+    def _name_instance(self):
+        return CategoryName
 
 
 class TestTagInstance:
@@ -114,3 +133,82 @@ class TestTagInstance:
         element = TagInstance(tag=throwing_tag)
 
         assert element.process(nonexistent_file) == ""
+
+
+class TestAdHocTag:
+    def test_invalid_executable_path(self, nonexistent_absolute_path: Path):
+        with pytest.raises(AssertionError):
+            AdHocTag(nonexistent_absolute_path)
+
+    def test_executable_is_invoked(self, text_data_dir: Path):
+        new_file = File(text_data_dir, Path("new.file"))
+        assert not new_file.absolute_path.exists()
+        touch_tag = AdHocTag(Path("/usr/bin/touch"))
+
+        result = touch_tag.process(new_file, None)
+
+        assert result is ""
+        assert new_file.absolute_path.exists()
+
+    def test_stdout_is_returned(self, text_data_dir: Path):
+        hello_file = File(text_data_dir, Path("hello.txt"))
+        cat_tag = AdHocTag(Path("/usr/bin/cat"))
+
+        result = cat_tag.process(hello_file, None)
+
+        assert result == "Hello"
+
+    def test_error_code_raises_error(self, text_data_dir: Path):
+        hello_file = File(text_data_dir, Path("hello.txt"))
+        false_tag = AdHocTag(Path("/usr/bin/false"))
+
+        with pytest.raises(MissingMetadataError) as exc:
+            false_tag.process(hello_file, None)
+
+        assert exc.match(r"error code \(1\)")
+
+    def test_positional_arguments_are_passed(self, text_data_dir: Path):
+        markdown_file = File(text_data_dir, Path("markdown.md"))
+        tail_tag = AdHocTag(Path("/usr/bin/tail"))
+        tail_tag.configure("-n", "1")
+
+        result = tail_tag.process(markdown_file, None)
+
+        assert result == "Second, a bit longer paragraph."
+
+    def test_context_replaces_file_argument(self, text_data_dir: Path):
+        hello_file = File(text_data_dir, Path("hello.txt"))
+        cat_tag = AdHocTag(Path("/usr/bin/cat"))
+
+        result = cat_tag.process(hello_file, "foobar")
+
+        assert result == "foobar"
+
+    def test_executable_default_timeout(self, text_data_dir: Path):
+        hello_file = File(text_data_dir, Path("hello.txt"))
+        sleep_tag = AdHocTag(Path("/usr/bin/sleep"))
+        sleep_tag.configure("4s")
+
+        with pytest.raises(ExecutionTimeoutError) as exc:
+            sleep_tag.process(hello_file, "")
+
+        assert exc.match("timeout")
+
+    def test_executable_explicit_timeout_increase(self, text_data_dir: Path):
+        hello_file = File(text_data_dir, Path("hello.txt"))
+        sleep_tag = AdHocTag(Path("/usr/bin/sleep"))
+        sleep_tag.configure("1s", timeout_ms=2000)
+
+        result = sleep_tag.process(hello_file, "")
+
+        assert result == ""
+
+    def test_executable_explicit_timeout_exceeded(self, text_data_dir: Path):
+        hello_file = File(text_data_dir, Path("hello.txt"))
+        sleep_tag = AdHocTag(Path("/usr/bin/sleep"))
+        sleep_tag.configure("3s", timeout_ms=2000)
+
+        with pytest.raises(ExecutionTimeoutError) as exc:
+            sleep_tag.process(hello_file, "")
+
+        assert exc.match("timeout")

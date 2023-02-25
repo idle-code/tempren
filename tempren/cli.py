@@ -1,18 +1,20 @@
 #!/usr/bin/env python
 import argparse
 import logging
-import os
+import os.path
+import shutil
 import sys
 from argparse import ArgumentParser, Namespace
 from enum import IntEnum
+from itertools import chain
 from logging import LogRecord
 from pathlib import Path
 from textwrap import indent
-from typing import Any, List, NoReturn, Optional, Sequence, Text, Union
+from typing import Any, Dict, List, NoReturn, Optional, Sequence, Text, Tuple, Union
 
 from tempren.filesystem import DestinationAlreadyExistsError
 from tempren.path_generator import TemplateEvaluationError
-from tempren.template.tree_elements import TagName
+from tempren.template.tree_elements import CategoryName, QualifiedTagName, TagName
 
 from .pipeline import (
     ConflictResolutionStrategy,
@@ -23,13 +25,7 @@ from .pipeline import (
     build_pipeline,
     build_tag_registry,
 )
-from .template.tree_builder import (
-    AmbiguousTagError,
-    TagError,
-    TemplateError,
-    UnknownCategoryError,
-    UnknownTagError,
-)
+from .template.tree_builder import TagError, TemplateError
 
 log = logging.getLogger("CLI")
 
@@ -72,7 +68,7 @@ def configure_logging():
     logging.root.addHandler(stderr_handler)
 
 
-def existing_file(val: str) -> Path:
+def existing_path(val: str) -> Path:
     input_path = Path(val)
     if not input_path.exists():
         raise argparse.ArgumentTypeError(f"Path '{val}' doesn't exists")
@@ -81,8 +77,61 @@ def existing_file(val: str) -> Path:
 
 def nonempty_string(val: str) -> str:
     if not val:
-        raise argparse.ArgumentTypeError(f"Non-empty argument required")
+        raise argparse.ArgumentTypeError("Non-empty argument required")
     return val
+
+
+def tag_name_from_executable(exec_path: Path) -> str:
+    base_name = os.path.splitext(exec_path.name)[0]
+    return base_name
+
+
+def adhoc_tag(val: str) -> Tuple[TagName, Path]:
+    val = nonempty_string(val)
+    components = val.split("=", maxsplit=1)
+    if len(components) == 1:
+        tag_name = None
+        exec_path_str = components[0]
+    else:
+        tag_name, exec_path_str = components
+    exec_path = Path(exec_path_str)
+    if not exec_path.exists():
+        system_exec_path_str = shutil.which(exec_path_str)
+        if not system_exec_path_str:
+            raise argparse.ArgumentTypeError(f"Executable '{exec_path}' doesn't exists")
+        exec_path = Path(system_exec_path_str)
+    if not tag_name:
+        tag_name = tag_name_from_executable(exec_path)
+    try:
+        return TagName(tag_name), exec_path.absolute()
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"'{tag_name}' cannot be used as tag name")
+
+
+def validate_adhoc_tags(
+    adhoc_tags: List[List[Tuple[TagName, Path]]]
+) -> Dict[TagName, Path]:
+    if not adhoc_tags:
+        return dict()
+    list_of_tuples = list(chain(*adhoc_tags))
+    names = list(map(lambda pair: pair[0], list_of_tuples))
+    unique_names = set(names)
+    if len(names) > len(unique_names):
+        repeating_names = [name for name in unique_names if names.count(name) > 1]
+        for duplicate_name in repeating_names:
+            executables_with_the_same_name = list(
+                map(
+                    lambda pair: str(pair[1]),
+                    filter(lambda pair: pair[0] == duplicate_name, list_of_tuples),
+                )
+            )
+            # CHECK: report more errors at once?
+            raise SystemExitError(
+                ErrorCode.USAGE_ERROR,
+                f"Adhoc tags created from executables {' and '.join(executables_with_the_same_name)} cannot have the same name {duplicate_name}",
+            )
+
+    return dict(list_of_tuples)
 
 
 class SystemExitError(Exception):
@@ -97,11 +146,11 @@ class _ListAvailableTags(argparse.Action):
     def __call__(
         self,
         parser: ArgumentParser,
-        namespace: Namespace,
+        args: Namespace,
         values: Union[Text, Sequence[Any], None],
         option_string: Optional[Text] = None,
     ):
-        registry = build_tag_registry()
+        registry = build_tag_registry(validate_adhoc_tags(args.ad_hoc))
         log.info("Available tags:")
         for category_name in sorted(registry.category_map.keys()):
             log.info(f"{category_name.capitalize()}:")
@@ -129,7 +178,7 @@ class _ShowHelp(argparse.Action):
     def __call__(
         self,
         parser: ArgumentParser,
-        namespace: Namespace,
+        args: Namespace,
         values: Union[str, Sequence[Any], None],
         option_string: Optional[Text] = None,
     ):
@@ -137,17 +186,21 @@ class _ShowHelp(argparse.Action):
             parser.print_help()
         else:
             raw_tag_name = str(values)
-            registry = build_tag_registry()
+            registry = build_tag_registry(validate_adhoc_tags(args.ad_hoc))
 
             try:
                 if "." in raw_tag_name:
-                    tag_name = TagName(*reversed(raw_tag_name.split(".")))
+                    category, name = raw_tag_name.split(".")
+                    qualified_name = QualifiedTagName(
+                        TagName(name), CategoryName(category)
+                    )
                 else:
-                    tag_name = TagName(raw_tag_name)
+                    qualified_name = QualifiedTagName(TagName(raw_tag_name))
 
-                tag_factory = registry.get_tag_factory(tag_name)
+                tag_factory = registry.get_tag_factory(qualified_name)
             except TagError as tag_error:
                 parser.exit(ErrorCode.USAGE_ERROR, str(tag_error))
+                raise
             log.info("")
             log.info(indent(tag_factory.configuration_signature, "  "))
             log.info("")
@@ -244,6 +297,15 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         "--include-hidden",
         action="store_true",
         help="Consider hidden files and directories when scanning for files in input directory",
+    )
+    parser.add_argument(
+        "-ah",
+        "--ad-hoc",
+        nargs=1,
+        type=adhoc_tag,
+        action="append",
+        metavar="[name=]program",
+        help="Add command or executable as an ad-hoc tag",
     )
     parser.add_argument(
         "-v",
@@ -359,8 +421,8 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         help="Template used to generate new filename/path",
     )
     parser.add_argument(
-        "file",
-        type=existing_file,
+        "path",
+        type=existing_path,
         nargs="+",
         help="Input files or directories where files to rename are stored",
     )
@@ -425,7 +487,7 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
 
     configuration = RuntimeConfiguration(
         template=args.template,
-        input_paths=args.file,
+        input_paths=args.path,
         recursive=args.recursive,
         include_hidden=args.include_hidden,
         dry_run=args.dry_run,
@@ -436,6 +498,7 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         sort_invert=args.sort_invert,
         sort=args.sort,
         mode=args.mode,
+        adhoc_tags=validate_adhoc_tags(args.ad_hoc),
     )
 
     return configuration
@@ -520,7 +583,7 @@ def main() -> int:
     original_cwd = os.getcwd()
     try:
         config = process_cli_configuration(argv)
-        registry = build_tag_registry()
+        registry = build_tag_registry(config.adhoc_tags)
         pipeline = build_pipeline(
             config, registry, manual_conflict_resolver=cli_prompt_conflict_resolver
         )
@@ -546,6 +609,7 @@ def main() -> int:
         return ErrorCode.INVALID_DESTINATION_ERROR
     except Exception as exc:  # NOCOVER: not really testable - final fallback
         log.error(f"Unknown error: {exc.__class__.__name__} {exc}")
+        raise
         return ErrorCode.UNKNOWN_ERROR
     finally:
         os.chdir(original_cwd)

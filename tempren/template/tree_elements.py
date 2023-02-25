@@ -1,23 +1,33 @@
+import re
+import subprocess
 import textwrap
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any, List, Mapping, Optional, Type
+from pathlib import Path
+from typing import Any, List, Mapping, Optional, Tuple, Type
 
 from docstring_parser import parse as parse_docstring
 
 from tempren.path_generator import File
 
+tag_name_regex = re.compile(r"^[_a-z][0-9_a-z]*$", re.IGNORECASE)
+
+
+class TagName(str):
+    def __new__(cls, name: str) -> "TagName":
+        if not tag_name_regex.match(name):
+            raise ValueError(f"Invalid name: {repr(name)}")
+        return super().__new__(cls, name)  # type: ignore
+
+
+class CategoryName(TagName):
+    pass
+
 
 @dataclass
-class TagName:
-    name: str
-    category: Optional[str] = None
-
-    def __post_init__(self):
-        if len(self.name) < 1:
-            raise ValueError(f"Invalid tag name: ${repr(self.name)}")
-        if self.category is not None and len(self.category) < 1:
-            raise ValueError(f"Invalid category name: ${repr(self.category)}")
+class QualifiedTagName:
+    name: TagName
+    category: Optional[CategoryName] = None
 
     def __str__(self) -> str:
         if self.category:
@@ -102,12 +112,12 @@ class TagPlaceholder(PatternElement):
     """Represents unbound tag"""
 
     location: Location = field(init=False, compare=False)
-    tag_name: TagName
+    tag_name: QualifiedTagName
     context: Optional[Pattern] = None
     args: List[Any] = field(default_factory=list)
     kwargs: Mapping[str, Any] = field(default_factory=dict)
 
-    def process(self, file: File) -> str:
+    def process(self, file: File) -> Any:
         raise NotImplementedError(
             "TagPlaceholder shouldn't be present in bound tag tree"
         )
@@ -121,6 +131,12 @@ class FileNotSupportedError(Exception):
 
 class MissingMetadataError(Exception):
     """Tag cannot extract value due to missing metadata"""
+
+    pass
+
+
+class ExecutionTimeoutError(MissingMetadataError):  # TODO: Fix exception hierarchy?
+    """Tag execution time exceeded"""
 
     pass
 
@@ -147,7 +163,7 @@ class Tag(ABC):
 class TagFactory(ABC):
     @property
     @abstractmethod
-    def tag_name(self) -> str:
+    def tag_name(self) -> TagName:
         """Name of produced tags"""
 
     @property
@@ -171,12 +187,11 @@ class TagFactory(ABC):
 
 
 class TagFactoryFromClass(TagFactory):
-    _tag_class_suffix = "Tag"
     _tag_class: Type[Tag]
-    _tag_name: str
+    _tag_name: TagName
 
     @property
-    def tag_name(self) -> str:
+    def tag_name(self) -> TagName:
         return self._tag_name
 
     @property
@@ -231,29 +246,121 @@ class TagFactoryFromClass(TagFactory):
     def long_description(self) -> Optional[str]:
         return self._parsed_class_docstring.long_description
 
-    def __init__(self, tag_class: Type[Tag], tag_name: Optional[str] = None):
+    def __init__(self, tag_class: Type[Tag], tag_name: TagName):
         self._tag_class = tag_class
+        self._tag_name = tag_name
         self._parsed_class_docstring = parse_docstring(
             tag_class.__doc__ if tag_class.__doc__ else ""
         )
         self._parsed_configure_docstring = parse_docstring(
             tag_class.configure.__doc__ if tag_class.configure.__doc__ else ""
         )
-        if tag_name:
-            self._tag_name = tag_name
-        else:
-            tag_class_name = tag_class.__name__
-            if tag_class_name.endswith(self._tag_class_suffix):
-                self._tag_name = tag_class_name[: -len(self._tag_class_suffix)]
-            else:
-                raise ValueError(
-                    f"Could not determine tag name from tag class: {tag_class_name}"
-                )
 
     def __call__(self, *args, **kwargs) -> Tag:
         tag = self._tag_class()
         tag.configure(*args, **kwargs)  # type: ignore
         return tag
+
+
+class TagFactoryFromExecutable(TagFactoryFromClass):
+    _executable_path: Path
+
+    @property
+    def short_description(self) -> str:
+        return self._render_description(super().short_description)
+
+    @property
+    def long_description(self) -> Optional[str]:
+        long_description = super().long_description
+        if long_description:
+            long_description = self._render_description(long_description)
+        return long_description
+
+    def __init__(self, exec_path: Path, tag_name: TagName):
+        assert exec_path.exists()
+        self._executable_path = exec_path
+        super().__init__(AdHocTag, tag_name)
+
+    def __call__(self, *args, **kwargs) -> Tag:
+        tag = AdHocTag(self._executable_path)
+        tag.configure(*args, **kwargs)  # type: ignore
+        return tag
+
+    def _render_description(self, description: str) -> str:
+        return description.format(
+            executable_name=self._executable_path.name,
+            executable_path=self._executable_path,
+            tag_name=self.tag_name,
+        )
+
+
+class AdHocTag(Tag):
+    """Invoke `{executable_name}` executable
+
+    Execute `{executable_name}` and extract its output.
+    If context is given, tag invocation:
+        %{tag_name}("--flag", "arg"){{Context}}
+    is equivalent to:
+        echo "Context" | {executable_name} --flag arg
+
+    If no context is present, tag invocation:
+        %{tag_name}("--flag", "arg")
+    results in equivalent command:
+        {executable_name} --flag arg <relative path to the processed file>
+
+    Program executable is located at: `{executable_path}`
+    """
+
+    executable: Path
+    args: Tuple[str, ...] = ()
+    timeout_ms: int = 3000
+
+    def __init__(self, executable: Path):
+        assert (
+            executable.exists()
+        ), "Provided executable doesn't exists in the filesystem"
+        self.executable = executable
+
+    def configure(self, *positional_args: str, timeout_ms: int = 3000):
+        """
+        :param positional_args: command line arguments to be passed to the executable
+        :param timeout_ms: execution timeout in milliseconds
+        """
+        self.args = positional_args
+        self.timeout_ms = timeout_ms
+
+    def process(self, file: File, context: Optional[str]) -> str:
+        if context is None:
+            command_line = (
+                [str(self.executable)] + list(self.args) + [str(file.relative_path)]
+            )
+        else:
+            command_line = [str(self.executable)] + list(self.args)
+
+        try:
+            completed_process = subprocess.run(
+                command_line,
+                input=context.encode("utf-8") if context else None,
+                capture_output=True,
+                timeout=self.timeout_ms / 1000,
+                cwd=file.input_directory,
+            )
+        except subprocess.TimeoutExpired:
+            raise ExecutionTimeoutError(
+                "`{}` command execution exceeded timeout {}ms".format(
+                    " ".join(command_line), self.timeout_ms
+                )
+            )
+
+        captured_stdout = completed_process.stdout.decode("utf-8")
+        if completed_process.returncode != 0:
+            captured_stderr = completed_process.stderr.decode("utf-8")
+            raise MissingMetadataError(
+                "Command failed due to error code ({}): \n{}".format(
+                    completed_process.returncode, captured_stderr
+                )
+            )
+        return captured_stdout.strip()
 
 
 @dataclass

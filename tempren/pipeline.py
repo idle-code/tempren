@@ -1,9 +1,9 @@
 import logging
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Callable, Iterable, List, Optional, Union
+from typing import Callable, Dict, Iterable, List, Optional, Union
 
 from tempren.file_filters import (
     FileFilterInverter,
@@ -34,7 +34,7 @@ from tempren.template.path_generators import (
     TemplatePathGenerator,
 )
 from tempren.template.tree_builder import TagRegistry, TagTreeBuilder, TemplateError
-from tempren.template.tree_elements import Pattern
+from tempren.template.tree_elements import CategoryName, Pattern, TagName
 
 log = logging.getLogger(__name__)
 
@@ -82,6 +82,7 @@ class RuntimeConfiguration:
     sort_invert: bool = False
     sort: Optional[str] = None
     mode: OperationMode = OperationMode.name
+    adhoc_tags: Dict[TagName, Path] = field(default_factory=dict)
 
 
 class ConfigurationError(Exception):
@@ -231,12 +232,17 @@ class Pipeline:
             )
 
 
-def build_tag_registry() -> TagRegistry:
+def build_tag_registry(adhoc_tags: Dict[TagName, Path]) -> TagRegistry:
     log.debug("Building tag registry")
     import tempren.tags
 
     registry = TagRegistry()
     registry.register_tags_in_package(tempren.tags)
+    if adhoc_tags:
+        log.debug("Registering ad-hoc tags")
+        adhoc_category = registry.register_category(CategoryName("AdHoc"))
+        for tag_name, exec_path in sorted(adhoc_tags.items()):
+            adhoc_category.register_tag_from_executable(exec_path, tag_name)
     return registry
 
 
