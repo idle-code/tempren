@@ -1,9 +1,8 @@
 from dataclasses import dataclass, field
 from typing import Any, Callable, Mapping, Optional, Tuple
 
-from tempren.path_generator import File
-from tempren.template.tree_builder import ArgValue
-from tempren.template.tree_elements import Tag
+from tempren.primitives import File, Tag
+from tempren.template.parser import ArgValue
 
 
 @dataclass

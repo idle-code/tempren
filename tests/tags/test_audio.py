@@ -3,7 +3,8 @@ from pathlib import Path
 
 import pytest
 
-from tempren.path_generator import File
+from tempren.exceptions import MissingMetadataError
+from tempren.primitives import File
 from tempren.tags.audio import (
     AlbumTag,
     ArtistTag,
@@ -18,7 +19,6 @@ from tempren.tags.audio import (
     TrackTag,
     YearTag,
 )
-from tempren.template.tree_elements import MissingMetadataError
 
 
 @pytest.mark.parametrize("sample_name", ["sample.flac", "sample.mp3"])

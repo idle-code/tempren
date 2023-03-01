@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from tempren.path_generator import File
+from tempren.primitives import File
 from tempren.tags.hash import Crc32Tag, Md5Tag, Sha1Tag, Sha224Tag, Sha256Tag
 
 

@@ -4,7 +4,8 @@ from typing import Optional
 import pytest
 from pint import UndefinedUnitError
 
-from tempren.path_generator import ExpressionEvaluationError, File
+from tempren.exceptions import ExpressionEvaluationError
+from tempren.primitives import File
 from tempren.tags.core import (
     AsDistanceTag,
     AsDurationTag,
@@ -646,6 +647,7 @@ class TestAsIntTag:
         assert number == "111111110"
 
 
+@pytest.mark.slow  # TODO: Store UnitRegistry at module level to improve startup time this tag
 class TestAsDistanceTag:
     def test_invalid_target_unit(self):
         tag = AsDistanceTag()

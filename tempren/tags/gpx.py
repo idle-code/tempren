@@ -5,12 +5,8 @@ from typing import Any, Optional
 import gpxpy
 from gpxpy.gpx import GPX, GPXXMLSyntaxException
 
-from tempren.path_generator import File
-from tempren.template.tree_elements import (
-    FileNotSupportedError,
-    MissingMetadataError,
-    Tag,
-)
+from tempren.exceptions import FileNotSupportedError, MissingMetadataError
+from tempren.primitives import File, Tag
 
 
 class GpxTagBase(Tag, ABC):

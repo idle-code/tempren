@@ -2,7 +2,7 @@ import datetime
 import os.path
 from pathlib import Path
 
-from tempren.path_generator import File
+from tempren.primitives import File
 from tempren.tags.filesystem import GroupTag, MTimeTag, OwnerTag, SizeTag
 
 

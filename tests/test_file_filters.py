@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pytest
 
+from tempren.exceptions import TemplateEvaluationError
 from tempren.file_filters import (
     FileFilterInverter,
     GlobFilenameFileFilter,
@@ -10,8 +11,8 @@ from tempren.file_filters import (
     RegexPathFileFilter,
     TemplateFileFilter,
 )
-from tempren.path_generator import File, TemplateEvaluationError
-from tempren.template.tree_elements import Pattern, RawText, TagInstance
+from tempren.primitives import File
+from tempren.template.ast import Pattern, RawText, TagInstance
 
 from .template.mocks import MockTag
 

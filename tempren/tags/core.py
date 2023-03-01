@@ -10,9 +10,8 @@ import magic
 import pathvalidate
 import pint as pint
 
-from tempren.path_generator import evaluate_expression
-from tempren.template.path_generators import File
-from tempren.template.tree_elements import Tag
+from tempren.evaluation import evaluate_expression
+from tempren.primitives import File, Tag
 
 mimetypes.init()
 

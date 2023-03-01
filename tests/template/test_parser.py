@@ -1,15 +1,16 @@
 import pytest
 
-from tempren.template.tree_builder import *
-from tempren.template.tree_elements import Pattern, RawText, TagPlaceholder
+from tempren.template.ast import Pattern, RawText, TagPlaceholder
+from tempren.template.exceptions import TemplateSemanticError
+from tempren.template.parser import *
 
 
 def parse(text: str) -> Pattern:
-    ast_builder = TagTreeBuilder()
+    ast_builder = TemplateParser()
     return ast_builder.parse(text)
 
 
-class TestTreeBuilder:
+class TestParser:
     def test_empty(self):
         pattern = parse("")
 
@@ -215,7 +216,7 @@ class TestTreeBuilder:
         assert pattern == equivalent_pattern
 
 
-class TestTreeBuilderSyntaxErrors:
+class TestParserSyntaxErrors:
     def test_missing_closing_argument_bracket(self):
         with pytest.raises(TemplateSyntaxError) as syntax_error:
             parse("Some %TAG( text")
@@ -301,7 +302,7 @@ class TestTreeBuilderSyntaxErrors:
         assert syntax_error.value.location == Location(1, 5, 4)
 
 
-class TestTreeBuilderSemanticErrors:
+class TestParserSemanticErrors:
     @pytest.mark.skip("Might not be an error")
     def test_empty_context(self):
         with pytest.raises(TemplateSemanticError) as semantic_error:

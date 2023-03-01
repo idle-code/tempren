@@ -12,9 +12,10 @@ from pathlib import Path
 from textwrap import indent
 from typing import Any, Dict, List, NoReturn, Optional, Sequence, Text, Tuple, Union
 
+from tempren.exceptions import TemplateEvaluationError
 from tempren.filesystem import DestinationAlreadyExistsError
-from tempren.path_generator import TemplateEvaluationError
-from tempren.template.tree_elements import CategoryName, QualifiedTagName, TagName
+from tempren.primitives import CategoryName, QualifiedTagName, TagName
+from tempren.template.exceptions import TagError, TemplateError
 
 from .pipeline import (
     ConflictResolutionStrategy,
@@ -25,7 +26,6 @@ from .pipeline import (
     build_pipeline,
     build_tag_registry,
 )
-from .template.tree_builder import TagError, TemplateError
 
 log = logging.getLogger("CLI")
 

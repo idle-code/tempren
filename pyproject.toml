@@ -59,6 +59,10 @@ line_length = 88
 [tool.pytest.ini_options]
 addopts = "--cov-report=xml --cov-report=term-missing --cov=tempren"
 testpaths = ["tests"]
+markers = [
+    "e2e: slower, end-to-end tests often running tempren as separate process",
+    "slow: slower test that often use timeouts"
+]
 
 [build-system]
 requires = ["poetry_core>=1.0.0"]

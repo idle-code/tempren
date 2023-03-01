@@ -28,13 +28,12 @@ from tempren.filesystem import (
     PrintingRenamerWrapper,
     RecursiveFileGatherer,
 )
-from tempren.path_generator import File, InvalidFilenameError, PathGenerator
-from tempren.template.path_generators import (
-    TemplateNameGenerator,
-    TemplatePathGenerator,
-)
-from tempren.template.tree_builder import TagRegistry, TagTreeBuilder, TemplateError
-from tempren.template.tree_elements import CategoryName, Pattern, TagName
+from tempren.primitives import CategoryName, File, PathGenerator, TagName
+from tempren.registry import TagRegistry
+from tempren.template.ast import Pattern
+from tempren.template.exceptions import InvalidFilenameError, TemplateError
+from tempren.template.generators import TemplateNameGenerator, TemplatePathGenerator
+from tempren.template.parser import TemplateParser
 
 log = logging.getLogger(__name__)
 
@@ -252,7 +251,7 @@ def build_pipeline(
     manual_conflict_resolver: ManualConflictResolver,  # TODO: Move to the RuntimeConfiguration
 ) -> Pipeline:
     log.debug("Building pipeline")
-    tree_builder = TagTreeBuilder()
+    parser = TemplateParser()
     pipeline = Pipeline()
 
     file_gatherers: List[FileGatherer] = []
@@ -272,7 +271,7 @@ def build_pipeline(
     def _compile_template(template_text: str) -> Pattern:
         log.debug("Compiling template %r", template_text)
         try:
-            return registry.bind(tree_builder.parse(template_text))
+            return registry.bind(parser.parse(template_text))
         except TemplateError as template_error:
             template_error.template = template_text
             raise template_error

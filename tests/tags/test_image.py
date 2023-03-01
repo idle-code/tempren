@@ -2,7 +2,8 @@ from pathlib import Path
 
 import pytest
 
-from tempren.path_generator import File
+from tempren.exceptions import FileNotSupportedError, MissingMetadataError
+from tempren.primitives import File, Tag
 from tempren.tags.image import (
     AspectRatioTag,
     ColorModeTag,
@@ -12,11 +13,6 @@ from tempren.tags.image import (
     IsOrientationTag,
     MPxTag,
     WidthTag,
-)
-from tempren.template.tree_elements import (
-    FileNotSupportedError,
-    MissingMetadataError,
-    Tag,
 )
 
 

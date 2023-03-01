@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Any, Optional
 
-from tempren.template.tree_elements import Tag
+from tempren.primitives import Tag
 
 
 class TestTag(Tag):

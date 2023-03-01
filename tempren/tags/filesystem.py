@@ -2,8 +2,7 @@ import datetime
 import os.path
 from typing import Any, Optional
 
-from tempren.path_generator import File
-from tempren.template.tree_elements import Tag
+from tempren.primitives import File, Tag
 
 
 class SizeTag(Tag):

@@ -9,12 +9,8 @@ from piexif import TAGS
 from piexif import TYPES as TAG_TYPES
 from PIL import Image
 
-from tempren.path_generator import File
-from tempren.template.tree_elements import (
-    FileNotSupportedError,
-    MissingMetadataError,
-    Tag,
-)
+from tempren.exceptions import FileNotSupportedError, MissingMetadataError
+from tempren.primitives import File, Tag
 
 
 class PillowTagBase(Tag, ABC):

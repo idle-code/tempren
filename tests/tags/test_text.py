@@ -1,6 +1,6 @@
 import pytest
 
-from tempren.path_generator import File
+from tempren.primitives import File
 from tempren.tags.text import (
     CapitalizeTag,
     CollapseTag,

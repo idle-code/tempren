@@ -2,13 +2,10 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Iterable, Tuple
 
-from tempren.path_generator import (
-    ExpressionEvaluationError,
-    File,
-    TemplateEvaluationError,
-    evaluate_expression,
-)
-from tempren.template.tree_elements import Pattern
+from tempren.evaluation import evaluate_expression
+from tempren.exceptions import ExpressionEvaluationError, TemplateEvaluationError
+from tempren.primitives import File
+from tempren.template.ast import Pattern
 
 
 class FileSorter(ABC):

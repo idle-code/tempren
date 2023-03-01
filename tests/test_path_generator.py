@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from tempren.path_generator import File
+from tempren.primitives import File
 
 
 class TestFile:

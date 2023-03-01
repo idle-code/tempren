@@ -15,7 +15,7 @@ from tempren.filesystem import (
     InvalidDestinationError,
     RecursiveFileGatherer,
 )
-from tempren.path_generator import File
+from tempren.primitives import File
 
 
 def file_to_absolute_path(file: File) -> Path:

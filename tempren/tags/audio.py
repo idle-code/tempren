@@ -6,8 +6,8 @@ import mutagen
 import mutagen.mp3
 from mutagen.easyid3 import EasyID3
 
-from tempren.path_generator import File
-from tempren.template.tree_elements import MissingMetadataError, Tag
+from tempren.exceptions import MissingMetadataError
+from tempren.primitives import File, Tag
 
 
 class MutagenTagBase(Tag, ABC):

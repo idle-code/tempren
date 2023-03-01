@@ -3,12 +3,10 @@ from pathlib import Path
 
 import pytest
 
-from tempren.path_generator import File, InvalidFilenameError
-from tempren.template.path_generators import (
-    TemplateNameGenerator,
-    TemplatePathGenerator,
-)
-from tempren.template.tree_elements import Pattern, RawText
+from tempren.primitives import File
+from tempren.template.ast import Pattern, RawText
+from tempren.template.exceptions import InvalidFilenameError
+from tempren.template.generators import TemplateNameGenerator, TemplatePathGenerator
 
 
 def static_pattern(text: str) -> Pattern:

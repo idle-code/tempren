@@ -5,7 +5,7 @@ from typing import Callable
 import pytest
 from _pytest.tmpdir import TempPathFactory
 
-from tempren.path_generator import File
+from tempren.primitives import File
 
 
 @pytest.fixture

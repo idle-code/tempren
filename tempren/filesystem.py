@@ -5,7 +5,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Callable, Iterable, List, Set
 
-from tempren.path_generator import File
+from tempren.primitives import File
 
 FileRenamerType = Callable[[Path, Path, bool], None]
 

@@ -3,7 +3,8 @@ from pathlib import Path
 
 import pytest
 
-from tempren.path_generator import File
+from tempren.exceptions import FileNotSupportedError, MissingMetadataError
+from tempren.primitives import File, Tag
 from tempren.tags.gpx import (
     ActivityTag,
     AverageSpeedTag,
@@ -12,11 +13,6 @@ from tempren.tags.gpx import (
     ElevationChangeTag,
     EndTimeTag,
     StartTimeTag,
-)
-from tempren.template.tree_elements import (
-    FileNotSupportedError,
-    MissingMetadataError,
-    Tag,
 )
 
 
