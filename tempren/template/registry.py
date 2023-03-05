@@ -28,6 +28,7 @@ class TagCategory:
     description: Optional[str] = None
     tag_map: Dict[str, TagFactory]
 
+    # CHECK: Move following to the TagRegistry? This would remove `tag_name` argument from `register_tag_class`
     _tag_class_suffix = "Tag"
 
     def __init__(self, name: CategoryName, description: Optional[str] = None):
@@ -60,6 +61,9 @@ class TagCategory:
             f"Registering executable {exec_path} as {executable_tag_factory.tag_name} tag"
         )
         self.register_tag_factory(executable_tag_factory, tag_name)
+
+    def register_tag_alias(self, pattern: str, tag_name: TagName):
+        pass
 
     def register_tag_factory(
         self, tag_factory: TagFactory, tag_name: Optional[TagName] = None
@@ -135,7 +139,9 @@ class TagRegistry:
 
         return tag_factory
 
-    def bind(self, pattern: Pattern) -> Pattern:
+    def bind(
+        self, pattern: Pattern
+    ) -> Pattern:  # TODO: Move to the TemplateCompiler class
         return self._rewrite_pattern(pattern)
 
     def _rewrite_pattern(self, pattern: Pattern) -> Pattern:

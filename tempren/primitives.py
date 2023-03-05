@@ -94,6 +94,16 @@ class Tag(ABC):
         raise NotImplementedError()
 
 
+class TagAlias(ABC):
+    @property
+    def pattern_text(self) -> str:
+        if not self.__doc__:
+            raise ValueError(
+                "Pattern template text should be specified in the documentation"
+            )
+        return self.__doc__
+
+
 class TagFactory(ABC):
     @property
     @abstractmethod

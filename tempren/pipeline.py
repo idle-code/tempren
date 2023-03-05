@@ -29,11 +29,11 @@ from tempren.filesystem import (
     RecursiveFileGatherer,
 )
 from tempren.primitives import CategoryName, File, PathGenerator, TagName
-from tempren.registry import TagRegistry
 from tempren.template.ast import Pattern
 from tempren.template.exceptions import InvalidFilenameError, TemplateError
 from tempren.template.generators import TemplateNameGenerator, TemplatePathGenerator
 from tempren.template.parser import TemplateParser
+from tempren.template.registry import TagRegistry
 
 log = logging.getLogger(__name__)
 

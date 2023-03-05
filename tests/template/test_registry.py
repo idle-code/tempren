@@ -5,7 +5,8 @@ from typing import Optional
 import pytest
 
 from tempren.primitives import QualifiedTagName, Tag
-from tempren.registry import (
+from tempren.template.ast import Pattern, RawText, TagInstance
+from tempren.template.registry import (
     AmbiguousTagError,
     ConfigurationError,
     ContextForbiddenError,
@@ -15,7 +16,6 @@ from tempren.registry import (
     UnknownCategoryError,
     UnknownTagError,
 )
-from tempren.template.ast import Pattern, RawText, TagInstance
 
 from .mocks import MockTag
 from .test_parser import parse
