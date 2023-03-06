@@ -22,4 +22,4 @@ class TemplateCompiler:
             return self.registry.bind(self.parser.parse(template_text))
         except TemplateError as template_error:
             template_error.template = template_text
-            raise template_error
+            raise

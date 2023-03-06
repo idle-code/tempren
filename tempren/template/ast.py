@@ -18,7 +18,7 @@ class PatternElement(ABC):
 class RawText(PatternElement):
     """Represents constant text (non-tag) part of the template"""
 
-    location: Location = field(init=False, compare=False)
+    location: Location = field(init=False, compare=False, default=Location(-1, -1, -1))
     text: str
 
     def process(self, file: File) -> str:
