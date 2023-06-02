@@ -2,14 +2,16 @@ import importlib
 import inspect
 import logging
 import pkgutil
+from itertools import starmap
 from logging import Logger
 from pathlib import Path
 from types import ModuleType
-from typing import Dict, List, Optional, Type
+from typing import Dict, Iterator, List, Optional, Tuple, Type
 
 from tempren.adhoc import TagFactoryFromExecutable
 from tempren.factories import TagFactoryFromClass
 from tempren.primitives import (
+    Alias,
     CategoryName,
     Location,
     QualifiedTagName,
@@ -61,9 +63,6 @@ class TagCategory:
             f"Registering executable {exec_path} as {executable_tag_factory.tag_name} tag"
         )
         self.register_tag_factory(executable_tag_factory, tag_name)
-
-    def register_tag_alias(self, pattern: str, tag_name: TagName):
-        pass
 
     def register_tag_factory(
         self, tag_factory: TagFactory, tag_name: Optional[TagName] = None
@@ -118,10 +117,10 @@ class TagRegistry:
                 found_tag_factories[category.name] = tag_factory
 
         if not found_tag_factories:
-            raise UnknownTagError(qualified_name)
+            raise UnknownNameError(qualified_name)
         elif len(found_tag_factories) > 1:
             category_names = sorted(list(found_tag_factories.keys()))
-            raise AmbiguousTagError(qualified_name, category_names)
+            raise AmbiguousNameError(qualified_name, category_names)
 
         return next(iter(found_tag_factories.values()))
 
@@ -135,7 +134,7 @@ class TagRegistry:
 
         tag_factory = tag_category.find_tag_factory(qualified_name.name)
         if tag_factory is None:
-            raise UnknownTagError(qualified_name)
+            raise UnknownNameError(qualified_name)
 
         return tag_factory
 
@@ -240,7 +239,7 @@ class TagRegistry:
                 self.log.error(exc, f"Could not load module {name}")
 
 
-class UnknownTagError(TagError):
+class UnknownNameError(TagError):
     def __init__(self, tag_name: QualifiedTagName):
         super().__init__(tag_name, f"Unknown tag name: {tag_name.name}")
 
@@ -269,7 +268,7 @@ class UnknownCategoryError(TagError):
         return super().with_location(category_location)
 
 
-class AmbiguousTagError(TagError):
+class AmbiguousNameError(TagError):
     category_names: List[CategoryName]
 
     def __init__(self, tag_name: QualifiedTagName, category_names: List[CategoryName]):
@@ -293,3 +292,57 @@ class ContextForbiddenError(TagError):
 class ConfigurationError(TagError):
     def __init__(self, tag_name: QualifiedTagName, message: str):
         super().__init__(tag_name, f"Configuration not valid: {message}")
+
+
+class AliasRegistry:
+    log: Logger
+    _category_map: Dict[CategoryName, Dict[TagName, Alias]]
+    _default_category_name = CategoryName("Aliases")
+
+    def __init__(self) -> None:
+        self.log = logging.getLogger(self.__class__.__name__)
+        self._category_map = {}
+
+    def aliases(self) -> Iterator[Tuple[QualifiedTagName, Alias]]:
+        """Provides view for all stored aliases"""
+        for category_name, aliases_in_category in self._category_map.items():
+            for alias_name, alias in aliases_in_category.items():
+                yield QualifiedTagName(alias_name, category_name), alias
+
+    def register_alias(self, qualified_name: QualifiedTagName, pattern_text: str):
+        category_name = qualified_name.category
+        if not category_name:
+            category_name = AliasRegistry._default_category_name
+
+        if category_name not in self._category_map:
+            self.log.debug("Creating category %r", category_name)
+            self._category_map[category_name] = {}
+        category_tags = self._category_map[category_name]
+        if qualified_name.name in category_tags:
+            raise ValueError(f"{qualified_name} alias is already registered")
+        category_tags[qualified_name.name] = Alias(pattern_text)
+
+    def find_alias(self, qualified_name: QualifiedTagName) -> Optional[Alias]:
+        if qualified_name.category:
+            if qualified_name.category not in self._category_map:
+                self.log.debug("Could not find category %r", qualified_name.category)
+                return None
+            category_tags = self._category_map[qualified_name.category]
+            if qualified_name.name not in category_tags:
+                self.log.debug(
+                    "Could not find alias %r in category %r",
+                    qualified_name.name,
+                    qualified_name.category,
+                )
+                return None
+            return category_tags[qualified_name.name]
+        else:
+            candidate_aliases = list(
+                filter(lambda t: t[0].name == qualified_name.name, self.aliases())
+            )
+            if len(candidate_aliases) != 1:
+                categories_with_the_same_name = list(
+                    starmap(lambda name, _: name.category, candidate_aliases)
+                )
+                raise AmbiguousNameError(qualified_name, categories_with_the_same_name)
+            return candidate_aliases[0][1]

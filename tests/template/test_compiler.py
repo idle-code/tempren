@@ -7,12 +7,12 @@ from tempren.primitives import CategoryName, Tag, TagFactory, TagName
 from tempren.template.ast import Pattern, RawText, TagInstance
 from tempren.template.compiler import TemplateCompiler
 from tempren.template.registry import (
-    AmbiguousTagError,
+    AmbiguousNameError,
     ConfigurationError,
     ContextForbiddenError,
     ContextMissingError,
     TagRegistry,
-    UnknownTagError,
+    UnknownNameError,
 )
 
 from .mocks import MockTag
@@ -67,27 +67,27 @@ class TestTemplateCompiler:
 
         return TemplateCompiler(registry)
 
-    def test_bind__missing_tag(self):
+    def test_compile__missing_tag(self):
         compiler = self.create_compiler()
 
-        with pytest.raises(UnknownTagError) as exc:
+        with pytest.raises(UnknownNameError) as exc:
             compiler.compile("%Nonexistent()")
 
         exc.match("Nonexistent")
 
-    def test_bind__ambiguous_tag_name(self):
+    def test_compile__ambiguous_tag_name(self):
         compiler = self.create_compiler(
             {"CategoryA": {"Mock": MockTag}, "CategoryB": {"Mock": MockTag}}
         )
 
-        with pytest.raises(AmbiguousTagError) as exc:
+        with pytest.raises(AmbiguousNameError) as exc:
             compiler.compile("%Mock()")
 
         exc.match("Mock")
         exc.match("CategoryA")
         exc.match("CategoryB")
 
-    def test_bind__tag_factory_is_invoked(self):
+    def test_compile__tag_factory_is_invoked(self):
         invoked = False
 
         def tag_factory(*args, **kwargs):
@@ -101,7 +101,7 @@ class TestTemplateCompiler:
 
         assert invoked
 
-    def test_bind__fully_qualified_tag_factory_is_invoked(self):
+    def test_compile__fully_qualified_tag_factory_is_invoked(self):
         invoked = False
 
         def tag_factory(*args, **kwargs):
@@ -115,7 +115,7 @@ class TestTemplateCompiler:
 
         assert invoked
 
-    def test_bind__tag_factory_receives_positional_arguments(self):
+    def test_compile__tag_factory_receives_positional_arguments(self):
         positional_args = None
 
         def tag_factory(*args, **kwargs):
@@ -129,7 +129,7 @@ class TestTemplateCompiler:
 
         assert positional_args == (1, "text", True)
 
-    def test_bind__tag_factory_receives_keyword_arguments(self):
+    def test_compile__tag_factory_receives_keyword_arguments(self):
         keyword_args = None
 
         def tag_factory(*args, **kwargs):
@@ -179,7 +179,7 @@ class TestTemplateCompiler:
 
         assert isinstance(exc.value.__cause__, ValueError)
 
-    def test_bind__context_pattern_is_rewritten(self):
+    def test_compile__context_pattern_is_rewritten(self):
         compiler = self.create_compiler(
             {
                 "Test": {
@@ -198,14 +198,14 @@ class TestTemplateCompiler:
             [TagInstance(tag=outer_tag, context=context_pattern)]
         )
 
-    def test_bind__raw_text_is_rewritten(self):
+    def test_compile__raw_text_is_rewritten(self):
         compiler = self.create_compiler()
 
         bound_pattern = compiler.compile("Just text")
 
         assert bound_pattern == Pattern([RawText("Just text")])
 
-    def test_bind__tag_requires_context_but_none_given(self):
+    def test_compile__tag_requires_context_but_none_given(self):
         def required_context_tag_factory(*args, **kwargs):
             return MockTag(require_context=True)
 
@@ -216,7 +216,7 @@ class TestTemplateCompiler:
         with pytest.raises(ContextMissingError):
             compiler.compile("%ContextRequired()")
 
-    def test_bind__tag_doesnt_accept_context_but_one_is_given(self):
+    def test_compile__tag_doesnt_accept_context_but_one_is_given(self):
         def forbidden_context_tag_factory(*args, **kwargs):
             return MockTag(require_context=False)
 
@@ -227,7 +227,7 @@ class TestTemplateCompiler:
         with pytest.raises(ContextForbiddenError):
             compiler.compile("%ContextForbidden(){context}")
 
-    def test_bind__tag_requires_context_and_one_given(self):
+    def test_compile__tag_requires_context_and_one_given(self):
         def required_context_tag_factory(*args, **kwargs):
             return MockTag(require_context=True)
 

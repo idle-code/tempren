@@ -2,7 +2,7 @@ import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 tag_name_regex = re.compile(r"^[_a-z][0-9_a-z]*$", re.IGNORECASE)
 
@@ -57,6 +57,18 @@ class QualifiedTagName:
     # TODO: if this is meant to be a genuinely qualified name, the category should be specified:
     category: Optional[CategoryName] = None
 
+    def __init__(
+        self,
+        name: Union[TagName, str],
+        category: Optional[Union[CategoryName, str]] = None,
+    ) -> None:
+        if not isinstance(name, TagName):
+            name = TagName(name)
+        if category is not None and not isinstance(category, CategoryName):
+            category = CategoryName(category)
+        self.name = name
+        self.category = category
+
     def __str__(self) -> str:
         if self.category:
             return f"{self.category}.{self.name}"
@@ -94,14 +106,31 @@ class Tag(ABC):
         raise NotImplementedError()
 
 
-class TagAlias(ABC):
+@dataclass
+class Alias:
+    """Pattern alias"""
+
+    pattern_text: str
+
+
+class TagAlias(Alias):
+    """Base class for build-in aliases"""
+
+    def __init_subclass__(cls) -> None:
+        if not cls.__doc__:
+            raise ValueError(
+                "Pattern template text should be specified in the derived class documentation"
+            )
+        super().__init_subclass__()
+
     @property
     def pattern_text(self) -> str:
-        if not self.__doc__:
-            raise ValueError(
-                "Pattern template text should be specified in the documentation"
-            )
+        assert self.__doc__
         return self.__doc__
+
+    @pattern_text.setter
+    def pattern_text(self, value):
+        raise NotImplementedError()
 
 
 class TagFactory(ABC):
