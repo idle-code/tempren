@@ -81,7 +81,6 @@ class TagCategory:
 
 class TagRegistry:
     log: Logger
-    _tag_class_suffix = "Tag"
     category_map: Dict[CategoryName, TagCategory]
 
     def __init__(self):
@@ -197,46 +196,6 @@ class TagRegistry:
         new_category = TagCategory(category_name)
         self.category_map[category_name] = new_category
         return new_category
-
-    def register_tags_in_module(self, module: ModuleType):
-        self.log.debug(f"Discovering tags in module '{module}'")
-
-        if module.__package__:
-            category_name = CategoryName(module.__name__[len(module.__package__) + 1 :])
-        else:
-            category_name = CategoryName(module.__name__)
-
-        def is_tag_class(klass: type):
-            if (
-                not inspect.isclass(klass)
-                or not issubclass(klass, Tag)
-                or inspect.isabstract(klass)
-                or klass == Tag
-            ):
-                return False
-            return klass.__name__.endswith(self._tag_class_suffix)
-
-        # TODO: do not register empty modules
-        module_category = self.register_category(category_name)
-        for _, tag_class in inspect.getmembers(module, is_tag_class):
-            module_category.register_tag_class(tag_class)
-
-    def register_tags_in_package(self, package):
-        self.log.debug(f"Discovering tags in package '{package}'")
-
-        for _, name, is_pkg in pkgutil.walk_packages(
-            package.__path__, package.__name__ + "."
-        ):
-            if is_pkg:
-                continue
-            try:
-                self.log.debug(f"Trying to load {name} module")
-                module = importlib.import_module(name)
-                self.register_tags_in_module(module)
-            except NotImplementedError as exc:
-                self.log.warning(f"Module {name} is currently unsupported: {exc}")
-            except Exception as exc:
-                self.log.error(exc, f"Could not load module {name}")
 
 
 class UnknownNameError(TagError):

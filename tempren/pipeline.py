@@ -237,10 +237,9 @@ def build_tag_registry(adhoc_tags: Dict[TagName, Path]) -> TagRegistry:
     import tempren.tags
 
     registry = TagRegistry()
-    # registry.register_tags_in_package(tempren.tags)
     found_tags = discover_tags_in_package(tempren.tags)
-    for category, tags in found_tags.items():
-        category = registry.register_category(category)
+    for category_name, tags in found_tags.items():
+        category = registry.register_category(category_name)
         for tag in tags:
             category.register_tag_class(tag)
 

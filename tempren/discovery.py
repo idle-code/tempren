@@ -3,6 +3,7 @@ import inspect
 import logging
 import pkgutil
 from collections import defaultdict
+from types import ModuleType
 from typing import Callable, Dict, List, Type
 
 from tempren.primitives import CategoryName, Tag, TagAlias
@@ -10,7 +11,7 @@ from tempren.primitives import CategoryName, Tag, TagAlias
 log = logging.getLogger(__name__)
 
 
-def discover_tags_in_package(package) -> Dict[CategoryName, List[Tag]]:
+def discover_tags_in_package(package) -> Dict[CategoryName, List[Type[Tag]]]:
     def is_tag_class(klass: type):
         if (
             not inspect.isclass(klass)
@@ -23,7 +24,7 @@ def discover_tags_in_package(package) -> Dict[CategoryName, List[Tag]]:
 
     found_tags = defaultdict(list)
 
-    def tag_class_visitor(module, klass: type):
+    def tag_class_visitor(module: ModuleType, klass: type):
         if not is_tag_class(klass):
             return
 
@@ -57,7 +58,9 @@ def discover_tags_in_package(package) -> Dict[CategoryName, List[Tag]]:
 #             category_name = CategoryName(module.__name__)
 
 
-def visit_types_in_package(package, visitor: Callable[[type], None]):
+def visit_types_in_package(
+    package: ModuleType, visitor: Callable[[ModuleType, type], None]
+):
     log.debug(f"Discovering types in package '{package}'")
 
     for _, name, is_pkg in pkgutil.walk_packages(
@@ -75,8 +78,11 @@ def visit_types_in_package(package, visitor: Callable[[type], None]):
             log.error(exc, f"Could not load module {name}")
 
 
-def visit_types_in_module(module, visitor: Callable[[type], None]):
+def visit_types_in_module(
+    module: ModuleType, visitor: Callable[[ModuleType, type], None]
+):
     log.debug(f"Discovering types in module '{module}'")
 
     for _, tag_class in inspect.getmembers(module):
-        visitor(module, tag_class)
+        if isinstance(tag_class, type):
+            visitor(module, tag_class)

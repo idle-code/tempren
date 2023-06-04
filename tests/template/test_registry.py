@@ -1,5 +1,4 @@
 from pathlib import Path
-from types import ModuleType
 from typing import Optional
 
 import pytest
@@ -116,100 +115,6 @@ class TestTagRegistry:
 
         assert tag_b_factory is not None
 
-    def test_register_tags_in_module__finds_first_level_tags(self):
-        registry = TagRegistry()
-        from .test_module import first_level
-
-        registry.register_tags_in_module(first_level)
-
-        first_level_tag_factory = registry.get_tag_factory(
-            QualifiedTagName("FirstLevel")
-        )
-        assert first_level_tag_factory
-
-    def test_register_tags_in_module__excludes_abstract_tags(self):
-        registry = TagRegistry()
-        from .test_module import first_level
-
-        registry.register_tags_in_module(first_level)
-
-        with pytest.raises(UnknownNameError):
-            registry.get_tag_factory(QualifiedTagName("Abstract"))
-
-    @staticmethod
-    def _load_module_from_path(module_path: Path) -> ModuleType:
-        module_name = module_path.stem
-        import importlib.util
-
-        spec = importlib.util.spec_from_file_location(module_name, module_path)
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        return module
-
-    def test_register_tags_in_packageless_module__uses_module_name_as_category(
-        self, tags_data_dir: Path
-    ):
-        registry = TagRegistry()
-        packageless_tags_module = TestTagRegistry._load_module_from_path(
-            tags_data_dir / "packageless_tags.py"
-        )
-
-        registry.register_tags_in_module(packageless_tags_module)
-
-        packageless_tags_category = registry.find_category("packageless_tags")
-        assert packageless_tags_category is not None
-
-        assert registry.get_tag_factory(QualifiedTagName("Test", "packageless_tags"))
-
-    def test_register_tags_in_package__finds_first_level_tags(self):
-        registry = TagRegistry()
-        import tests.template.test_module
-
-        registry.register_tags_in_package(tests.template.test_module)
-
-        first_level_tag_factory = registry.get_tag_factory(
-            QualifiedTagName("FirstLevel")
-        )
-        assert first_level_tag_factory
-
-    def test_register_tags_in_package__skips_unsupported_modules(self):
-        registry = TagRegistry()
-        import tests.template.test_module
-
-        registry.register_tags_in_package(tests.template.test_module)
-
-        with pytest.raises(UnknownNameError):
-            registry.get_tag_factory(QualifiedTagName("Unsupported"))
-
-    def test_register_tags_in_package__finds_second_level_tags(self):
-        registry = TagRegistry()
-        import tests.template.test_module
-
-        registry.register_tags_in_package(tests.template.test_module)
-
-        second_level_tag_factory = registry.get_tag_factory(
-            QualifiedTagName("SecondLevel")
-        )
-        assert second_level_tag_factory
-
-    def test_register_package__creates_categories(self):
-        registry = TagRegistry()
-        import tests.template.test_module
-
-        registry.register_tags_in_package(tests.template.test_module)
-
-        assert ["first_level", "second_level"] == registry.categories
-
-    def test_register_existing_category__raises(self):
-        registry = TagRegistry()
-        existing_category_name = CategoryName("Existing")
-        registry.register_category(existing_category_name)
-
-        with pytest.raises(ValueError):
-            registry.register_category(existing_category_name)
-
-    # TODO: Move binding and discovery tests from TestTagCategory
-
 
 class TestAliasRegistry:
     def test_find_nonexistent_category_alias(self):
@@ -290,3 +195,11 @@ class TestAliasRegistry:
         default_category_alias = next(registry.aliases())
         assert default_category_alias[0].name == "Alias"
         assert default_category_alias[0].category == "Aliases"
+
+    def test_register_existing_category__raises(self):
+        registry = TagRegistry()
+        existing_category_name = CategoryName("Existing")
+        registry.register_category(existing_category_name)
+
+        with pytest.raises(ValueError):
+            registry.register_category(existing_category_name)
