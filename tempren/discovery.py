@@ -1,0 +1,82 @@
+import importlib
+import inspect
+import logging
+import pkgutil
+from collections import defaultdict
+from typing import Callable, Dict, List, Type
+
+from tempren.primitives import CategoryName, Tag, TagAlias
+
+log = logging.getLogger(__name__)
+
+
+def discover_tags_in_package(package) -> Dict[CategoryName, List[Tag]]:
+    def is_tag_class(klass: type):
+        if (
+            not inspect.isclass(klass)
+            or not issubclass(klass, Tag)
+            or inspect.isabstract(klass)
+            or klass == Tag
+        ):
+            return False
+        return klass.__name__.endswith("Tag")
+
+    found_tags = defaultdict(list)
+
+    def tag_class_visitor(module, klass: type):
+        if not is_tag_class(klass):
+            return
+
+        if module.__package__:
+            category_name = CategoryName(module.__name__[len(module.__package__) + 1 :])
+        else:
+            category_name = CategoryName(module.__name__)
+
+        found_tags[category_name].append(klass)
+
+    visit_types_in_package(package, tag_class_visitor)
+
+    return found_tags
+
+
+# def discover_aliases_in_package(package) -> Dict[CategoryName, TagAlias]:
+#     def is_tag_alias_class(klass: type):
+#         if (
+#                 not inspect.isclass(klass)
+#                 or not issubclass(klass, Tag)
+#                 or inspect.isabstract(klass)
+#                 or klass == Tag
+#         ):
+#             return False
+#         return klass.__name__.endswith(self._tag_class_suffix)
+#
+#     def _visitor(module, t: type):
+#         if module.__package__:
+#             category_name = CategoryName(module.__name__[len(module.__package__) + 1:])
+#         else:
+#             category_name = CategoryName(module.__name__)
+
+
+def visit_types_in_package(package, visitor: Callable[[type], None]):
+    log.debug(f"Discovering types in package '{package}'")
+
+    for _, name, is_pkg in pkgutil.walk_packages(
+        package.__path__, package.__name__ + "."
+    ):
+        if is_pkg:
+            continue
+        try:
+            log.debug(f"Trying to load {name} module")
+            module = importlib.import_module(name)
+            visit_types_in_module(module, visitor)
+        except NotImplementedError as exc:
+            log.warning(f"Module {name} is currently unsupported: {exc}")
+        except Exception as exc:
+            log.error(exc, f"Could not load module {name}")
+
+
+def visit_types_in_module(module, visitor: Callable[[type], None]):
+    log.debug(f"Discovering types in module '{module}'")
+
+    for _, tag_class in inspect.getmembers(module):
+        visitor(module, tag_class)

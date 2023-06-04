@@ -5,6 +5,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Callable, Dict, Iterable, List, Optional, Union
 
+from tempren.discovery import discover_tags_in_package
 from tempren.file_filters import (
     FileFilterInverter,
     GlobFilenameFileFilter,
@@ -236,12 +237,20 @@ def build_tag_registry(adhoc_tags: Dict[TagName, Path]) -> TagRegistry:
     import tempren.tags
 
     registry = TagRegistry()
-    registry.register_tags_in_package(tempren.tags)
+    # registry.register_tags_in_package(tempren.tags)
+    found_tags = discover_tags_in_package(tempren.tags)
+    for category, tags in found_tags.items():
+        category = registry.register_category(category)
+        for tag in tags:
+            category.register_tag_class(tag)
+
     if adhoc_tags:
         log.debug("Registering ad-hoc tags")
         adhoc_category = registry.register_category(CategoryName("AdHoc"))
         for tag_name, exec_path in sorted(adhoc_tags.items()):
             adhoc_category.register_tag_from_executable(exec_path, tag_name)
+    # TODO: register aliases
+
     return registry
 
 
