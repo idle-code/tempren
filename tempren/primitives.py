@@ -123,14 +123,8 @@ class TagAlias(Alias):
             )
         super().__init_subclass__()
 
-    @property
-    def pattern_text(self) -> str:
-        assert self.__doc__
-        return self.__doc__
-
-    @pattern_text.setter
-    def pattern_text(self, value):
-        raise NotImplementedError()
+    def __init__(self):
+        super().__init__(self.__doc__)
 
 
 class TagFactory(ABC):

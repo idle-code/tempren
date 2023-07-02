@@ -4,7 +4,7 @@ import logging
 import pkgutil
 from collections import defaultdict
 from types import ModuleType
-from typing import Callable, Dict, List, Type
+from typing import Callable, Dict, List, Type, TypeVar
 
 from tempren.primitives import CategoryName, Tag, TagAlias
 
@@ -12,50 +12,44 @@ log = logging.getLogger(__name__)
 
 
 def discover_tags_in_package(package) -> Dict[CategoryName, List[Type[Tag]]]:
-    def is_tag_class(klass: type):
+    return _discover_classes_in_package(package, Tag)
+
+
+def discover_aliases_in_package(package) -> Dict[CategoryName, List[Type[TagAlias]]]:
+    return _discover_classes_in_package(package, TagAlias)
+
+
+BaseClass = TypeVar("BaseClass")
+
+
+def _discover_classes_in_package(
+    package, base_klass: Type[BaseClass]
+) -> Dict[CategoryName, List[Type[BaseClass]]]:
+    def _is_base_class(klass: type):
         if (
             not inspect.isclass(klass)
-            or not issubclass(klass, Tag)
+            or not issubclass(klass, base_klass)
             or inspect.isabstract(klass)
-            or klass == Tag
+            or klass == base_klass
         ):
             return False
-        return klass.__name__.endswith("Tag")
+        return klass.__name__.endswith(base_klass.__name__)
 
-    found_tags = defaultdict(list)
+    found_classes = defaultdict(list)
 
-    def tag_class_visitor(module: ModuleType, klass: type):
-        if not is_tag_class(klass):
+    def _visitor(module: ModuleType, klass: type):
+        if not _is_base_class(klass):
             return
-
         if module.__package__:
             category_name = CategoryName(module.__name__[len(module.__package__) + 1 :])
         else:
             category_name = CategoryName(module.__name__)
 
-        found_tags[category_name].append(klass)
+        found_classes[category_name].append(klass)
 
-    visit_types_in_package(package, tag_class_visitor)
+    visit_types_in_package(package, _visitor)
 
-    return found_tags
-
-
-# def discover_aliases_in_package(package) -> Dict[CategoryName, TagAlias]:
-#     def is_tag_alias_class(klass: type):
-#         if (
-#                 not inspect.isclass(klass)
-#                 or not issubclass(klass, Tag)
-#                 or inspect.isabstract(klass)
-#                 or klass == Tag
-#         ):
-#             return False
-#         return klass.__name__.endswith(self._tag_class_suffix)
-#
-#     def _visitor(module, t: type):
-#         if module.__package__:
-#             category_name = CategoryName(module.__name__[len(module.__package__) + 1:])
-#         else:
-#             category_name = CategoryName(module.__name__)
+    return found_classes
 
 
 def visit_types_in_package(

@@ -1,10 +1,9 @@
 import itertools
 from collections import defaultdict
-from pathlib import Path
-from types import ModuleType
 from typing import Dict, List
 
 from tempren.discovery import (
+    discover_aliases_in_package,
     discover_tags_in_package,
     visit_types_in_module,
     visit_types_in_package,
@@ -22,7 +21,7 @@ class CollectingVisitor:
         self.found_types[module].append(klass)
 
 
-class TestTagDiscovery:
+class TestTypeDiscovery:
     def test_visit_types_in_package__finds_all_classes(self):
         import tests.template.test_module
 
@@ -68,16 +67,8 @@ class TestTagDiscovery:
         )
         assert "UnsupportedTag" not in found_class_names
 
-    @staticmethod
-    def _load_module_from_path(module_path: Path) -> ModuleType:
-        module_name = module_path.stem
-        import importlib.util
 
-        spec = importlib.util.spec_from_file_location(module_name, module_path)
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        return module
-
+class TestTagDiscovery:
     def test_discover_tags_in_package__finds_all_tags(self):
         import tests.template.test_module
 
@@ -107,4 +98,18 @@ class TestTagDiscovery:
         assert (
             tests.template.test_module.first_level.AbstractTag
             not in found_tags[first_level_category]
+        )
+
+
+class TestAliasDiscovery:
+    def test_discover_aliases_in_package__finds_aliases(self):
+        import tests.template.test_module
+
+        found_tag_aliases = discover_aliases_in_package(tests.template.test_module)
+
+        first_level_category = CategoryName("first_level")
+        assert first_level_category in found_tag_aliases
+        assert (
+            tests.template.test_module.first_level.FirstLevelTagAlias
+            in found_tag_aliases[first_level_category]
         )

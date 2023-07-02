@@ -1,6 +1,6 @@
 from typing import Optional
 
-from tempren.primitives import File, Tag
+from tempren.primitives import File, Tag, TagAlias
 
 
 class SecondLevelTag(Tag):
