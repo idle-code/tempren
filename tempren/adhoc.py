@@ -7,7 +7,9 @@ from tempren.factories import TagFactoryFromClass
 from tempren.primitives import File, Tag, TagName
 
 
-class TagFactoryFromExecutable(TagFactoryFromClass):
+class AdHocTagFactoryFromExecutable(TagFactoryFromClass):
+    """Produces AdHocTag instances from given executable path"""
+
     _executable_path: Path
 
     @property

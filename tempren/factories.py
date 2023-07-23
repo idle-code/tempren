@@ -7,6 +7,8 @@ from tempren.primitives import Tag, TagFactory, TagName
 
 
 class TagFactoryFromClass(TagFactory):
+    """Produces tag instances by instantiating provided python class"""
+
     _tag_class: Type[Tag]
     _tag_name: TagName
 

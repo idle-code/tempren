@@ -3,7 +3,7 @@ from logging import Logger
 from pathlib import Path
 from typing import Dict, List, Optional, Type
 
-from tempren.adhoc import TagFactoryFromExecutable
+from tempren.adhoc import AdHocTagFactoryFromExecutable
 from tempren.factories import TagFactoryFromClass
 from tempren.primitives import (
     CategoryName,
@@ -52,7 +52,7 @@ class TagCategory:
         self.register_tag_factory(class_tag_factory, tag_name)
 
     def register_tag_from_executable(self, exec_path: Path, tag_name: TagName):
-        executable_tag_factory = TagFactoryFromExecutable(exec_path, tag_name)
+        executable_tag_factory = AdHocTagFactoryFromExecutable(exec_path, tag_name)
         self.log.debug(
             f"Registering executable {exec_path} as {executable_tag_factory.tag_name} tag"
         )

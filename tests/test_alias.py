@@ -1,6 +1,6 @@
 import pytest
 
-from tempren.alias import AliasTag, TagAlias, TagFactoryFromAlias
+from tempren.alias import AliasTag, AliasTagFactoryFromClass, TagAlias
 from tempren.primitives import File
 from tempren.template.ast import Pattern, RawText
 from tempren.template.compiler import TemplateCompiler
@@ -20,14 +20,14 @@ class FooBarTagAlias(TagAlias):
     """Foo bar"""
 
 
-class TestTagFactoryFromAlias:
+class TestAliasTagFactoryFromClass:
     def test_short_description(self, compiler: TemplateCompiler):
-        factory = TagFactoryFromAlias(FooBarTagAlias, compiler)
+        factory = AliasTagFactoryFromClass(FooBarTagAlias, compiler)
         assert "Alias" in factory.short_description
         assert "Foo bar" in factory.short_description
 
     def test_long_description(self, compiler: TemplateCompiler):
-        factory = TagFactoryFromAlias(FooBarTagAlias, compiler)
+        factory = AliasTagFactoryFromClass(FooBarTagAlias, compiler)
         assert "Foo bar" in factory.long_description
 
     def test_tag_alias_without_suffix(self, compiler: TemplateCompiler):
@@ -35,12 +35,12 @@ class TestTagFactoryFromAlias:
             """Spam"""
 
         with pytest.raises(ValueError) as exc:
-            TagFactoryFromAlias(_InvalidAlias, compiler)
+            AliasTagFactoryFromClass(_InvalidAlias, compiler)
 
         assert exc.match("tag alias name")
 
     def test_specify_args_for_alias(self, compiler):
-        factory = TagFactoryFromAlias(FooBarTagAlias, compiler)
+        factory = AliasTagFactoryFromClass(FooBarTagAlias, compiler)
 
         with pytest.raises(TypeError) as exc:
             factory(1, 2)
@@ -48,7 +48,7 @@ class TestTagFactoryFromAlias:
         assert exc.match("positional argument")
 
     def test_specify_keyword_args_for_alias(self, compiler):
-        factory = TagFactoryFromAlias(FooBarTagAlias, compiler)
+        factory = AliasTagFactoryFromClass(FooBarTagAlias, compiler)
 
         with pytest.raises(TypeError) as exc:
             factory(foo="bar")
