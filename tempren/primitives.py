@@ -106,27 +106,6 @@ class Tag(ABC):
         raise NotImplementedError()
 
 
-@dataclass
-class Alias:
-    """Pattern alias"""
-
-    pattern_text: str
-
-
-class TagAlias(Alias):
-    """Base class for build-in aliases"""
-
-    def __init_subclass__(cls) -> None:
-        if not cls.__doc__:
-            raise ValueError(
-                "Pattern template text should be specified in the derived class documentation"
-            )
-        super().__init_subclass__()
-
-    def __init__(self):
-        super().__init__(self.__doc__)
-
-
 class TagFactory(ABC):
     @property
     @abstractmethod

@@ -6,7 +6,8 @@ from collections import defaultdict
 from types import ModuleType
 from typing import Callable, Dict, List, Type, TypeVar
 
-from tempren.primitives import CategoryName, Tag, TagAlias
+from tempren.alias import TagAlias
+from tempren.primitives import CategoryName, Tag
 
 log = logging.getLogger(__name__)
 

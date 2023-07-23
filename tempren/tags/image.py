@@ -9,8 +9,9 @@ from piexif import TAGS
 from piexif import TYPES as TAG_TYPES
 from PIL import Image
 
+from tempren.alias import TagAlias
 from tempren.exceptions import FileNotSupportedError, MissingMetadataError
-from tempren.primitives import File, Tag, TagAlias
+from tempren.primitives import File, Tag
 
 
 class PillowTagBase(Tag, ABC):
@@ -184,5 +185,5 @@ ExifTag.__doc__ = "\n".join(
 )
 
 
-class ResolutionTag(TagAlias):
+class ResolutionTagAlias(TagAlias):
     """%Image.Width()x%Image.Height()"""

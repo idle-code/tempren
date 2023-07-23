@@ -5,7 +5,6 @@ import pytest
 
 from tempren.primitives import CategoryName, QualifiedTagName, Tag, TagName
 from tempren.template.registry import (
-    AliasRegistry,
     AmbiguousNameError,
     TagCategory,
     TagRegistry,
@@ -114,92 +113,3 @@ class TestTagRegistry:
         tag_b_factory = registry.get_tag_factory(QualifiedTagName("Mock", "CategoryB"))
 
         assert tag_b_factory is not None
-
-
-class TestAliasRegistry:
-    def test_find_nonexistent_category_alias(self):
-        registry = AliasRegistry()
-        registry.register_alias(
-            qualified_name("Alias", "TestCategory"), "Alias pattern"
-        )
-
-        alias = registry.find_alias(qualified_name("Tag", "TestCategory"))
-
-        assert alias is None
-
-    def test_find_nonexistent_alias(self):
-        registry = AliasRegistry()
-
-        alias = registry.find_alias(qualified_name("TestCategory", "Tag"))
-
-        assert alias is None
-
-    def test_find_registered_alias_with_category(self):
-        registry = AliasRegistry()
-        alias_name = qualified_name("Alias", "TestCategory")
-        registry.register_alias(alias_name, "Alias pattern")
-
-        alias = registry.find_alias(alias_name)
-
-        assert alias is not None
-        assert alias.pattern_text == "Alias pattern"
-
-    def test_find_registered_alias_without_category(self):
-        registry = AliasRegistry()
-        alias_name = qualified_name("Alias", "TestCategory")
-        registry.register_alias(alias_name, "Alias pattern")
-
-        alias = registry.find_alias(qualified_name("Alias"))
-
-        assert alias is not None
-        assert alias.pattern_text == "Alias pattern"
-
-    def test_find_common_name(self):
-        registry = AliasRegistry()
-        alias_name = qualified_name("Alias", "TestCategory")
-        other_alias_name = qualified_name("Alias", "OtherCategory")
-        registry.register_alias(alias_name, "Alias pattern")
-        registry.register_alias(other_alias_name, "Other alias pattern")
-
-        with pytest.raises(AmbiguousNameError) as exc:
-            registry.find_alias(qualified_name("Alias"))
-
-        assert "TestCategory" in exc.value.category_names
-        assert "OtherCategory" in exc.value.category_names
-
-    def test_register_alias_over_existing_alias(self):
-        registry = AliasRegistry()
-        alias_name = qualified_name("Alias", "TestCategory")
-        registry.register_alias(alias_name, "Alias pattern")
-
-        with pytest.raises(ValueError) as exc:
-            registry.register_alias(alias_name, "Alias pattern")
-
-        assert exc.match("already registered")
-
-    def test_find_alias_registered_without_category(self):
-        registry = AliasRegistry()
-        alias_name = qualified_name("Alias")
-
-        registry.register_alias(alias_name, "Alias pattern")
-
-        alias = registry.find_alias(alias_name)
-        assert alias is not None
-
-    def test_register_alias_without_category(self):
-        registry = AliasRegistry()
-        alias_name = qualified_name("Alias")
-
-        registry.register_alias(alias_name, "Alias pattern")
-
-        default_category_alias = next(registry.aliases())
-        assert default_category_alias[0].name == "Alias"
-        assert default_category_alias[0].category == "Aliases"
-
-    def test_register_existing_category__raises(self):
-        registry = TagRegistry()
-        existing_category_name = CategoryName("Existing")
-        registry.register_category(existing_category_name)
-
-        with pytest.raises(ValueError):
-            registry.register_category(existing_category_name)

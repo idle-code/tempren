@@ -5,7 +5,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Callable, Dict, Iterable, List, Optional, Union
 
-from tempren.discovery import discover_tags_in_package
+from tempren.alias import TagFactoryFromAlias
+from tempren.discovery import discover_aliases_in_package, discover_tags_in_package
 from tempren.file_filters import (
     FileFilterInverter,
     GlobFilenameFileFilter,
@@ -31,6 +32,7 @@ from tempren.filesystem import (
 )
 from tempren.primitives import CategoryName, File, PathGenerator, TagName
 from tempren.template.ast import Pattern
+from tempren.template.compiler import TemplateCompiler
 from tempren.template.exceptions import InvalidFilenameError, TemplateError
 from tempren.template.generators import TemplateNameGenerator, TemplatePathGenerator
 from tempren.template.parser import TemplateParser
@@ -248,7 +250,18 @@ def build_tag_registry(adhoc_tags: Dict[TagName, Path]) -> TagRegistry:
         adhoc_category = registry.register_category(CategoryName("AdHoc"))
         for tag_name, exec_path in sorted(adhoc_tags.items()):
             adhoc_category.register_tag_from_executable(exec_path, tag_name)
-    # TODO: register aliases
+
+    log.debug("Registering tag aliases")
+    found_aliases = discover_aliases_in_package(tempren.tags)
+    compiler = TemplateCompiler(registry)
+    for category_name, aliases in found_aliases.items():
+        alias_category = registry.find_category(category_name)
+        if not alias_category:
+            alias_category = registry.register_category(category_name)
+
+        for alias in aliases:
+            alias_tag_factory = TagFactoryFromAlias(alias, compiler)
+            alias_category.register_tag_factory(alias_tag_factory)
 
     return registry
 

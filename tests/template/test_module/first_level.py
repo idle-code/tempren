@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Any, Optional
 
-from tempren.primitives import File, Tag, TagAlias
+from tempren.alias import TagAlias
+from tempren.primitives import File, Tag
 
 
 class FirstLevelTag(Tag):
