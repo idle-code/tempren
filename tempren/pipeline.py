@@ -5,6 +5,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Callable, Dict, Iterable, List, Optional, Union
 
+from tempren.alias import AliasTagFactory, AliasTagFactoryFromClass
+from tempren.discovery import discover_aliases_in_package, discover_tags_in_package
 from tempren.file_filters import (
     FileFilterInverter,
     GlobFilenameFileFilter,
@@ -29,11 +31,12 @@ from tempren.filesystem import (
     RecursiveFileGatherer,
 )
 from tempren.primitives import CategoryName, File, PathGenerator, TagName
-from tempren.registry import TagRegistry
 from tempren.template.ast import Pattern
+from tempren.template.compiler import TemplateCompiler
 from tempren.template.exceptions import InvalidFilenameError, TemplateError
 from tempren.template.generators import TemplateNameGenerator, TemplatePathGenerator
 from tempren.template.parser import TemplateParser
+from tempren.template.registry import TagRegistry
 
 log = logging.getLogger(__name__)
 
@@ -82,6 +85,7 @@ class RuntimeConfiguration:
     sort: Optional[str] = None
     mode: OperationMode = OperationMode.name
     adhoc_tags: Dict[TagName, Path] = field(default_factory=dict)
+    aliases: Dict[TagName, str] = field(default_factory=dict)
 
 
 class ConfigurationError(Exception):
@@ -231,17 +235,45 @@ class Pipeline:
             )
 
 
-def build_tag_registry(adhoc_tags: Dict[TagName, Path]) -> TagRegistry:
-    log.debug("Building tag registry")
+def build_tag_registry(
+    adhoc_tags: Dict[TagName, Path], aliases: Dict[TagName, str]
+) -> TagRegistry:
     import tempren.tags
 
     registry = TagRegistry()
-    registry.register_tags_in_package(tempren.tags)
+    log.debug("Discovering tags")
+    found_tags = discover_tags_in_package(tempren.tags)
+    for category_name, tags_in_category in found_tags.items():
+        category = registry.register_category(category_name)
+        for tag in tags_in_category:
+            category.register_tag_class(tag)
+
     if adhoc_tags:
         log.debug("Registering ad-hoc tags")
         adhoc_category = registry.register_category(CategoryName("AdHoc"))
         for tag_name, exec_path in sorted(adhoc_tags.items()):
             adhoc_category.register_tag_from_executable(exec_path, tag_name)
+
+    log.debug("Discovering tag aliases")
+    found_aliases = discover_aliases_in_package(tempren.tags)
+    compiler = TemplateCompiler(registry)
+    for category_name, aliases_in_category in found_aliases.items():
+        alias_category = registry.find_category(category_name)
+        if not alias_category:
+            alias_category = registry.register_category(category_name)
+
+        for alias in aliases_in_category:
+            alias_tag_factory = AliasTagFactoryFromClass(alias, compiler)
+            alias_category.register_tag_factory(alias_tag_factory)
+
+    if aliases:
+        log.debug("Registering ad-hoc aliases")
+        alias_category = registry.register_category(CategoryName("Alias"))
+        for alias_name, pattern_text in sorted(aliases.items()):
+            alias_category.register_tag_factory(
+                AliasTagFactory(alias_name, pattern_text, compiler)
+            )
+
     return registry
 
 

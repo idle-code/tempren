@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any, Optional
 
+from tempren.alias import TagAlias
 from tempren.primitives import File, Tag
 
 
@@ -20,3 +21,9 @@ class AbstractTag(Tag, ABC):
 
     def process(self, file: File, context: Optional[str]) -> Any:
         self.implementation_detail()
+
+
+class FirstLevelTagAlias(TagAlias):
+    """%FirstLevel()-Alias"""
+
+    pass

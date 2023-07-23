@@ -1,13 +1,9 @@
-import importlib
-import inspect
 import logging
-import pkgutil
 from logging import Logger
 from pathlib import Path
-from types import ModuleType
 from typing import Dict, List, Optional, Type
 
-from tempren.adhoc import TagFactoryFromExecutable
+from tempren.adhoc import AdHocTagFactoryFromExecutable
 from tempren.factories import TagFactoryFromClass
 from tempren.primitives import (
     CategoryName,
@@ -28,6 +24,7 @@ class TagCategory:
     description: Optional[str] = None
     tag_map: Dict[str, TagFactory]
 
+    # CHECK: Move following to the TagRegistry? This would remove `tag_name` argument from `register_tag_class`
     _tag_class_suffix = "Tag"
 
     def __init__(self, name: CategoryName, description: Optional[str] = None):
@@ -55,7 +52,7 @@ class TagCategory:
         self.register_tag_factory(class_tag_factory, tag_name)
 
     def register_tag_from_executable(self, exec_path: Path, tag_name: TagName):
-        executable_tag_factory = TagFactoryFromExecutable(exec_path, tag_name)
+        executable_tag_factory = AdHocTagFactoryFromExecutable(exec_path, tag_name)
         self.log.debug(
             f"Registering executable {exec_path} as {executable_tag_factory.tag_name} tag"
         )
@@ -78,7 +75,6 @@ class TagCategory:
 
 class TagRegistry:
     log: Logger
-    _tag_class_suffix = "Tag"
     category_map: Dict[CategoryName, TagCategory]
 
     def __init__(self):
@@ -114,10 +110,10 @@ class TagRegistry:
                 found_tag_factories[category.name] = tag_factory
 
         if not found_tag_factories:
-            raise UnknownTagError(qualified_name)
+            raise UnknownNameError(qualified_name)
         elif len(found_tag_factories) > 1:
             category_names = sorted(list(found_tag_factories.keys()))
-            raise AmbiguousTagError(qualified_name, category_names)
+            raise AmbiguousNameError(qualified_name, category_names)
 
         return next(iter(found_tag_factories.values()))
 
@@ -131,11 +127,13 @@ class TagRegistry:
 
         tag_factory = tag_category.find_tag_factory(qualified_name.name)
         if tag_factory is None:
-            raise UnknownTagError(qualified_name)
+            raise UnknownNameError(qualified_name)
 
         return tag_factory
 
-    def bind(self, pattern: Pattern) -> Pattern:
+    def bind(
+        self, pattern: Pattern
+    ) -> Pattern:  # TODO: Move to the TemplateCompiler class
         return self._rewrite_pattern(pattern)
 
     def _rewrite_pattern(self, pattern: Pattern) -> Pattern:
@@ -193,48 +191,8 @@ class TagRegistry:
         self.category_map[category_name] = new_category
         return new_category
 
-    def register_tags_in_module(self, module: ModuleType):
-        self.log.debug(f"Discovering tags in module '{module}'")
 
-        if module.__package__:
-            category_name = CategoryName(module.__name__[len(module.__package__) + 1 :])
-        else:
-            category_name = CategoryName(module.__name__)
-
-        def is_tag_class(klass: type):
-            if (
-                not inspect.isclass(klass)
-                or not issubclass(klass, Tag)
-                or inspect.isabstract(klass)
-                or klass == Tag
-            ):
-                return False
-            return klass.__name__.endswith(self._tag_class_suffix)
-
-        # TODO: do not register empty modules
-        module_category = self.register_category(category_name)
-        for _, tag_class in inspect.getmembers(module, is_tag_class):
-            module_category.register_tag_class(tag_class)
-
-    def register_tags_in_package(self, package):
-        self.log.debug(f"Discovering tags in package '{package}'")
-
-        for _, name, is_pkg in pkgutil.walk_packages(
-            package.__path__, package.__name__ + "."
-        ):
-            if is_pkg:
-                continue
-            try:
-                self.log.debug(f"Trying to load {name} module")
-                module = importlib.import_module(name)
-                self.register_tags_in_module(module)
-            except NotImplementedError as exc:
-                self.log.warning(f"Module {name} is currently unsupported: {exc}")
-            except Exception as exc:
-                self.log.error(exc, f"Could not load module {name}")
-
-
-class UnknownTagError(TagError):
+class UnknownNameError(TagError):
     def __init__(self, tag_name: QualifiedTagName):
         super().__init__(tag_name, f"Unknown tag name: {tag_name.name}")
 
@@ -263,7 +221,7 @@ class UnknownCategoryError(TagError):
         return super().with_location(category_location)
 
 
-class AmbiguousTagError(TagError):
+class AmbiguousNameError(TagError):
     category_names: List[CategoryName]
 
     def __init__(self, tag_name: QualifiedTagName, category_names: List[CategoryName]):

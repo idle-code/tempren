@@ -108,6 +108,22 @@ def adhoc_tag(val: str) -> Tuple[TagName, Path]:
         raise argparse.ArgumentTypeError(f"'{tag_name}' cannot be used as tag name")
 
 
+def alias(val: str) -> Tuple[TagName, str]:
+    val = nonempty_string(val)
+    components = val.split("=", maxsplit=1)
+    if len(components) < 2:
+        raise argparse.ArgumentTypeError("Missing alias name")
+
+    alias_name, pattern_text = components
+    if not pattern_text:
+        raise argparse.ArgumentTypeError("Missing alias pattern")
+
+    try:
+        return TagName(alias_name), pattern_text
+    except ValueError:
+        raise argparse.ArgumentTypeError(f"'{alias_name}' cannot be used as tag name")
+
+
 def validate_adhoc_tags(
     adhoc_tags: List[List[Tuple[TagName, Path]]]
 ) -> Dict[TagName, Path]:
@@ -134,6 +150,31 @@ def validate_adhoc_tags(
     return dict(list_of_tuples)
 
 
+def validate_aliases(aliases: List[List[Tuple[TagName, str]]]) -> Dict[TagName, str]:
+    # TODO: Merge with validate_adhoc_tags
+    if not aliases:
+        return dict()
+    list_of_tuples = list(chain(*aliases))
+    names = list(map(lambda pair: pair[0], list_of_tuples))
+    unique_names = set(names)
+    if len(names) > len(unique_names):
+        repeating_names = [name for name in unique_names if names.count(name) > 1]
+        for duplicate_name in repeating_names:
+            patterns_with_the_same_name = list(
+                map(
+                    lambda pair: str(pair[1]),
+                    filter(lambda pair: pair[0] == duplicate_name, list_of_tuples),
+                )
+            )
+            # CHECK: report more errors at once?
+            raise SystemExitError(
+                ErrorCode.USAGE_ERROR,
+                f"Aliases for patterns {' and '.join(patterns_with_the_same_name)} cannot have the same name {duplicate_name}",
+            )
+
+    return dict(list_of_tuples)
+
+
 class SystemExitError(Exception):
     status: int
 
@@ -150,7 +191,9 @@ class _ListAvailableTags(argparse.Action):
         values: Union[Text, Sequence[Any], None],
         option_string: Optional[Text] = None,
     ):
-        registry = build_tag_registry(validate_adhoc_tags(args.ad_hoc))
+        registry = build_tag_registry(
+            validate_adhoc_tags(args.ad_hoc), validate_aliases(args.alias)
+        )
         log.info("Available tags:")
         for category_name in sorted(registry.category_map.keys()):
             log.info(f"{category_name.capitalize()}:")
@@ -186,7 +229,9 @@ class _ShowHelp(argparse.Action):
             parser.print_help()
         else:
             raw_tag_name = str(values)
-            registry = build_tag_registry(validate_adhoc_tags(args.ad_hoc))
+            registry = build_tag_registry(
+                validate_adhoc_tags(args.ad_hoc), validate_aliases(args.alias)
+            )
 
             try:
                 if "." in raw_tag_name:
@@ -297,6 +342,15 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         "--include-hidden",
         action="store_true",
         help="Consider hidden files and directories when scanning for files in input directory",
+    )
+    parser.add_argument(
+        "-a",
+        "--alias",
+        nargs=1,
+        type=alias,
+        action="append",
+        metavar="name=pattern",
+        help="Add an alias tag rendering given pattern",
     )
     parser.add_argument(
         "-ah",
@@ -499,6 +553,7 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         sort=args.sort,
         mode=args.mode,
         adhoc_tags=validate_adhoc_tags(args.ad_hoc),
+        aliases=validate_aliases(args.alias),
     )
 
     return configuration
@@ -583,7 +638,7 @@ def main() -> int:
     original_cwd = os.getcwd()
     try:
         config = process_cli_configuration(argv)
-        registry = build_tag_registry(config.adhoc_tags)
+        registry = build_tag_registry(config.adhoc_tags, config.aliases)
         pipeline = build_pipeline(
             config, registry, manual_conflict_resolver=cli_prompt_conflict_resolver
         )
@@ -607,10 +662,9 @@ def main() -> int:
     except InvalidDestinationError as exc:
         log.error(f"Error: {exc}")
         return ErrorCode.INVALID_DESTINATION_ERROR
-    except Exception as exc:  # NOCOVER: not really testable - final fallback
-        log.error(f"Unknown error: {exc.__class__.__name__} {exc}")
-        raise
-        return ErrorCode.UNKNOWN_ERROR
+    # except Exception as exc:  # NOCOVER: not really testable - final fallback
+    #     log.error(f"Unknown error: {exc.__class__.__name__} {exc}")
+    #     return ErrorCode.UNKNOWN_ERROR
     finally:
         os.chdir(original_cwd)
 

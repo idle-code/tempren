@@ -2,7 +2,7 @@ import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 tag_name_regex = re.compile(r"^[_a-z][0-9_a-z]*$", re.IGNORECASE)
 
@@ -56,6 +56,18 @@ class QualifiedTagName:
     name: TagName
     # TODO: if this is meant to be a genuinely qualified name, the category should be specified:
     category: Optional[CategoryName] = None
+
+    def __init__(
+        self,
+        name: Union[TagName, str],
+        category: Optional[Union[CategoryName, str]] = None,
+    ) -> None:
+        if not isinstance(name, TagName):
+            name = TagName(name)
+        if category is not None and not isinstance(category, CategoryName):
+            category = CategoryName(category)
+        self.name = name
+        self.category = category
 
     def __str__(self) -> str:
         if self.category:

@@ -9,6 +9,7 @@ from piexif import TAGS
 from piexif import TYPES as TAG_TYPES
 from PIL import Image
 
+from tempren.alias import TagAlias
 from tempren.exceptions import FileNotSupportedError, MissingMetadataError
 from tempren.primitives import File, Tag
 
@@ -182,3 +183,7 @@ ExifTag.__doc__ = "\n".join(
         sorted(set(_generate_exif_tag_list())),
     )
 )
+
+
+class ResolutionTagAlias(TagAlias):
+    """%Image.Width()x%Image.Height()"""

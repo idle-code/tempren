@@ -1,5 +1,6 @@
 from typing import Optional
 
+from tempren.alias import TagAlias
 from tempren.primitives import File, Tag
 
 
