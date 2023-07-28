@@ -5,7 +5,7 @@ import pytest
 from tempren.exceptions import TemplateEvaluationError
 from tempren.file_sorters import TemplateFileSorter
 from tempren.primitives import File
-from tempren.template.ast import Pattern, RawText, TagInstance
+from tempren.template.ast import PatternElementSequence, RawText, TagInstance
 
 from .template.mocks import GeneratorTag
 
@@ -13,7 +13,7 @@ from .template.mocks import GeneratorTag
 class TestTemplateFileSorter:
     @pytest.mark.parametrize("expression_text", ["", "$%", "1 +", "while True: pass"])
     def test_invalid_expression(self, expression_text: str, nonexistent_file: File):
-        pattern = Pattern([RawText(expression_text)])
+        pattern = PatternElementSequence([RawText(expression_text)])
         pattern.source_representation = expression_text
         file_sorter = TemplateFileSorter(pattern)
 
@@ -37,7 +37,7 @@ class TestTemplateFileSorter:
         self, tag_implementation, nonexistent_absolute_path: Path
     ):
         filepath_tag = GeneratorTag(tag_implementation)
-        pattern = Pattern([TagInstance(tag=filepath_tag)])
+        pattern = PatternElementSequence([TagInstance(tag=filepath_tag)])
         file_sorter = TemplateFileSorter(pattern)
         files = [
             File(nonexistent_absolute_path, Path("3")),
@@ -71,7 +71,7 @@ class TestTemplateFileSorter:
     ):
         tag1 = GeneratorTag(tag1_implementation)
         tag2 = GeneratorTag(tag2_implementation)
-        pattern = Pattern(
+        pattern = PatternElementSequence(
             [
                 TagInstance(tag=tag1),
                 RawText(", "),
@@ -95,7 +95,7 @@ class TestTemplateFileSorter:
 
     def test_path_rendering(self, nonexistent_absolute_path: Path):
         filepath_tag = GeneratorTag(lambda file, context: file.relative_path)
-        pattern = Pattern([TagInstance(tag=filepath_tag)])
+        pattern = PatternElementSequence([TagInstance(tag=filepath_tag)])
         file_sorter = TemplateFileSorter(pattern)
         files = [
             File(nonexistent_absolute_path, Path("3")),

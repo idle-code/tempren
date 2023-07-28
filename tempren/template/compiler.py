@@ -1,8 +1,13 @@
 import logging
 from typing import List, Optional
 
-from tempren.primitives import PatternRoot, QualifiedTagName
-from tempren.template.ast import Pattern, PatternElement, TagInstance, TagPlaceholder
+from tempren.primitives import Pattern, QualifiedTagName
+from tempren.template.ast import (
+    PatternElement,
+    PatternElementSequence,
+    TagInstance,
+    TagPlaceholder,
+)
 from tempren.template.exceptions import TagError, TemplateError
 from tempren.template.parser import TemplateParser
 from tempren.template.registry import TagRegistry
@@ -18,7 +23,7 @@ class TemplateCompiler:
         self.parser = TemplateParser()
         self.registry = registry
 
-    def compile(self, template_text: str) -> PatternRoot:
+    def compile(self, template_text: str) -> Pattern:
         self.log.debug("Compiling template %r", template_text)
         try:
             return self._bind(self.parser.parse(template_text))
@@ -26,18 +31,20 @@ class TemplateCompiler:
             template_error.template = template_text
             raise
 
-    def _bind(self, pattern: PatternRoot) -> PatternRoot:
-        assert isinstance(pattern, Pattern)
+    def _bind(self, pattern: Pattern) -> Pattern:
+        assert isinstance(pattern, PatternElementSequence)
         return self._rewrite_pattern(pattern)
 
-    def _rewrite_pattern(self, pattern: Pattern) -> Pattern:
+    def _rewrite_pattern(
+        self, pattern: PatternElementSequence
+    ) -> PatternElementSequence:
         new_elements: List[PatternElement] = []
         for element in pattern.sub_elements:
             if isinstance(element, TagPlaceholder):
                 new_elements.append(self._rewrite_tag_placeholder(element))
             else:
                 new_elements.append(element)
-        bound_pattern = Pattern(new_elements)
+        bound_pattern = PatternElementSequence(new_elements)
         bound_pattern.source_representation = pattern.source_representation
         return bound_pattern
 
@@ -69,7 +76,7 @@ class TemplateCompiler:
                     tag_placeholder.location
                 )
 
-        context_pattern: Optional[Pattern] = None
+        context_pattern: Optional[PatternElementSequence] = None
         if tag_placeholder.context:
             context_pattern = self._rewrite_pattern(tag_placeholder.context)
 

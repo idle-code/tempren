@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from typing import Any, List, Mapping, Optional
 
 from tempren.exceptions import MissingMetadataError
-from tempren.primitives import File, Location, PatternRoot, QualifiedTagName, Tag
+from tempren.primitives import File, Location, Pattern, QualifiedTagName, Tag
 
 
 class PatternElement(ABC):
@@ -26,7 +26,7 @@ class RawText(PatternElement):
 
 
 @dataclass
-class Pattern(PatternElement, PatternRoot):
+class PatternElementSequence(PatternElement, Pattern):
     """Represents pattern tree - a chain of text/tag invocations"""
 
     sub_elements: List[PatternElement] = field(default_factory=list)
@@ -51,7 +51,7 @@ class Pattern(PatternElement, PatternRoot):
         """
         return "".join(
             map(
-                lambda se: Pattern._convert_to_representation(se, file),
+                lambda se: PatternElementSequence._convert_to_representation(se, file),
                 self.sub_elements,
             )
         )
@@ -72,7 +72,7 @@ class TagPlaceholder(PatternElement):
 
     location: Location = field(init=False, compare=False)
     tag_name: QualifiedTagName
-    context: Optional[Pattern] = None
+    context: Optional[PatternElementSequence] = None
     args: List[Any] = field(default_factory=list)
     kwargs: Mapping[str, Any] = field(default_factory=dict)
 
@@ -87,7 +87,7 @@ class TagInstance(PatternElement):
     """Represents a tag bound to the implementation"""
 
     tag: Tag
-    context: Optional[Pattern] = None
+    context: Optional[PatternElementSequence] = None
 
     def process(self, file: File) -> Any:
         context_str = self.context.process(file) if self.context else None

@@ -132,7 +132,7 @@ class TagFactory(ABC):
         """Creates tag from provided configuration arguments"""
 
 
-class PatternRoot(ABC):
+class Pattern(ABC):
     """Facade to the template pattern tree"""
 
     source_representation: Optional[str]

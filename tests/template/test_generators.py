@@ -4,13 +4,13 @@ from pathlib import Path
 import pytest
 
 from tempren.primitives import File
-from tempren.template.ast import Pattern, RawText
+from tempren.template.ast import PatternElementSequence, RawText
 from tempren.template.exceptions import InvalidFilenameError
 from tempren.template.generators import TemplateNameGenerator, TemplatePathGenerator
 
 
-def static_pattern(text: str) -> Pattern:
-    return Pattern([RawText(text)])
+def static_pattern(text: str) -> PatternElementSequence:
+    return PatternElementSequence([RawText(text)])
 
 
 class TestTemplateNameGenerator:

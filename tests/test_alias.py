@@ -2,13 +2,13 @@ import pytest
 
 from tempren.alias import AliasTag, AliasTagFactoryFromClass, TagAlias
 from tempren.primitives import File
-from tempren.template.ast import Pattern, RawText
+from tempren.template.ast import PatternElementSequence, RawText
 from tempren.template.compiler import TemplateCompiler
 
 
 class DummyCompiler:
-    def compile(self, template_text: str) -> Pattern:
-        return Pattern([RawText(template_text)])
+    def compile(self, template_text: str) -> PatternElementSequence:
+        return PatternElementSequence([RawText(template_text)])
 
 
 @pytest.fixture
@@ -58,7 +58,7 @@ class TestAliasTagFactoryFromClass:
 
 class TestAliasTag:
     def test_redirects_processing_to_passed_pattern(self, nonexistent_file: File):
-        pattern = Pattern([RawText("Spam")])
+        pattern = PatternElementSequence([RawText("Spam")])
         alias_tag = AliasTag(pattern)
 
         result = alias_tag.process(nonexistent_file, None)

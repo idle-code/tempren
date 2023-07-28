@@ -30,7 +30,7 @@ from tempren.filesystem import (
     PrintingRenamerWrapper,
     RecursiveFileGatherer,
 )
-from tempren.primitives import CategoryName, File, PathGenerator, PatternRoot, TagName
+from tempren.primitives import CategoryName, File, PathGenerator, Pattern, TagName
 from tempren.template.compiler import TemplateCompiler
 from tempren.template.exceptions import InvalidFilenameError, TemplateError
 from tempren.template.generators import TemplateNameGenerator, TemplatePathGenerator
@@ -299,7 +299,7 @@ def build_pipeline(
 
     compiler = TemplateCompiler(registry)
 
-    def _compile_template(template_text: str) -> PatternRoot:
+    def _compile_template(template_text: str) -> Pattern:
         try:
             return compiler.compile(template_text)
         except TemplateError as template_error:

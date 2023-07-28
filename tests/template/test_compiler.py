@@ -4,7 +4,7 @@ from typing import Callable, Dict, Optional, Type, Union
 import pytest
 
 from tempren.primitives import CategoryName, Tag, TagFactory, TagName
-from tempren.template.ast import Pattern, RawText, TagInstance
+from tempren.template.ast import PatternElementSequence, RawText, TagInstance
 from tempren.template.compiler import (
     ConfigurationError,
     ContextForbiddenError,
@@ -147,7 +147,7 @@ class TestTemplateCompiler:
         bound_pattern = compiler.compile("%Mock(1, b='text')")
 
         expected_tag = MockTag(args=(1,), kwargs={"b": "text"}, configure_invoked=True)
-        assert bound_pattern == Pattern([TagInstance(tag=expected_tag)])
+        assert bound_pattern == PatternElementSequence([TagInstance(tag=expected_tag)])
 
     def test_default_tag_factory__configure_throws_wrong_parameter_name(self):
         class FooTag(Tag):
@@ -191,8 +191,8 @@ class TestTemplateCompiler:
 
         inner_tag = MockTag(kwargs={"name": "inner"}, configure_invoked=True)
         outer_tag = MockTag(kwargs={"name": "outer"}, configure_invoked=True)
-        context_pattern = Pattern([TagInstance(tag=inner_tag)])
-        assert bound_pattern == Pattern(
+        context_pattern = PatternElementSequence([TagInstance(tag=inner_tag)])
+        assert bound_pattern == PatternElementSequence(
             [TagInstance(tag=outer_tag, context=context_pattern)]
         )
 
@@ -201,7 +201,7 @@ class TestTemplateCompiler:
 
         bound_pattern = compiler.compile("Just text")
 
-        assert bound_pattern == Pattern([RawText("Just text")])
+        assert bound_pattern == PatternElementSequence([RawText("Just text")])
 
     def test_compile__tag_requires_context_but_none_given(self):
         def required_context_tag_factory(*args, **kwargs):
@@ -235,11 +235,11 @@ class TestTemplateCompiler:
 
         bound_pattern = compiler.compile("%ContextRequired(){context}")
 
-        assert bound_pattern == Pattern(
+        assert bound_pattern == PatternElementSequence(
             [
                 TagInstance(
                     tag=MockTag(require_context=True),
-                    context=Pattern([RawText("context")]),
+                    context=PatternElementSequence([RawText("context")]),
                 )
             ]
         )

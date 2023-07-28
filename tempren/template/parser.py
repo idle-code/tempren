@@ -5,9 +5,9 @@ from typing import List, Mapping, Optional, Tuple, Union
 from antlr4 import CommonTokenStream, InputStream  # type: ignore
 from antlr4.error.ErrorListener import ErrorListener  # type: ignore
 
-from tempren.primitives import Location, PatternRoot, QualifiedTagName, TagName
+from tempren.primitives import Location, Pattern, QualifiedTagName, TagName
 
-from .ast import Pattern, PatternElement, RawText, TagPlaceholder
+from .ast import PatternElement, PatternElementSequence, RawText, TagPlaceholder
 from .exceptions import TemplateSyntaxError
 from .grammar.TagTemplateLexer import TagTemplateLexer
 from .grammar.TagTemplateParser import TagTemplateParser
@@ -65,9 +65,7 @@ class _TreeVisitor(TagTemplateParserVisitor):
             return pattern
         return pattern + [element]
 
-    def visitRootPattern(
-        self, ctx: TagTemplateParser.RootPatternContext
-    ) -> PatternRoot:
+    def visitRootPattern(self, ctx: TagTemplateParser.RootPatternContext) -> Pattern:
         return self.visitPattern(ctx.pattern())
 
     def visitPipeList(
@@ -81,17 +79,19 @@ class _TreeVisitor(TagTemplateParserVisitor):
         tag_list = self.visitChildren(ctx)
         return list(filter(bool, tag_list))
 
-    def visitPattern(self, ctx: TagTemplateParser.PatternContext) -> Pattern:
+    def visitPattern(
+        self, ctx: TagTemplateParser.PatternContext
+    ) -> PatternElementSequence:
         pattern_elements = self.visitChildren(ctx)
         pipe_list = ctx.pipeList()
         if pipe_list:
             pipe_tags = self.visitPipeList(pipe_list)
-            context = Pattern(pattern_elements[:-1])
+            context = PatternElementSequence(pattern_elements[:-1])
             for tag_placeholder in pipe_tags:
                 tag_placeholder.context = context
-                context = Pattern([tag_placeholder])
+                context = PatternElementSequence([tag_placeholder])
             return context
-        return Pattern(pattern_elements)
+        return PatternElementSequence(pattern_elements)
 
     def visitTag(self, ctx: TagTemplateParser.TagContext) -> TagPlaceholder:
         category_name = None
@@ -193,7 +193,7 @@ class TemplateParser:
     def __init__(self):
         self.log = logging.getLogger(self.__class__.__name__)
 
-    def parse(self, text: str) -> PatternRoot:
+    def parse(self, text: str) -> Pattern:
         self.log.debug("Parsing '%s'", text)
         lexer = TagTemplateLexer(InputStream(text))
         token_stream = CommonTokenStream(lexer)
