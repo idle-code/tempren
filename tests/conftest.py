@@ -6,6 +6,7 @@ import pytest
 from _pytest.tmpdir import TempPathFactory
 
 from tempren.primitives import File
+from tempren.template.ast import PatternElement, PatternElementSequence
 
 
 @pytest.fixture
@@ -81,3 +82,7 @@ def video_data_dir(test_data_dir: Callable[[str], Path]) -> Path:
 @pytest.fixture
 def gpx_data_dir(test_data_dir: Callable[[str], Path]) -> Path:
     yield from test_data_dir("gpx")
+
+
+def pattern_from(*args: PatternElement) -> PatternElementSequence:
+    return PatternElementSequence(list(args))

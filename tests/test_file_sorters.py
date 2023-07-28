@@ -5,15 +5,16 @@ import pytest
 from tempren.exceptions import TemplateEvaluationError
 from tempren.file_sorters import TemplateFileSorter
 from tempren.primitives import File
-from tempren.template.ast import PatternElementSequence, RawText, TagInstance
+from tempren.template.ast import RawText, TagInstance
 
+from .conftest import pattern_from
 from .template.mocks import GeneratorTag
 
 
 class TestTemplateFileSorter:
     @pytest.mark.parametrize("expression_text", ["", "$%", "1 +", "while True: pass"])
     def test_invalid_expression(self, expression_text: str, nonexistent_file: File):
-        pattern = PatternElementSequence([RawText(expression_text)])
+        pattern = pattern_from(RawText(expression_text))
         pattern.source_representation = expression_text
         file_sorter = TemplateFileSorter(pattern)
 
@@ -37,7 +38,7 @@ class TestTemplateFileSorter:
         self, tag_implementation, nonexistent_absolute_path: Path
     ):
         filepath_tag = GeneratorTag(tag_implementation)
-        pattern = PatternElementSequence([TagInstance(tag=filepath_tag)])
+        pattern = pattern_from(TagInstance(tag=filepath_tag))
         file_sorter = TemplateFileSorter(pattern)
         files = [
             File(nonexistent_absolute_path, Path("3")),
@@ -71,12 +72,8 @@ class TestTemplateFileSorter:
     ):
         tag1 = GeneratorTag(tag1_implementation)
         tag2 = GeneratorTag(tag2_implementation)
-        pattern = PatternElementSequence(
-            [
-                TagInstance(tag=tag1),
-                RawText(", "),
-                TagInstance(tag=tag2),
-            ]
+        pattern = pattern_from(
+            TagInstance(tag=tag1), RawText(", "), TagInstance(tag=tag2)
         )
         file_sorter = TemplateFileSorter(pattern)
         files = [
@@ -95,7 +92,7 @@ class TestTemplateFileSorter:
 
     def test_path_rendering(self, nonexistent_absolute_path: Path):
         filepath_tag = GeneratorTag(lambda file, context: file.relative_path)
-        pattern = PatternElementSequence([TagInstance(tag=filepath_tag)])
+        pattern = pattern_from(TagInstance(tag=filepath_tag))
         file_sorter = TemplateFileSorter(pattern)
         files = [
             File(nonexistent_absolute_path, Path("3")),

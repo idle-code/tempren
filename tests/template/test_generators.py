@@ -4,18 +4,16 @@ from pathlib import Path
 import pytest
 
 from tempren.primitives import File
-from tempren.template.ast import PatternElementSequence, RawText
+from tempren.template.ast import RawText
 from tempren.template.exceptions import InvalidFilenameError
 from tempren.template.generators import TemplateNameGenerator, TemplatePathGenerator
 
-
-def static_pattern(text: str) -> PatternElementSequence:
-    return PatternElementSequence([RawText(text)])
+from ..conftest import pattern_from
 
 
 class TestTemplateNameGenerator:
     def test_replacement_is_used_for_filename(self, text_data_dir: Path):
-        generator = TemplateNameGenerator(static_pattern("new_name"))
+        generator = TemplateNameGenerator(pattern_from(RawText("new_name")))
         os.chdir(text_data_dir)
         src_file = File(text_data_dir, Path("hello.txt"))
 
@@ -25,7 +23,7 @@ class TestTemplateNameGenerator:
         assert dst_path.name == "new_name"
 
     def test_generated_replacement_is_path(self, text_data_dir: Path):
-        generator = TemplateNameGenerator(static_pattern("file/path"))
+        generator = TemplateNameGenerator(pattern_from(RawText("file/path")))
         os.chdir(text_data_dir)
         src_file = File(text_data_dir, Path("hello.txt"))
 
@@ -37,7 +35,7 @@ class TestTemplateNameGenerator:
 
 class TestTemplatePathGenerator:
     def test_replacement_is_used_for_path(self, text_data_dir: Path):
-        generator = TemplatePathGenerator(static_pattern("new/file/path"))
+        generator = TemplatePathGenerator(pattern_from(RawText("new/file/path")))
         os.chdir(text_data_dir)
         src_file = File(text_data_dir, Path("hello.txt"))
 

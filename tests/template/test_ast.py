@@ -1,7 +1,8 @@
 from tempren.exceptions import MissingMetadataError
 from tempren.primitives import File
-from tempren.template.ast import PatternElementSequence, RawText, TagInstance
+from tempren.template.ast import RawText, TagInstance
 
+from ..conftest import pattern_from
 from .mocks import GeneratorTag, MockTag
 
 
@@ -19,31 +20,29 @@ class TestRawText:
 
 class TestPattern:
     def test_no_elements(self, nonexistent_file: File):
-        element = PatternElementSequence()
+        element = pattern_from()
 
         assert element.process(nonexistent_file) == ""
 
     def test_single_element(self, nonexistent_file: File):
-        element = PatternElementSequence([RawText("text")])
+        element = pattern_from(RawText("text"))
 
         assert element.process(nonexistent_file) == "text"
 
     def test_concatenate_many(self, nonexistent_file: File):
-        element = PatternElementSequence([RawText("foo"), RawText("bar")])
+        element = pattern_from(RawText("foo"), RawText("bar"))
 
         assert element.process(nonexistent_file) == "foobar"
 
     def test_expression_string_rendering(self, nonexistent_file: File):
         mock_tag = MockTag(process_output="foo")
-        element = PatternElementSequence(
-            [TagInstance(tag=mock_tag), RawText(" == 'bar'")]
-        )
+        element = pattern_from(TagInstance(tag=mock_tag), RawText(" == 'bar'"))
 
         assert element.process_as_expression(nonexistent_file) == "'foo' == 'bar'"
 
     def test_path_value_rendering(self, nonexistent_file: File):
         mock_tag = MockTag(process_output=nonexistent_file.relative_path)
-        element = PatternElementSequence([TagInstance(tag=mock_tag)])
+        element = pattern_from(TagInstance(tag=mock_tag))
 
         assert element.process(nonexistent_file) == str(nonexistent_file.relative_path)
 
@@ -52,8 +51,8 @@ class TestPattern:
             raise MissingMetadataError()
 
         throwing_tag = GeneratorTag(_tag_implementation)
-        element = PatternElementSequence(
-            [RawText("foo"), TagInstance(tag=throwing_tag), RawText("bar")]
+        element = pattern_from(
+            RawText("foo"), TagInstance(tag=throwing_tag), RawText("bar")
         )
 
         assert element.process(nonexistent_file) == "foobar"
@@ -72,7 +71,7 @@ class TestTagInstance:
     def test_context_is_processed_if_present(self, nonexistent_file: File):
         file = nonexistent_file
         context_tag = MockTag()
-        context_pattern = PatternElementSequence([TagInstance(tag=context_tag)])
+        context_pattern = pattern_from(TagInstance(tag=context_tag))
         element = TagInstance(tag=MockTag(), context=context_pattern)
 
         element.process(file)
@@ -83,7 +82,7 @@ class TestTagInstance:
         file = nonexistent_file
         context_tag = MockTag(process_output="Context output")
         outer_tag = MockTag()
-        context_pattern = PatternElementSequence([TagInstance(tag=context_tag)])
+        context_pattern = pattern_from(TagInstance(tag=context_tag))
         element = TagInstance(tag=outer_tag, context=context_pattern)
 
         element.process(file)

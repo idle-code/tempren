@@ -12,8 +12,9 @@ from tempren.file_filters import (
     TemplateFileFilter,
 )
 from tempren.primitives import File
-from tempren.template.ast import PatternElementSequence, RawText, TagInstance
+from tempren.template.ast import RawText, TagInstance
 
+from .conftest import pattern_from
 from .template.mocks import MockTag
 
 
@@ -176,7 +177,7 @@ class TestFileFilterInverter:
 class TestTemplateFileFilter:
     @pytest.mark.parametrize("expression_text", ["", "$%", "1 +", "while True: pass"])
     def test_invalid_expression(self, expression_text: str, nonexistent_file: File):
-        pattern = PatternElementSequence([RawText(expression_text)])
+        pattern = pattern_from(RawText(expression_text))
         pattern.source_representation = expression_text
         file_filter = TemplateFileFilter(pattern)
 
@@ -199,7 +200,7 @@ class TestTemplateFileFilter:
     def test_valid_expression(
         self, expression_text: str, expected_result: bool, nonexistent_file: File
     ):
-        pattern = PatternElementSequence([RawText(expression_text)])
+        pattern = pattern_from(RawText(expression_text))
         file_filter = TemplateFileFilter(pattern)
 
         assert file_filter(nonexistent_file) == expected_result
@@ -207,7 +208,7 @@ class TestTemplateFileFilter:
     def test_file_is_passed_to_tags(self, nonexistent_file: File):
         mock_tag = MockTag()
         mock_tag.process_output = "True"
-        pattern = PatternElementSequence([TagInstance(tag=mock_tag)])
+        pattern = pattern_from(TagInstance(tag=mock_tag))
         file_filter = TemplateFileFilter(pattern)
 
         file_filter(nonexistent_file)
@@ -217,9 +218,7 @@ class TestTemplateFileFilter:
     def test_tag_output_rendering(self, nonexistent_file: File):
         mock_tag = MockTag()
         mock_tag.process_output = "foobar"
-        pattern = PatternElementSequence(
-            [TagInstance(tag=mock_tag), RawText(".startswith('foo')")]
-        )
+        pattern = pattern_from(TagInstance(tag=mock_tag), RawText(".startswith('foo')"))
         file_filter = TemplateFileFilter(pattern)
 
         assert file_filter(nonexistent_file)
@@ -227,9 +226,7 @@ class TestTemplateFileFilter:
     def test_path_rendering(self, nonexistent_file: File):
         mock_tag = MockTag()
         mock_tag.process_output = nonexistent_file.relative_path
-        pattern = PatternElementSequence(
-            [TagInstance(tag=mock_tag), RawText(".exists()")]
-        )
+        pattern = pattern_from(TagInstance(tag=mock_tag), RawText(".exists()"))
         file_filter = TemplateFileFilter(pattern)
 
         assert not file_filter(nonexistent_file)
