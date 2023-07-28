@@ -5,15 +5,13 @@ import pytest
 
 from tempren.primitives import CategoryName, Tag, TagFactory, TagName
 from tempren.template.ast import Pattern, RawText, TagInstance
-from tempren.template.compiler import TemplateCompiler
-from tempren.template.registry import (
-    AmbiguousNameError,
+from tempren.template.compiler import (
     ConfigurationError,
     ContextForbiddenError,
     ContextMissingError,
-    TagRegistry,
-    UnknownNameError,
+    TemplateCompiler,
 )
+from tempren.template.registry import AmbiguousNameError, TagRegistry, UnknownNameError
 
 from .mocks import MockTag
 

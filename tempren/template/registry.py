@@ -13,7 +13,6 @@ from tempren.primitives import (
     TagFactory,
     TagName,
 )
-from tempren.template.ast import Pattern, PatternElement, TagInstance, TagPlaceholder
 from tempren.template.exceptions import TagError, TemplateError
 
 
@@ -94,26 +93,24 @@ class TagRegistry:
 
     def get_tag_factory(self, tag_name: QualifiedTagName) -> TagFactory:
         if tag_name.category is None:
-            return self._get_tag_factory_by_unique_name(tag_name)
+            return self._get_tag_factory_by_unique_name(tag_name.name)
         else:
             return self._get_tag_factory_by_qualified_name(tag_name)
 
-    def _get_tag_factory_by_unique_name(
-        self, qualified_name: QualifiedTagName
-    ) -> TagFactory:
+    def _get_tag_factory_by_unique_name(self, tag_name: TagName) -> TagFactory:
         # In case there are tags with the same name in multiple categories,
         # category name have to be specified explicitly
         found_tag_factories: Dict[CategoryName, TagFactory] = {}
         for category in self.category_map.values():
-            tag_factory = category.find_tag_factory(qualified_name.name)
+            tag_factory = category.find_tag_factory(tag_name)
             if tag_factory:
                 found_tag_factories[category.name] = tag_factory
 
         if not found_tag_factories:
-            raise UnknownNameError(qualified_name)
+            raise UnknownNameError(QualifiedTagName(tag_name))
         elif len(found_tag_factories) > 1:
             category_names = sorted(list(found_tag_factories.keys()))
-            raise AmbiguousNameError(qualified_name, category_names)
+            raise AmbiguousNameError(QualifiedTagName(tag_name), category_names)
 
         return next(iter(found_tag_factories.values()))
 
@@ -130,56 +127,6 @@ class TagRegistry:
             raise UnknownNameError(qualified_name)
 
         return tag_factory
-
-    def bind(
-        self, pattern: Pattern
-    ) -> Pattern:  # TODO: Move to the TemplateCompiler class
-        return self._rewrite_pattern(pattern)
-
-    def _rewrite_pattern(self, pattern: Pattern) -> Pattern:
-        new_elements: List[PatternElement] = []
-        for element in pattern.sub_elements:
-            if isinstance(element, TagPlaceholder):
-                new_elements.append(self._rewrite_tag_placeholder(element))
-            else:
-                new_elements.append(element)
-        bound_pattern = Pattern(new_elements)
-        bound_pattern.source_representation = pattern.source_representation
-        return bound_pattern
-
-    def _rewrite_tag_placeholder(self, tag_placeholder: TagPlaceholder) -> TagInstance:
-        try:
-            tag_factory = self.get_tag_factory(tag_placeholder.tag_name)
-
-            self.log.debug(
-                "Creating tag '%s' with arguments: %s %s",
-                tag_placeholder.tag_name,
-                tag_placeholder.args,
-                tag_placeholder.kwargs,
-            )
-            tag = tag_factory(*tag_placeholder.args, **tag_placeholder.kwargs)
-        except TemplateError as template_error:
-            raise template_error.with_location(tag_placeholder.location)
-        except Exception as exc:
-            raise ConfigurationError(tag_placeholder.tag_name, str(exc)).with_location(
-                tag_placeholder.location
-            ) from exc
-
-        if tag.require_context is not None:
-            if tag_placeholder.context and not tag.require_context:
-                raise ContextForbiddenError(tag_placeholder.tag_name).with_location(
-                    tag_placeholder.location
-                )
-            elif tag_placeholder.context is None and tag.require_context:
-                raise ContextMissingError(tag_placeholder.tag_name).with_location(
-                    tag_placeholder.location
-                )
-
-        context_pattern: Optional[Pattern] = None
-        if tag_placeholder.context:
-            context_pattern = self._rewrite_pattern(tag_placeholder.context)
-
-        return TagInstance(tag, context=context_pattern)
 
     def register_category(
         self, category_name: CategoryName, description: Optional[str] = None
@@ -230,18 +177,3 @@ class AmbiguousNameError(TagError):
             f"This tag name is present in multiple categories: {', '.join(category_names)}",
         )
         self.category_names = category_names
-
-
-class ContextMissingError(TagError):
-    def __init__(self, tag_name: QualifiedTagName):
-        super().__init__(tag_name, f"Context is required for this tag")
-
-
-class ContextForbiddenError(TagError):
-    def __init__(self, tag_name: QualifiedTagName):
-        super().__init__(tag_name, f"This tag cannot be used with context")
-
-
-class ConfigurationError(TagError):
-    def __init__(self, tag_name: QualifiedTagName, message: str):
-        super().__init__(tag_name, f"Configuration not valid: {message}")

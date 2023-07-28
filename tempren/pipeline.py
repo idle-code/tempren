@@ -283,7 +283,6 @@ def build_pipeline(
     manual_conflict_resolver: ManualConflictResolver,  # TODO: Move to the RuntimeConfiguration
 ) -> Pipeline:
     log.debug("Building pipeline")
-    parser = TemplateParser()
     pipeline = Pipeline()
 
     file_gatherers: List[FileGatherer] = []
@@ -300,10 +299,11 @@ def build_pipeline(
     pipeline.file_gatherer = CombinedFileGatherer(file_gatherers)
     pipeline.file_gatherer.include_hidden = config.include_hidden
 
+    compiler = TemplateCompiler(registry)
+
     def _compile_template(template_text: str) -> Pattern:
-        log.debug("Compiling template %r", template_text)
         try:
-            return registry.bind(parser.parse(template_text))
+            return compiler.compile(template_text)
         except TemplateError as template_error:
             template_error.template = template_text
             raise template_error
