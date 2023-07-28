@@ -662,9 +662,9 @@ def main() -> int:
     except InvalidDestinationError as exc:
         log.error(f"Error: {exc}")
         return ErrorCode.INVALID_DESTINATION_ERROR
-    # except Exception as exc:  # NOCOVER: not really testable - final fallback
-    #     log.error(f"Unknown error: {exc.__class__.__name__} {exc}")
-    #     return ErrorCode.UNKNOWN_ERROR
+    except Exception as exc:  # NOCOVER: not really testable - final fallback
+        log.error(f"Unknown error: {exc.__class__.__name__} {exc}")
+        return ErrorCode.UNKNOWN_ERROR
     finally:
         os.chdir(original_cwd)
 
