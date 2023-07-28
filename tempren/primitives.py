@@ -130,3 +130,22 @@ class TagFactory(ABC):
     @abstractmethod
     def __call__(self, *args, **kwargs) -> Tag:
         """Creates tag from provided configuration arguments"""
+
+
+class PatternRoot(ABC):
+    """Facade to the template pattern tree"""
+
+    source_representation: Optional[str]
+    """Raw representation of this template pattern tree"""
+
+    def process(self, file: File) -> str:
+        """Recursively renders pattern as a string"""
+        raise NotImplementedError()
+
+    def process_as_expression(self, file: File) -> str:
+        """Recursively renders pattern as an expression string
+
+        In expression string, values returned by the tags are converted using `repr`
+        rather than `str` to obtain valid python value representation.
+        """
+        raise NotImplementedError()

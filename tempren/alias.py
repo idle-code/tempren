@@ -1,8 +1,7 @@
 from typing import Any, Optional, Type
 
 from tempren.factories import TagFactoryFromClass
-from tempren.primitives import File, Tag, TagName
-from tempren.template.ast import Pattern
+from tempren.primitives import File, PatternRoot, Tag, TagName
 from tempren.template.compiler import TemplateCompiler
 
 
@@ -27,9 +26,9 @@ class AliasTag(Tag):
     """
 
     require_context = False
-    pattern: Pattern
+    pattern: PatternRoot
 
-    def __init__(self, pattern: Pattern) -> None:
+    def __init__(self, pattern: PatternRoot) -> None:
         self.pattern = pattern
 
     def process(self, file: File, context: Optional[str]) -> Any:

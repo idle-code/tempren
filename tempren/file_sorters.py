@@ -4,8 +4,7 @@ from typing import Iterable, Tuple
 
 from tempren.evaluation import evaluate_expression
 from tempren.exceptions import ExpressionEvaluationError, TemplateEvaluationError
-from tempren.primitives import File
-from tempren.template.ast import Pattern
+from tempren.primitives import File, PatternRoot
 
 
 class FileSorter(ABC):
@@ -16,10 +15,10 @@ class FileSorter(ABC):
 
 class TemplateFileSorter(FileSorter):
     log: logging.Logger
-    pattern: Pattern
+    pattern: PatternRoot
     invert: bool = False
 
-    def __init__(self, pattern: Pattern, invert: bool = False):
+    def __init__(self, pattern: PatternRoot, invert: bool = False):
         self.log = logging.getLogger(__name__)
 
         self.pattern = pattern

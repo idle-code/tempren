@@ -5,7 +5,7 @@ from typing import List, Mapping, Optional, Tuple, Union
 from antlr4 import CommonTokenStream, InputStream  # type: ignore
 from antlr4.error.ErrorListener import ErrorListener  # type: ignore
 
-from tempren.primitives import Location, QualifiedTagName, TagName
+from tempren.primitives import Location, PatternRoot, QualifiedTagName, TagName
 
 from .ast import Pattern, PatternElement, RawText, TagPlaceholder
 from .exceptions import TemplateSyntaxError
@@ -65,7 +65,9 @@ class _TreeVisitor(TagTemplateParserVisitor):
             return pattern
         return pattern + [element]
 
-    def visitRootPattern(self, ctx: TagTemplateParser.RootPatternContext) -> Pattern:
+    def visitRootPattern(
+        self, ctx: TagTemplateParser.RootPatternContext
+    ) -> PatternRoot:
         return self.visitPattern(ctx.pattern())
 
     def visitPipeList(
@@ -191,7 +193,7 @@ class TemplateParser:
     def __init__(self):
         self.log = logging.getLogger(self.__class__.__name__)
 
-    def parse(self, text: str) -> Pattern:
+    def parse(self, text: str) -> PatternRoot:
         self.log.debug("Parsing '%s'", text)
         lexer = TagTemplateLexer(InputStream(text))
         token_stream = CommonTokenStream(lexer)

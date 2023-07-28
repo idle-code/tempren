@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from typing import Any, List, Mapping, Optional
 
 from tempren.exceptions import MissingMetadataError
-from tempren.primitives import File, Location, QualifiedTagName, Tag
+from tempren.primitives import File, Location, PatternRoot, QualifiedTagName, Tag
 
 
 class PatternElement(ABC):
@@ -26,7 +26,7 @@ class RawText(PatternElement):
 
 
 @dataclass
-class Pattern(PatternElement):
+class Pattern(PatternElement, PatternRoot):
     """Represents pattern tree - a chain of text/tag invocations"""
 
     sub_elements: List[PatternElement] = field(default_factory=list)
@@ -93,5 +93,7 @@ class TagInstance(PatternElement):
         context_str = self.context.process(file) if self.context else None
         try:
             return self.tag.process(file, context_str)
-        except MissingMetadataError:
+        except (
+            MissingMetadataError
+        ):  # TODO: Use visitor pattern to evaluate template tree and move this logic there
             return ""

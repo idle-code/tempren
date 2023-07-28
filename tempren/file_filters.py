@@ -6,8 +6,7 @@ from typing import Callable
 
 from tempren.evaluation import evaluate_expression
 from tempren.exceptions import ExpressionEvaluationError, TemplateEvaluationError
-from tempren.primitives import File
-from tempren.template.ast import Pattern
+from tempren.primitives import File, PatternRoot
 
 
 class FileFilter(ABC):
@@ -75,9 +74,9 @@ class GlobPathFileFilter(GlobFileFilter):
 
 class TemplateFileFilter(FileFilter):
     log: logging.Logger
-    pattern: Pattern
+    pattern: PatternRoot
 
-    def __init__(self, pattern: Pattern):
+    def __init__(self, pattern: PatternRoot):
         self.log = logging.getLogger(__name__)
         self.pattern = pattern
 

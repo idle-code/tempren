@@ -2,16 +2,15 @@ import logging
 from abc import ABC
 from pathlib import Path
 
-from tempren.primitives import File, PathGenerator
-from tempren.template.ast import Pattern
+from tempren.primitives import File, PathGenerator, PatternRoot
 from tempren.template.exceptions import InvalidFilenameError
 
 
 class TemplateGenerator(PathGenerator, ABC):
     log: logging.Logger
-    pattern: Pattern
+    pattern: PatternRoot
 
-    def __init__(self, pattern: Pattern):
+    def __init__(self, pattern: PatternRoot):
         self.log = logging.getLogger(__name__)
         self.log.debug("Creating template generator with template: %s", pattern)
         self.pattern = pattern

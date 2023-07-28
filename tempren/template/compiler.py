@@ -1,7 +1,7 @@
 import logging
 from typing import List, Optional
 
-from tempren.primitives import QualifiedTagName
+from tempren.primitives import PatternRoot, QualifiedTagName
 from tempren.template.ast import Pattern, PatternElement, TagInstance, TagPlaceholder
 from tempren.template.exceptions import TagError, TemplateError
 from tempren.template.parser import TemplateParser
@@ -18,7 +18,7 @@ class TemplateCompiler:
         self.parser = TemplateParser()
         self.registry = registry
 
-    def compile(self, template_text: str) -> Pattern:
+    def compile(self, template_text: str) -> PatternRoot:
         self.log.debug("Compiling template %r", template_text)
         try:
             return self._bind(self.parser.parse(template_text))
@@ -26,7 +26,8 @@ class TemplateCompiler:
             template_error.template = template_text
             raise
 
-    def _bind(self, pattern: Pattern) -> Pattern:
+    def _bind(self, pattern: PatternRoot) -> PatternRoot:
+        assert isinstance(pattern, Pattern)
         return self._rewrite_pattern(pattern)
 
     def _rewrite_pattern(self, pattern: Pattern) -> Pattern:
