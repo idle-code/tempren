@@ -9,6 +9,7 @@ import isodate
 import magic
 import pathvalidate
 import pint as pint
+from pint.facets.plain import PlainUnit
 
 from tempren.evaluation import evaluate_expression
 from tempren.primitives import File, Tag
@@ -436,8 +437,8 @@ class AsDistanceTag(Tag):
 
     require_context = True
 
-    _dst_unit: pint.Unit
-    _src_unit: pint.Unit
+    _dst_unit: PlainUnit
+    _src_unit: PlainUnit
 
     _ureg_instance: Optional[pint.UnitRegistry] = None
 
