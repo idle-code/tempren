@@ -1,21 +1,34 @@
 name: tempren
-base: core20
-version: '0.6.0'
+title: Template-based file renaming utility
 summary: Template-based file renaming utility
+base: core22
+version: git
+source-code: https://github.com/idle-code/tempren.git
 description: |
   tempren is a powerful batch file renamer that can generate filenames based on flexible template expressions.
   It can create new, modify existing filenames or sort files into directories based on their attributes (metadata).
   Rich library of build-in tags allow for easy metadata extraction from common file types.
 grade: devel # must be 'stable' to release into candidate/stable channels
 confinement: strict
-
-parts:
-  tempren:
-    plugin: python
-    python-packages: [tempren]
+architectures:
+  - build-on: amd64
+  - build-on: arm64
+  - build-on: armhf
 
 apps:
   tempren:
     command: bin/tempren
     plugs:
       - home
+      - removable-media
+
+parts:
+  tempren:
+    plugin: python
+    source: https://github.com/idle-code/tempren.git
+    override-pull: |
+      snapcraftctl pull
+      snapcraftctl set-version \
+      "$(git describe --long --tags --always --match=v*.*.* | sed 's/v//')"
+    python-packages:
+      - tempren == 0.10.1
