@@ -251,3 +251,9 @@ gen/
 # When debugging grammar there may appear some java files:
 *.java
 *.class
+
+# AppImage staging directories
+AppDir/
+appimage-build/
+*.zsync
+*.AppImage

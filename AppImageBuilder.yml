@@ -1,0 +1,80 @@
+version: 1
+script:
+  # Remove any previous build
+  - rm -rf $TARGET_APPDIR | true
+  - rm -rf appimage-build | true
+  - mkdir -p $TARGET_APPDIR/app/
+  - pushd $TARGET_APPDIR/app/
+  - python3 -m pip --isolated install --target=./ tempren[video]
+  # - cp -r $SOURCE_DIR/tempren $TARGET_APPDIR/app/tempren
+  #- pip3 --isolated install --target $TARGET_APPDIR tempren[video]
+
+  # # Install poetry
+  # - export POETRY_HOME=$PWD/poetry
+  # - mkdir -p $POETRY_HOME
+  # - pushd $POETRY_HOME
+  # - curl https://install.python-poetry.org/ -o install-poetry.py
+  # - python3 install-poetry.py --version 1.5.1
+  # - export PATH="$POETRY_HOME:$PATH"
+  # - popd
+  # - poetry --version
+  # - python3 -m pip --isolated install --target=$TARGET_APPDIR tempren[video]
+  # # Make directory for the source
+  # - mkdir -p $TARGET_APPDIR/usr/src
+
+  # # Copy the python application code into the AppDir
+  # - cp -r tempren $TARGET_APPDIR/usr/src/tempren
+  # - cp pyproject.toml poetry.lock $TARGET_APPDIR/usr/src/
+  # - cp LICENSE README.md $TARGET_APPDIR/usr/src/
+  # # Install dependencies
+  # - pushd $TARGET_APPDIR/usr/src
+  # - poetry install --no-interaction --all-extras
+
+
+AppDir:
+  path: '${TARGET_APPDIR}'
+
+  app_info:
+    id: pl.idlecode.tempren.cli
+    name: tempren
+    icon: utilities-terminal
+    version: 0.10.1
+    exec: "usr/bin/python3"
+    exec_args: "-m tempren.cli $@"
+
+  apt:
+    arch: amd64
+    sources:
+      - sourceline: 'deb [arch=amd64] http://archive.ubuntu.com/ubuntu/ focal main restricted universe multiverse'
+        key_url: 'http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x3b4fe6acc0b21f32'
+    include:
+      - python3
+      - file
+      - libmediainfo0v5
+    exclude: [ ]
+
+  runtime:
+    env:
+      PATH: '${APPDIR}/usr/bin:${PATH}'
+      PYTHONPATH: '${APPDIR}/app:$PYTHONPATH'
+      PYTHONHOME: '${APPDIR}/usr'
+
+  test:
+    fedora:
+      image: appimagecrafters/tests-env:fedora-30
+      command: "./AppRun --list-tags"
+    arch:
+      image: appimagecrafters/tests-env:archlinux-latest
+      command: "./AppRun --list-tags"
+    centos:
+      image: appimagecrafters/tests-env:centos-7
+      command: "./AppRun --list-tags"
+    ubuntu:
+      image: appimagecrafters/tests-env:ubuntu-xenial
+      command: "./AppRun --list-tags"
+
+
+AppImage:
+  update-information: 'gh-releases-zsync|idle-code|tempren|latest|tempren-*x86_64.AppImage.zsync'
+  sign-key: E81CCD354F24A501858D29C8DBE5FE9E4E27FEB2
+  arch: x86_64
