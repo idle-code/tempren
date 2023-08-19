@@ -1,0 +1,34 @@
+name: publish-on-pypi
+on:
+  push:
+    tags:
+      - "v*.*.*"
+jobs:
+  publish-package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build and publish to PyPi
+        uses: JRubics/poetry-publish@v1.17
+        with:
+          pypi_token: ${{ secrets.PYPI_TOKEN }}
+
+      - name: Build snap package
+        uses: snapcore/action-build@v1
+        id: build_snap
+      - uses: actions/upload-artifact@v3
+        with:
+          path: ${{ steps.build_snap.outputs.snap }}
+      - name: Publish snap package to the snapcraft.io store
+        uses: snapcore/action-publish@v1
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAP_STORE_LOGIN }}
+        with:
+          snap: ${{ steps.build_snap.outputs.snap }}
+          release: edge
+
+      - name: Make a GitHub release
+        uses: softprops/action-gh-release@v1
+        with:
+          generate_release_notes: true
