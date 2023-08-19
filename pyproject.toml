@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tempren"
-version = "0.10.2"
+version = "0.10.3"
 description = "Template-based renaming utility"
 readme = "README.md"
 license = "GPL-3.0-or-later"
