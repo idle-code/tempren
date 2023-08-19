@@ -1,5 +1,5 @@
 name: tempren
-title: Template-based file renaming utility
+title: tempren - file renaming utility
 summary: Template-based file renaming utility
 base: core20
 adopt-info: tempren
@@ -8,7 +8,7 @@ description: |
   tempren is a powerful batch file renamer that can generate filenames based on flexible template expressions.
   It can create new, modify existing filenames or sort files into directories based on their attributes (metadata).
   Rich library of build-in tags allow for easy metadata extraction from common file types.
-grade: devel # must be 'stable' to release into candidate/stable channels
+grade: stable
 confinement: strict
 architectures:
   - build-on: amd64
