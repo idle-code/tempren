@@ -1,5 +1,5 @@
 name: tempren
-title: tempren - file renaming utility
+title: tempren
 summary: Template-based file renaming utility
 base: core20
 adopt-info: tempren

@@ -31,4 +31,5 @@ jobs:
       - name: Make a GitHub release
         uses: softprops/action-gh-release@v1
         with:
+          files: ${{ steps.build_snap.outputs.snap }}
           generate_release_notes: true
