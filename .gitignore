@@ -252,7 +252,10 @@ gen/
 *.java
 *.class
 
-# AppImage staging directories
+# Snap packages:
+*.snap
+
+# AppImage packages and staging directories
 AppDir/
 appimage-build/
 *.zsync

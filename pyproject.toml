@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tempren"
-version = "0.10.1"
+version = "0.10.4"
 description = "Template-based renaming utility"
 readme = "README.md"
 license = "GPL-3.0-or-later"
@@ -61,10 +61,10 @@ line_length = 88
 addopts = "--cov-report=xml --cov-report=term-missing --cov=tempren"
 testpaths = ["tests"]
 markers = [
-    "e2e: slower, end-to-end tests often running tempren as separate process",
-    "slow: slower test that often use timeouts"
+    "e2e: slower, end-to-end tests often running tempren as a separate process",
+    "slow: slower tests that often use timeouts"
 ]
 
 [build-system]
 requires = ["poetry_core>=1.0.0"]
-build-backend = "poetry.masonry.api"
+build-backend = "poetry.core.masonry.api"
