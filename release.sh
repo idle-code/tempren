@@ -6,6 +6,7 @@ if [ -z "$BUMP_RULE" ]; then
   exit 1
 fi
 
+# Update python package version
 OLD_VERSION=$(poetry version --short)
 poetry version $BUMP_RULE
 NEW_VERSION=$(poetry version --short)

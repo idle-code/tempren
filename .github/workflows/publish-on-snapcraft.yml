@@ -1,0 +1,23 @@
+name: publish-on-snapcraft
+on:
+  workflow_run:
+    workflows: [ publish-on-pypi ]
+    types:
+      - completed
+jobs:
+  publish-package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: snapcore/action-build@v1
+        id: build
+      - uses: actions/upload-artifact@v3
+        with:
+          path: ${{ steps.build.outputs.snap }}
+          if-no-files-found: error
+      - uses: snapcore/action-publish@v1
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAP_STORE_LOGIN }}
+        with:
+          snap: ${{ steps.build.outputs.snap }}
+          release: edge
