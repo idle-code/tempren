@@ -1,8 +1,8 @@
 name: tempren
 title: Template-based file renaming utility
 summary: Template-based file renaming utility
-base: core22
-version: git
+base: core20
+adopt-info: tempren
 source-code: https://github.com/idle-code/tempren.git
 description: |
   tempren is a powerful batch file renamer that can generate filenames based on flexible template expressions.
@@ -15,20 +15,53 @@ architectures:
   - build-on: arm64
   - build-on: armhf
 
+
+parts:
+  poetry:
+    plugin: dump
+    source: .
+    build-packages:
+      - curl
+    override-pull: |
+      curl https://install.python-poetry.org > install-poetry.py
+      export POETRY_HOME=/opt/poetry
+      python3 install-poetry.py --version 1.5.1
+      #$POETRY_HOME/bin/poetry --version
+      #export TEMPREN_VERSION="$($POETRY_HOME/bin/poetry version --short)"
+      #echo $TEMPREN_VERSION | tee /tmp/tempren_version
+
+  tempren:
+    after: [poetry]
+    plugin: python
+    source: .
+    build-environment:
+      - PATH: "/opt/poetry/bin:$PATH"
+    build-packages:
+        - python3-pip
+    override-pull: |
+      snapcraftctl pull
+
+      # Find out program version
+      export TEMPREN_VERSION="$(poetry version --short)"
+      snapcraftctl set-version $TEMPREN_VERSION
+
+      # Prepare requirements.txt to install tempren from the PyPi
+      # This is required as default build alghorithm doesn't correctly
+      # export scripts declared in pyproject.toml
+      poetry export --extras=video --output=requirements.txt
+      python3 -m pip download "tempren[video]==$TEMPREN_VERSION"
+      export TEMPREN_HASH=$(python3 -m pip hash tempren*.whl | tail -1)
+      echo "tempren==$TEMPREN_VERSION $TEMPREN_HASH" >> requirements.txt
+
+    requirements: [requirements.txt]
+    stage-packages:
+      - libmagic1
+      - libmediainfo0v5
+
+
 apps:
   tempren:
     command: bin/tempren
     plugs:
       - home
       - removable-media
-
-parts:
-  tempren:
-    plugin: python
-    source: https://github.com/idle-code/tempren.git
-    override-pull: |
-      snapcraftctl pull
-      snapcraftctl set-version \
-      "$(git describe --long --tags --always --match=v*.*.* | sed 's/v//')"
-    python-packages:
-      - tempren == 0.10.1
