@@ -67,7 +67,7 @@ def visit_types_in_package(
             log.debug(f"Trying to load {name} module")
             module = importlib.import_module(name)
             visit_types_in_module(module, visitor)
-        except NotImplementedError as exc:
+        except (NotImplementedError, ModuleNotFoundError) as exc:
             log.warning(f"Module {name} is currently unsupported: {exc}")
         except Exception as exc:
             log.error(exc, f"Could not load module {name}")
