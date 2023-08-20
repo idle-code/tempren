@@ -75,7 +75,7 @@ class QualifiedTagName:
         return f"{self.name}"
 
 
-@dataclass
+@dataclass(frozen=True)
 class Location:
     line: int
     column: int
