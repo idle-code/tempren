@@ -54,6 +54,9 @@ $ sudo mv ./tempren /usr/local/bin
 ```
 Currently, AppImage release doesn't support automatic updates so if new version of the `tempren` is released, you will need to repeat this installation procedure.
 
+## Docker
+TODO
+
 ## PyPI
 If `pip` is installed on the target system,
 `tempren` can be installed as any other Python package:
@@ -145,7 +148,7 @@ When non-unique tag name is used this way, `tempren` will report an error about 
 ## Tag configuration arguments
 Some tags can or have to be configured before they can do their work.
 To do so, user is expected to pass configuration arguments in the tag _argument list_.
-What arguments are expected and in what order can be found by looking at built-in [tag documentation](#Builtin documentation).
+What arguments are expected and in what order can be found by looking at built-in [tag documentation](#Builtin-documentation).
 
 Argument list follows tag name and is contained between parentheses: `()`.
 Each argument value is separated by a single coma `,` (with optional space) and can be one of three types:
@@ -178,32 +181,65 @@ User can prefix argument value with its name and `=` symbol to explicitly specif
 Order of arguments is important if explicit names are not used: `%Trim(-1, True)` will set `left` flag because it's second in the argument list.
 
 ## Context
-Contexts are parts of tag template expression passed to the tags as a kind of dynamic argument.
-To pass context to the tag invocation, use curly braces `{}` with expression embedded between.
+Similar to arguments, some tags can (or have to) operate on the _context_ which is another way to pass the data to the tag. In contrast to the arguments,
+which have to stay the same during entire renaming operation, contexts can change between each tag invocation. They might be considered a dynamic argument.
 
-In the following example, `Upper` tag receives context containing processed file extensions and makes it uppercase:
+To pass a context to the tag invocation, use curly braces `{}` with template expression embedded between.
+The curly braces can be placed directly after argument list:
 ```
-%Upper(){%Ext()}
+%Trim(5, left){Long text}
+```
+or (if the argument list would be empty) directly after the tag name:
+```
+%Upper{small text}
 ```
 
-Context might be required, optional and forbidden.
-This is indicated by `{...}` symbol at the end of tag prototype.
+The most important feature of contexts is their dynamic nature - they can contain entire sub-templates.
+In the following example, the `Lower` tag receives context containing processed file extension and makes it lowercase:
+```
+%Lower(){%Ext()}
+```
 
-<!---
-## Pipe list sugar
---->
+To check if the tag might operate on a context, check build-in documentation.
+The symbol after the tag name indicates context requirements:
+- No symbol - when prototype ends with just argument list (`(...)`) - indicates that the tag doesn't operate on contexts and passing one will result in an error.
+- `{...}` symbol indicates that this tag **requires** some context to be passed
+- `[{...}]` symbol denotes that the tag **can** use the context if one is passed to it
+
+### Pipe list sugar
+> Note: Currently pipe list syntax is limited as it have to be the last element of the whole (sub)template.
+> This might change in the future.
+
+Sometimes it is desirable to create chain of context invocations such as:
+```
+%Lower{%Collapse{%Strip{%Name()}}}
+```
+
+To streamline such operations, _pipe list_ syntax sugar can be used.
+Following expression is equivalent to the one above:
+```
+%Name()|%Strip()|%Collapse()|%Lower()
+```
+
+In the pipe list there can be no contexts (therefore no curly braces) as the context is passed directly from the previous tag - from left to right.
+
+> Note: For pipe list syntax, an empty argument list is required to denote end of the tag name.
+> This behaviour might change in the future.
 
 # Filtering
+Filtering allows to include/exclude specific files from renaming operation
+
 There are three types of a filtering expressions supported:
 - `template` - tag-template evaluated Python predicate expression, e.g.: `%Size() > 10*1024`
-- `glob` - filename globbing expression, e.g.: `*.mp3`, `IMG_????.jpg`
-- `regex` - python-flavored regex, e.g.: `.*\.jpe?g`
+- `glob` - globbing expression, e.g.: `*.mp3`, `IMG_????.jpg`
+- `regex` - python-flavored regular expressions, e.g.: `.*\.jpe?g`
 
 ## Template-based filtering
-Template-based filtering allows to include/exclude files based on their metadata.
+Template-based filtering is most powerful and allows for inclusion/exclusion of files based on their metadata.
+
 Filter expression can be passed with `--filter-template`/`-ft` flag.
-Filter expression tag template is rendered for each file and then, it is evaluated as Python expression.
-If result of evaluation is _truthy_, the file is considered for the renaming.
+Filter expression tag template is rendered for each file and evaluated as Python expression.
+If result of evaluation is [_truthy_](https://docs.python.org/3/library/stdtypes.html#truth-value-testing), the file is considered for the renaming.
 
 For example, the following filtering template will exclude files larger than 1024 bytes:
 ```
@@ -216,10 +252,15 @@ For example, to include only image files that are not PNGs, following filter exp
 %IsMime("image") and not %Ext().endswith("png")
 ```
 
-## Glob filtering
-Glob filtering allows to include/exclude files based on glob expression matching their filenames.
+> Note: Filtering/sorting templates are evaluated a bit differently to the ones used for name generation - values generated from the tags are escaped to create valid Python literals.
+> Therefore, above expression could be rendered as: \
+> `True and not ".png".endswith("png")`
 
-For example, to rename only files with an `Image_` prefix, following pattern can be used:
+## Glob filtering
+People used to the terminal should be familiar with this kind of filtering.
+Glob filtering allows to include/exclude files based on the [glob expression](https://en.wikipedia.org/wiki/Glob_(programming)) matching their filenames.
+
+For example, to rename only files with an `Image_` as a prefix, following pattern can be used:
 ```
 Image_*
 ```
@@ -238,23 +279,21 @@ To negate/invert any filtering expression you can use `--filter-invert`/`-fi` fl
 
 # Template-based sorting
 In some cases (i.e. when `Count` tag is used), files should be processed in specific order to make renaming useful.
-`--sort`/`-s` flag can be used to order files considered for renaming based on their metadata.
+`--sort`/`-s` flag can be used to order files based on their metadata.
 
-Sort expression is similar to the filter expression in a way that it also should generate valid Python value.
-Tag template evaluated from rendered sorting expression is used as key for the sorting.
+Sort expression is similar to the [filter template](#Template-based-filtering) in a way that it also used to generate a Python expression which, after evaluation, is used to order the files considered for renaming.
 
 For example, to order files based their original name, following expression can be used:
 ```
 %Name()
 ```
 
-To add another sorting criteria (for cases where first key may repeat across files), a comma `,` can be used as separator.
+In contrast to filtering expressions, the sorting expression have to evaluate into a valid Python tuple. So, to add another sorting criteria (for cases where first key may repeat across files), a comma `,` should be used as sorting criteria separator.
 
-For example, to order files based their extension **then** their size, following expression can be used:
+For example, to order files based their extension first and then their size, following expression can be used:
 ```
 %Ext(), %Size()
 ```
-
 
 ## Sorting order inversion
 By default, sorting expression order files in the ascending order.
@@ -268,10 +307,13 @@ File conflict arises when a template generates the same name for two different f
 - `ignore` - Reports problem as a warning and continue renaming leaving source file name intact (enabled with `--conflict-ignore`/`-ci` flag)
 - `override` - Replaces destination file with the one being processed (enabled with `--conflict-override`/`-co` flag)
 - `manual` - Interactively prompts the user to select one of the above conflict resolutions (enabled with `--conflict-manual`/`-cm` flag)
+
 # Ad-hoc tags
 TODO
+
 # Tag aliases
 TODO
+
 # Various options
 ## Dry run
 To facilitate discovery-based usage learning, `tempren`'s `--dry-run`/`-d` flag can be used to disable actual file renaming stage of utility pipeline.
