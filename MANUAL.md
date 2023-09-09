@@ -309,7 +309,33 @@ File conflict arises when a template generates the same name for two different f
 - `manual` - Interactively prompts the user to select one of the above conflict resolutions (enabled with `--conflict-manual`/`-cm` flag)
 
 # Ad-hoc tags
-TODO
+If built-in tag library doesn't contain the tag appropriate for user problem, `tempren` allows to import external executables as a new, ad-hoc tags.
+To create an ad-hoc tag, you will need to provide executable path as an argument to the `--ad-hoc`/`-ah` flag. After doing so, a new tag will be placed under `Adhoc` category, and you will be able to see its documentation (i.e. invocation details) with the help of `--help`/`-h` flag.
+
+> Note: When executing the ad-hoc tags, even with `--dry-run`/`-d` flag, `tempren` doesn't have control of the behaviour of the invoked ad-hoc executables.
+> Care should be taken to make sure that the provided executable doesn't create any undesirable side effects upon template execution.
+
+There are two ways, and ad-hoc executable can be invoked when using ad-hoc tag in the template.
+If no context is provided, TODO
+
+For example, to count lines of the processed text file, an `awk` utility can be used as such:
+```commandline
+$ tempren --ad-hoc Awk=awk '%Base()_%Awk("END {print NR}")%Ext()' *.txt
+```
+
+This invocation will result in execution of `awk 'END {print NR}'` command for each processed file. The output of this command (`stdout`) will be used as ad-hoc tag output.
+
+Explicit naming (`Awk=` part in the above example) can be skipped. This will result in the base name of the executable being used as a tag name.
+
+Program arguments can be passed in the ad-hoc tag arguments but care should be taken to separate them correctly as spaces in do not delimit the arguments like in the shell environment.
+For example, to pass two parameters to the ad-hoc `Program`, following syntax should be used:
+```
+%Program("--flag-parameter", "positional")
+```
+
+There are two modes of of the ad-hoc
+The ad-hoc tags might optionally use the provided context.
+There are two possible
 
 # Tag aliases
 TODO
