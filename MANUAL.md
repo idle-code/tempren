@@ -315,27 +315,36 @@ To create an ad-hoc tag, you will need to provide executable path as an argument
 > Note: When executing the ad-hoc tags, even with `--dry-run`/`-d` flag, `tempren` doesn't have control of the behaviour of the invoked ad-hoc executables.
 > Care should be taken to make sure that the provided executable doesn't create any undesirable side effects upon template execution.
 
-There are two ways, and ad-hoc executable can be invoked when using ad-hoc tag in the template.
-If no context is provided, TODO
+There are two ways in which an executable associated with ad-hoc tag can be invoked.
+If no context is provided in the tag template, the relative path to the processed file
+is appended as last parameter to the command line.
 
 For example, to count lines of the processed text file, an `awk` utility can be used as such:
 ```commandline
 $ tempren --ad-hoc Awk=awk '%Base()_%Awk("END {print NR}")%Ext()' *.txt
 ```
 
-This invocation will result in execution of `awk 'END {print NR}'` command for each processed file. The output of this command (`stdout`) will be used as ad-hoc tag output.
-
+This invocation will result in execution of `awk 'END {print NR}' <processed-file-path>` command for each processed file.
 Explicit naming (`Awk=` part in the above example) can be skipped. This will result in the base name of the executable being used as a tag name.
 
-Program arguments can be passed in the ad-hoc tag arguments but care should be taken to separate them correctly as spaces in do not delimit the arguments like in the shell environment.
+If context is provided, it will be passed to the command's standard input (`stdin`) - command would not receive processed file path.
+
+For example, `tr` utility can be used to remove some characters from the base file name by passing it to its standard input (context) as such:
+```commandline
+tempren --ad-hoc Tr=tr '%Tr(" _\\-.@~", "-"){%Base()}%Ext()'
+```
+
+Regardless how underlying ad-hoc executable will be invoked, any data sent to the `stdout` by it will be used as a tag output
+and any data sent do the `stderr` channel will be ignored.
+
+CHECK: If the invoked command returns non-zero error code, `tempren` will report this as an error.
+
+Program arguments can be passed in the ad-hoc tag arguments but care should be taken to
+separate them correctly as spaces do not delimit the arguments like in the shell environment.
 For example, to pass two parameters to the ad-hoc `Program`, following syntax should be used:
 ```
 %Program("--flag-parameter", "positional")
 ```
-
-There are two modes of of the ad-hoc
-The ad-hoc tags might optionally use the provided context.
-There are two possible
 
 # Tag aliases
 TODO
