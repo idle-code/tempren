@@ -1,7 +1,6 @@
 <!-- TOC -->
 * [Installation](#installation)
   * [Snap](#snap)
-  * [AppImage](#appimage)
   * [PyPI](#pypi)
     * [Additional dependencies](#additional-dependencies)
 * [Builtin documentation](#builtin-documentation)
@@ -11,6 +10,7 @@
   * [Tag name](#tag-name)
   * [Tag configuration arguments](#tag-configuration-arguments)
   * [Context](#context)
+    * [Pipe list sugar](#pipe-list-sugar)
 * [Filtering](#filtering)
   * [Template-based filtering](#template-based-filtering)
   * [Glob filtering](#glob-filtering)
@@ -26,6 +26,7 @@
   * [Verbosity levels](#verbosity-levels)
   * [Hidden files handling](#hidden-files-handling)
   * [Symbolic links handling](#symbolic-links-handling)
+  * [Loading arguments from files](#loading-arguments-from-files)
 <!-- TOC -->
 
 * * *
@@ -33,41 +34,45 @@
 # Installation
 ## Snap
 `tempren` can be found on the [snapcraft store](https://snapcraft.io/tempren).
-To install it, you can use graphical package manager or  command line:
+To install it, you can use graphical package manager or command:
 ```commandline
-$ snap install tempren
+snap install tempren
 ```
 Snap packages are updated automatically by default so no additional configuration is necessary.
 
+<!--
 ## AppImage
 On the [releases page](https://github.com/idle-code/tempren/releases), under _Assets_ you can find .AppImage files that can be downloaded and executed as is.
 To install `tempren` this way, you will need to:
 ```commandline
 # Download the .AppImage file
-$ curl -o tempren https://<link to the latest AppImage>
+curl -o tempren https://<link to the latest AppImage>
 
 # Make the file executable
-$ chmod +x ./tempren
+chmod +x ./tempren
 
 # Install it in any directory that is in your $PATH
-$ sudo mv ./tempren /usr/local/bin
+sudo mv ./tempren /usr/local/bin
 ```
 Currently, AppImage release doesn't support automatic updates so if new version of the `tempren` is released, you will need to repeat this installation procedure.
+-->
 
+<!--
 ## Docker
 TODO
+-->
 
 ## PyPI
 If `pip` is installed on the target system,
 `tempren` can be installed as any other Python package:
 ```commandline
-$ pip install [--user] tempren
+pip install [--user] 'tempren[video]'
 ```
 
 `pip` doesn't automatically update packages so to keep `tempren` up-to-date, another command have to be used each time there is new release:
 
 ```commandline
-$ pip install [--user] --upgrade 'tempren[video]'
+pip install [--user] --upgrade 'tempren[video]'
 ```
 
 ### Additional dependencies
@@ -76,7 +81,7 @@ This dependency cannot be installed via `pip` so user is expected to deal with i
 
 Most often, a distribution-specific package manager can be used. For example:
 ```commandline
-$ sudo apt install libmediainfo0v5
+sudo apt install libmediainfo0v5
 ```
 
 # Builtin documentation
@@ -84,19 +89,19 @@ $ sudo apt install libmediainfo0v5
 
 Short documentation for all command line arguments can always be retrieved via `--help`/`-h` flag:
 ```commandline
-$ tempren --help
+tempren --help
 ```
 
 Options which documentation starts with `(default)` do not have to be specified explicitly on the command line.
 
 `--help`/`-h` flag can also be used to display tag-specific documentation when a tag name is given as an argument:
 ```commandline
-$ tempren --help [Category.]TagName
+tempren --help [Category.]TagName
 ```
 
 To find out which tags are shipped with the installation, `--list-tags`/`-l` flag can be used:
 ```commandline
-$ tempren --list-tags
+tempren --list-tags
 ```
 The output of this command will list all available tag names sorted by name and grouped by category they belong to.
 
@@ -321,7 +326,7 @@ is appended as last parameter to the command line.
 
 For example, to count lines of the processed text file, an `awk` utility can be used as such:
 ```commandline
-$ tempren --ad-hoc Awk=awk '%Base()_%Awk("END {print NR}")%Ext()' *.txt
+tempren --ad-hoc Awk=awk '%Base()_%Awk("END {print NR}")%Ext()' *.txt
 ```
 
 This invocation will result in execution of `awk 'END {print NR}' <processed-file-path>` command for each processed file.
@@ -331,7 +336,7 @@ If context is provided, it will be passed to the command's standard input (`stdi
 
 For example, `tr` utility can be used to remove some characters from the base file name by passing it to its standard input (context) as such:
 ```commandline
-tempren --ad-hoc Tr=tr '%Tr(" _\\-.@~", "-"){%Base()}%Ext()'
+tempren --ad-hoc Tr=tr '%Tr(" _\\-.@~", "-"){%Base()}%Ext()' --help Tr
 ```
 
 Regardless how underlying ad-hoc executable will be invoked, any data sent to the `stdout` by it will be used as a tag output
@@ -347,7 +352,13 @@ For example, to pass two parameters to the ad-hoc `Program`, following syntax sh
 ```
 
 # Tag aliases
-TODO
+Tag aliases are templates that can be reused as a standalone tags.
+To create a new alias, `--alias`/`-a` flag can be used:
+```commandline
+tempren --alias 'Normalized=%Lower{%Name()}' --help Normalized
+```
+Tags created from the aliases cannot receive any arguments or context - they are simply placeholders where the underlying template will be inserted.
+
 
 # Various options
 ## Dry run
@@ -369,4 +380,8 @@ To consider such files for processing, `--include-hidden`/`-ih` flag can be used
 > When both flags are specified, hidden directories and any files in them **will be** considered for renaming.
 
 ## Symbolic links handling
-TODO: Implement
+`tempren` doesn't treat symbolic links differently from the files they are targeting but each tag can introduce its own behaviour.
+
+## Loading arguments from files
+If the command line argument starts with a `@` symbol, `tempren` will assume that it is a file containing the desired program arguments, and it will load it (treating each line as a separate argument).
+This is especially useful in case of reusing the same pattern (or program arguments in general) over and over.
