@@ -1,74 +1,98 @@
-## Development environment setup
-Minimal Python version supported is 3.7, so you should make sure that you have it installed on your system.
-You can use `pyenv` for that:
-```console
-$ pyenv shell 3.7.10
+<!-- TOC -->
+* [Development environment setup](#development-environment-setup)
+* [Testing](#testing)
+  * [Directory layout](#directory-layout)
+* [Tags development](#tags-development)
+  * [Renaming pipeline](#renaming-pipeline)
+  * [Tutorial - `Reverse` tag](#tutorial---reverse-tag)
+<!-- TOC -->
+
+# Development environment setup
+Minimal Python version supported is 3.8, so you should make sure that you have it installed on your system.\
+Alternatively, you can use [pyenv](https://github.com/pyenv/pyenv) for runtime management as follows:
+```commandline
+# Install Python 3.8:
+pyenv install 3.8.16
+# Activate installed python for the current shell session:
+pyenv shell 3.8.16
 ```
 
-After cloning the repository you should install `poetry` as it is used for dependency resolution and packaging:
-```console
-$ pip install [--user] poetry
+After cloning the repository you should install [poetry](https://python-poetry.org/) - it is used for dependency resolution and packaging:
+```commandline
+pip install [--user] poetry
 ```
 
-It is a good idea to use separate virtualenv for development, `poetry` can spawn one with following command:
-```console
-# Make sure that your `python --version` is at least 3.7 before this step
-$ poetry shell
+In the cloned `tempren` directory, you can spawn new virtualenv as its good idea to use separate one for the development. `poetry` can be used here to create one and activate it with one `poetry shell` command:
+```commandline
+# Make sure that your `python --version` is at least 3.8 before this step:
+python --version
+poetry shell
 ```
 
-Now you can install required packages (specified in `pyproject.toml`) via:
-```console
-$ poetry install
+Now you can install required packages (specified in `pyproject.toml`/`poetry.lock`) via:
+```commandline
+poetry install [--no-root] --all-extras
+```
+This will install all development dependencies (mypy, pytest, pre-commit) and video tags as well.\
+The `--no-root` option can be used to omit installation of the `tempren` itself if you are not using virtualenvs and do not want to pollute your systems' packages.
+
+> Note: When using `--all-extras` option you will also need to install additional dependencies as stated in the [manual](MANUAL.md#additional-dependencies). If those are not met, you will get errors when running the test suite.
+
+Code conventions are enforced via [pre-commit](https://pre-commit.com/) and to get started you will still need to install its git hooks:
+```commandline
+pre-commit install
+```
+With this, every time you invoke `git commit` a series of cleanup scripts will run and modify your patchset to the state suitable for the commitment into the repository.
+
+> Note: In all other subsequent shell sessions (after you close your terminal window), the only thing you will need to do to get back to the development is to invoke `poetry shell` in the project directory to activate tempren's environment.
+
+# Testing
+We try to keep the high quality of the project by using extensive test suite.
+
+Tests are written with the help of [pytest](https://docs.pytest.org/en/latest/) and can be run by invoking the following command in the project root directory:
+```commandline
+pytest
+```
+Due to dynamic nature of the Python, [mypy](https://github.com/python/mypy) is used to take care of static analysis - it can catch early type-related errors. Just invoke the following command in the project root directory:
+```commandline
+mypy
 ```
 
-Code conventions are enforced via [pre-commit](https://pre-commit.com/) (which is installed as part of dev dependencies).
-To get started you will still need to install its git hooks:
-```console
-$ pre-commit install
-```
-With this, every time you invoke `git commit` a series of cleanup scripts will run and modify your patchset.
+If those two command succeed, you are ready to start the development.
 
-Now you have the development environment ready - we can go straight to the code!
+> Note: If you want to create Pull Request to the main repository, both `pytest` and `mypy` commands have to succeed as they are invoked by the CI pipeline.
 
-Note: most of the commands above need to be executed just once.
-When you close your terminal window, you will just need to run `poetry shell` to start working again.
+## Directory layout
+Test modules hierarchy (`tests` directory) mirrors the source code layout (under `tempren` directory). The tests themselves are divided into two categories: unit and end-to-end.
 
-### Testing
-Tests are written with a help of [pytest](https://docs.pytest.org/en/latest/). Just enter repository root and run:
-```console
-$ pytest
-```
-
-`mypy` on the other hand takes care of static analysis - it can catch early type-related errors:
-```console
-$ mypy
-```
-
-Test modules hierarchy (`tests` directory) mirrors source code layout (under `tempren` directory).
-
-Tests are divided into two categories: unit and functional.
-
-Functional tests cover mostly CLI interface and error reporting. Those tests are placed in the `tests/test_cli.py` file.
-They are basically black-box tests where `tempren` is executed as an external process and test validates its output/filesystem state.
-The overhead associated with process execution makes functional tests take longer, so unit tests should be preferred.
+Ent-to-end tests cover mostly CLI interface, error reporting and features that are hard to test using unit tests. Those tests are placed under `tests/e2e` directory.
+They are basically black-box tests where `tempren` is executed as an external process and test validates its output/filesystem state.\
+The overhead associated with process execution makes end-to-end tests take longer, so unit tests should be preferred whenever possible (especially for tags development).
 
 Unit tests cover everything else - from parsing, through filesystem access modules to tags themselves.
-This kind of test should execute quickly (so in the future they can be run continuously in the background).
+This kind of test should execute quickly, so they can be run continuously in the background during development process.
 
 
-### Tags development
+# Tags development
 To create a new tag, you should choose its name and category.
 Then you can create a Python class which will be used to instantiate tags in the _tag templates_.
 
-Automatic tag discovery looks for tag classes in Python modules under `tempren/tags` directory.
-Module (file) name is used as the _tag category_.
-Each tag (class) name should have `Tag` suffix and inherit from the `tempren.template.tree_elements.Tag` superclass.
-For example: `class MyTag(Tag)` defined in `tempren/tags/sample.py` file will introduce `My` tag under `Sample` category.
+Automatic tag discovery looks for tag classes in Python modules under `tempren/tags` directory and creates factories for them.\
+Module (file) name is used as the _tag category_, while class name (without `Tag` suffix) is used as a tag name.
+Tag classes should have `Tag` suffix and inherit from the `tempren.primitives.Tag` class to be discoverable.
 
-`tempren.template.tree_elements.Tag` superclass outlines main tag elements:
-- `require_context` property which indicates if the tag accepts/requires/forbids context passing
-- `configure` method used to receive arguments passed in the argument list (in the _tag template_) to set up the tag instance before renaming can begin
-- `process` method invoked for each file considered for renaming
+For example: `class MyTag(Tag)` defined in `tempren/tags/sample.py` file will introduce tag `My` under `Sample` category. Which can be used in the template as `%Sample.My()`.
 
-Tag class docstring (e.g. `MyTag.__doc__`) is used as built-in documentation presented to the user (when `--list-tags` or `--help My` flags are used).
-`configure` method docstring (e.g. `MyTag.configure.__doc__`) is also used for detailed configuration documentation (accessible via `--help My` flag).
+`tempren.primitives.Tag` superclass outlines main tag elements:
+- property `require_context` indicates if the tag accepts, require or forbids context passing
+- method `configure` is used to receive arguments passed in the tag argument list (in the _tag template_) to set up the tag instance before renaming can begin
+- method `process` is invoked for each file considered for renaming in the renaming pipeline
+
+Additionally, tag class docstring (e.g. `MyTag.__doc__`) is used as built-in documentation presented to the user (when `--list-tags` or `--help My` flags are used).
+`configure` method docstring (e.g. `MyTag.configure.__doc__`) is also used to generate tag prototype documentation (accessible via `--help My` flag).
+
+## Renaming pipeline
+TODO
+
+## Tutorial - `Reverse` tag
+TODO

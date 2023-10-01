@@ -25,7 +25,6 @@
   * [Dry run](#dry-run)
   * [Verbosity levels](#verbosity-levels)
   * [Hidden files handling](#hidden-files-handling)
-  * [Symbolic links handling](#symbolic-links-handling)
   * [Loading arguments from files](#loading-arguments-from-files)
 <!-- TOC -->
 
@@ -388,7 +387,7 @@ Tags created from the aliases cannot receive any arguments or context - they are
 
 # Various options
 ## Dry run
-To facilitate discovery-based usage learning, `tempren`'s `--dry-run`/`-d` flag can be used to disable the actual file renaming stage of the pipeline.
+To facilitate discovery-based usage learning, `tempren`'s `--dry-run`/`-d` flag can be used to disable the actual file renaming stage of the pipeline. This way, users can test their templates without making changes to the filesystem.
 > Note: While dry-run is active, side effects from filtering/sorting template expressions (which are valid Python code), ad-hoc tags
 > or even tags themselves may still affect the file system.\
 > Be careful not to copy-paste templates that look suspicious.

@@ -8,24 +8,20 @@
 
 [![Get it from the Snap Store](https://snapcraft.io/static/images/badges/en/snap-store-black.svg)](https://snapcraft.io/tempren)
 
-`tempren` is a powerful file renaming utility that uses flexible template expressions to create new file paths and names.
-New file paths can be based on original filename, created independently or from the underlying file's tags.
-Rich library of built-in tag extraction modules helps with tagging many common file types.
+`tempren` is a powerful file renaming utility that uses flexible template expressions to generate names for your files.\
+Tag templates can modify original filename, extract metadata from the files or anything in between.\
+A rich library of built-in tags helps with working with many common file types out-of-the-box.
+
+Whether you need to organize your files, standardize naming conventions, or perform complex renaming tasks, `tempren` can help you get the job done efficiently.
 
 ## Features
 - Template-based filename/path generation
-- Audio/Video/Images/etc metadata extraction
-- Configurable, metadata-based file selection (filtering)
-- Metadata-based sorting
+- Built-in Audio/Video/Images metadata extraction tags
+- Ad-hoc tags to leverage external programs for metadata extraction
+- Configurable, metadata-based file selection (filtering) and sorting
 
-## Installation
-Currently only PyPI installation is supported, just run following command:
-```commandline
-$ pip install [--user] tempren
-```
-
-## Documentation
-[Manual](MANUAL.md) gives a tour of all `tempren` features and (until quickstart is created) should work as a guide.
+## Installation and documentation
+For comprehensive documentation, including [installation instructions](MANUAL.md#installation), all features, advanced usage, and troubleshooting, please visit the [Manual](MANUAL.md) page.
 
 <!--
 ## [Quickstart](QUICKSTART.md)
@@ -35,7 +31,7 @@ You can also take a look on the following examples.
 
 ## Examples
 **Note: When experimenting on your own please use `--dry-run` flag!** \
-**Tempren will not override your files by default but invalid template can mangle their names.**
+**`tempren` will not override your files by default but invalid template can mangle their names.**
 
 <details>
 <summary>Cleaning up names for sensitive (e.g. FAT32) filesystems</summary>
@@ -121,5 +117,5 @@ Renamed: 03-168948-Roger Subirana Mata-Thryst.mp3
 
 
 ## Contributing
-If you noticed a bug or have an idea for a new tag please open an issue with appropriate tags.
+If you noticed a bug or have an idea for a new tag please open an issue with appropriate (GitHub) tags.
 If you would like to contribute to the development you can visit [contributing page](CONTRIBUTING.md) designed specially for that.

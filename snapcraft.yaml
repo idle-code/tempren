@@ -5,9 +5,9 @@ base: core20
 adopt-info: tempren
 source-code: https://github.com/idle-code/tempren.git
 description: |
-  tempren is a powerful batch file renamer that can generate filenames based on flexible template expressions.
-  It can create new, modify existing filenames or sort files into directories based on their attributes (metadata).
-  Rich library of build-in tags allow for easy metadata extraction from common file types.
+  tempren is a powerful file renaming utility that uses flexible template expressions to generate names for your files.
+  Tag templates can modify original filename, extract metadata from the files or anything in between.
+  A rich library of built-in tags helps with working with many common file types out-of-the-box.
 grade: stable
 confinement: strict
 architectures:
