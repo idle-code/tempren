@@ -135,8 +135,7 @@ class Pipeline:
         backlog = []
         for file in all_files:
             # Renamer will receive a relative path,
-            # to make it valid we need to change the current directory before processing:
-            # TODO: Make renamer operate on File instances instead
+            # to make it valid, current working directory has to be changed before processing:
             os.chdir(file.input_directory)
 
             try:

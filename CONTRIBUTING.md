@@ -92,7 +92,35 @@ Additionally, tag class docstring (e.g. `MyTag.__doc__`) is used as built-in doc
 `configure` method docstring (e.g. `MyTag.configure.__doc__`) is also used to generate tag prototype documentation (accessible via `--help My` flag).
 
 ## Renaming pipeline
-TODO
+At the startup, command line arguments are gathered to the `RuntimeConfiguration` instance.
+This is DTO is used in pipeline building procedure which consists of:
+- Tag (factories) discovery
+- Preparations of pipeline stages (which implementations will be used for specified stage)
+- Tag template compilation (this includes main and filtering/sorting templates if those were specified)
+
+When pipeline has been created, it can be used in the renaming process.
+
+Renaming process consist of few steps which are contained in the `Pipeline` class:
+- File gathering
+- (optional) Filtering
+- (optional) Sorting
+- Name/Path generation
+- Renaming
+
+`tempren` uses paths passed in the command line to find the files to be renamed.
+If a directory path has been passed, the `FilesystemGatherer` will be used to traverse its contents.
+In the case of file paths - simple `ExplicitFileGatherer` will be used.
+
+The filtering phase is executed during the file discovery process for efficiency - we don't need to store paths that won't be even considered for renaming.
+
+Sorting stage is optional and executed only if the sorting expression has been specified.
+
+Name/Path generation works basically the same.
+The only difference between those modes is that in the case of name generation, an error is reported if a path separator is detected in the generated output.
+
+Actual renaming depends on the mode which determines what filesystem operations will be used.
+For the **path** mode, `move` filesystem operation is used, while **name** mode, utilizes the `rename` operation.
+If `--dry-run`/`-d` flag has been specified, `DryRunRenamer` is selected and no renaming is performed. All other stages are unaffected by this flag.
 
 ## Tutorial - `Reverse` tag
 TODO
