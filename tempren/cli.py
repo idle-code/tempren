@@ -12,7 +12,7 @@ from pathlib import Path
 from textwrap import indent
 from typing import Any, Dict, List, NoReturn, Optional, Sequence, Text, Tuple, Union
 
-from tempren.exceptions import TemplateEvaluationError
+from tempren.exceptions import FileNotSupportedError, TemplateEvaluationError
 from tempren.filesystem import DestinationAlreadyExistsError
 from tempren.primitives import CategoryName, QualifiedTagName, TagName
 from tempren.template.exceptions import TagError, TemplateError
@@ -660,6 +660,9 @@ def main() -> int:
         log.error(f"Error: {exc}")
         return ErrorCode.INVALID_DESTINATION_ERROR
     except InvalidDestinationError as exc:
+        log.error(f"Error: {exc}")
+        return ErrorCode.INVALID_DESTINATION_ERROR
+    except FileNotSupportedError as exc:
         log.error(f"Error: {exc}")
         return ErrorCode.INVALID_DESTINATION_ERROR
     except Exception as exc:  # NOCOVER: not really testable - final fallback

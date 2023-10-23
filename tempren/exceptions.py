@@ -4,7 +4,8 @@ from tempren.primitives import File
 class FileNotSupportedError(Exception):
     """Tag cannot extract value due to invalid file type"""
 
-    pass
+    def __init__(self):
+        super().__init__(self.__doc__)
 
 
 class MissingMetadataError(Exception):

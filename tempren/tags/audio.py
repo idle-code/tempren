@@ -6,7 +6,7 @@ import mutagen
 import mutagen.mp3
 from mutagen.easyid3 import EasyID3
 
-from tempren.exceptions import MissingMetadataError
+from tempren.exceptions import FileNotSupportedError, MissingMetadataError
 from tempren.primitives import File, Tag
 
 
@@ -29,6 +29,8 @@ class MutagenTagBase(Tag, ABC):
     def _extract_metadata(self, file: File) -> Dict[str, Any]:
         # TODO: Check if File(..., easy=True) could improve readability here
         audio_file = mutagen.File(file.absolute_path)
+        if audio_file is None:
+            raise FileNotSupportedError()
         metadata_dict = dict()
         metadata_dict["duration"] = audio_file.info.length
         metadata_dict["channels"] = audio_file.info.channels
