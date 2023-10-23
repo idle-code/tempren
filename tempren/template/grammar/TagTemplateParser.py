@@ -1,4 +1,4 @@
-# Generated from TagTemplateParser.g4 by ANTLR 4.9.2
+# Generated from TagTemplateParser.g4 by ANTLR 4.13.1
 # encoding: utf-8
 import sys
 from io import StringIO
@@ -12,46 +12,1152 @@ else:
 
 
 def serializedATN():
-    with StringIO() as buf:
-        buf.write("\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\3\24")
-        buf.write("g\4\2\t\2\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b")
-        buf.write("\t\b\4\t\t\t\3\2\3\2\3\2\3\3\3\3\3\3\3\3\3\3\3\3\3\3\5")
-        buf.write("\3\35\n\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\5\3")
-        buf.write(")\n\3\3\4\3\4\6\4-\n\4\r\4\16\4.\3\4\3\4\6\4\63\n\4\r")
-        buf.write("\4\16\4\64\5\4\67\n\4\3\5\3\5\7\5;\n\5\f\5\16\5>\13\5")
-        buf.write("\3\5\5\5A\n\5\3\6\3\6\3\6\3\6\3\6\3\6\7\6I\n\6\f\6\16")
-        buf.write("\6L\13\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\7\6U\n\6\f\6\16\6")
-        buf.write("X\13\6\5\6Z\n\6\3\7\3\7\3\7\3\7\3\7\5\7a\n\7\3\b\3\b\3")
-        buf.write("\t\3\t\3\t\2\2\n\2\4\6\b\n\f\16\20\2\3\3\2\20\22\2o\2")
-        buf.write("\22\3\2\2\2\4(\3\2\2\2\6\66\3\2\2\2\b<\3\2\2\2\nY\3\2")
-        buf.write("\2\2\f`\3\2\2\2\16b\3\2\2\2\20d\3\2\2\2\22\23\5\b\5\2")
-        buf.write("\23\24\7\2\2\3\24\3\3\2\2\2\25\26\7\4\2\2\26\27\7\f\2")
-        buf.write("\2\27\34\5\n\6\2\30\31\7\7\2\2\31\32\5\b\5\2\32\33\7\b")
-        buf.write("\2\2\33\35\3\2\2\2\34\30\3\2\2\2\34\35\3\2\2\2\35)\3\2")
-        buf.write('\2\2\36\37\7\4\2\2\37)\7\f\2\2 !\7\4\2\2!"\7\f\2\2"')
-        buf.write("#\5\n\6\2#$\7\7\2\2$%\5\b\5\2%)\3\2\2\2&'\7\4\2\2')")
-        buf.write("\5\n\6\2(\25\3\2\2\2(\36\3\2\2\2( \3\2\2\2(&\3\2\2\2)")
-        buf.write("\5\3\2\2\2*+\7\5\2\2+-\5\4\3\2,*\3\2\2\2-.\3\2\2\2.,\3")
-        buf.write("\2\2\2./\3\2\2\2/\67\3\2\2\2\60\61\7\5\2\2\61\63\5\20")
-        buf.write("\t\2\62\60\3\2\2\2\63\64\3\2\2\2\64\62\3\2\2\2\64\65\3")
-        buf.write("\2\2\2\65\67\3\2\2\2\66,\3\2\2\2\66\62\3\2\2\2\67\7\3")
-        buf.write("\2\2\28;\5\20\t\29;\5\4\3\2:8\3\2\2\2:9\3\2\2\2;>\3\2")
-        buf.write("\2\2<:\3\2\2\2<=\3\2\2\2=@\3\2\2\2><\3\2\2\2?A\5\6\4\2")
-        buf.write("@?\3\2\2\2@A\3\2\2\2A\t\3\2\2\2BC\7\13\2\2CZ\7\16\2\2")
-        buf.write("DE\7\13\2\2EJ\5\f\7\2FG\7\17\2\2GI\5\f\7\2HF\3\2\2\2I")
-        buf.write("L\3\2\2\2JH\3\2\2\2JK\3\2\2\2KM\3\2\2\2LJ\3\2\2\2MN\7")
-        buf.write("\16\2\2NZ\3\2\2\2OZ\7\13\2\2PQ\7\13\2\2QV\5\f\7\2RS\7")
-        buf.write("\17\2\2SU\5\f\7\2TR\3\2\2\2UX\3\2\2\2VT\3\2\2\2VW\3\2")
-        buf.write("\2\2WZ\3\2\2\2XV\3\2\2\2YB\3\2\2\2YD\3\2\2\2YO\3\2\2\2")
-        buf.write("YP\3\2\2\2Z\13\3\2\2\2[\\\7\23\2\2\\]\7\24\2\2]a\5\16")
-        buf.write("\b\2^a\7\23\2\2_a\5\16\b\2`[\3\2\2\2`^\3\2\2\2`_\3\2\2")
-        buf.write("\2a\r\3\2\2\2bc\t\2\2\2c\17\3\2\2\2de\7\6\2\2e\21\3\2")
-        buf.write("\2\2\16\34(.\64\66:<@JVY`")
-        return buf.getvalue()
+    return [
+        4,
+        1,
+        19,
+        125,
+        2,
+        0,
+        7,
+        0,
+        2,
+        1,
+        7,
+        1,
+        2,
+        2,
+        7,
+        2,
+        2,
+        3,
+        7,
+        3,
+        2,
+        4,
+        7,
+        4,
+        2,
+        5,
+        7,
+        5,
+        2,
+        6,
+        7,
+        6,
+        2,
+        7,
+        7,
+        7,
+        1,
+        0,
+        1,
+        0,
+        1,
+        0,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        3,
+        1,
+        23,
+        8,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        3,
+        1,
+        31,
+        8,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        3,
+        1,
+        36,
+        8,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        3,
+        1,
+        52,
+        8,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        3,
+        1,
+        63,
+        8,
+        1,
+        1,
+        2,
+        1,
+        2,
+        4,
+        2,
+        67,
+        8,
+        2,
+        11,
+        2,
+        12,
+        2,
+        68,
+        1,
+        2,
+        1,
+        2,
+        4,
+        2,
+        73,
+        8,
+        2,
+        11,
+        2,
+        12,
+        2,
+        74,
+        3,
+        2,
+        77,
+        8,
+        2,
+        1,
+        3,
+        1,
+        3,
+        5,
+        3,
+        81,
+        8,
+        3,
+        10,
+        3,
+        12,
+        3,
+        84,
+        9,
+        3,
+        1,
+        3,
+        3,
+        3,
+        87,
+        8,
+        3,
+        1,
+        4,
+        1,
+        4,
+        1,
+        4,
+        1,
+        4,
+        1,
+        4,
+        1,
+        4,
+        5,
+        4,
+        95,
+        8,
+        4,
+        10,
+        4,
+        12,
+        4,
+        98,
+        9,
+        4,
+        1,
+        4,
+        1,
+        4,
+        1,
+        4,
+        1,
+        4,
+        1,
+        4,
+        1,
+        4,
+        1,
+        4,
+        5,
+        4,
+        107,
+        8,
+        4,
+        10,
+        4,
+        12,
+        4,
+        110,
+        9,
+        4,
+        3,
+        4,
+        112,
+        8,
+        4,
+        1,
+        5,
+        1,
+        5,
+        1,
+        5,
+        1,
+        5,
+        1,
+        5,
+        3,
+        5,
+        119,
+        8,
+        5,
+        1,
+        6,
+        1,
+        6,
+        1,
+        7,
+        1,
+        7,
+        1,
+        7,
+        0,
+        0,
+        8,
+        0,
+        2,
+        4,
+        6,
+        8,
+        10,
+        12,
+        14,
+        0,
+        1,
+        1,
+        0,
+        15,
+        17,
+        139,
+        0,
+        16,
+        1,
+        0,
+        0,
+        0,
+        2,
+        62,
+        1,
+        0,
+        0,
+        0,
+        4,
+        76,
+        1,
+        0,
+        0,
+        0,
+        6,
+        82,
+        1,
+        0,
+        0,
+        0,
+        8,
+        111,
+        1,
+        0,
+        0,
+        0,
+        10,
+        118,
+        1,
+        0,
+        0,
+        0,
+        12,
+        120,
+        1,
+        0,
+        0,
+        0,
+        14,
+        122,
+        1,
+        0,
+        0,
+        0,
+        16,
+        17,
+        3,
+        6,
+        3,
+        0,
+        17,
+        18,
+        5,
+        0,
+        0,
+        1,
+        18,
+        1,
+        1,
+        0,
+        0,
+        0,
+        19,
+        22,
+        5,
+        2,
+        0,
+        0,
+        20,
+        21,
+        5,
+        11,
+        0,
+        0,
+        21,
+        23,
+        5,
+        10,
+        0,
+        0,
+        22,
+        20,
+        1,
+        0,
+        0,
+        0,
+        22,
+        23,
+        1,
+        0,
+        0,
+        0,
+        23,
+        24,
+        1,
+        0,
+        0,
+        0,
+        24,
+        25,
+        5,
+        11,
+        0,
+        0,
+        25,
+        30,
+        3,
+        8,
+        4,
+        0,
+        26,
+        27,
+        5,
+        5,
+        0,
+        0,
+        27,
+        28,
+        3,
+        6,
+        3,
+        0,
+        28,
+        29,
+        5,
+        6,
+        0,
+        0,
+        29,
+        31,
+        1,
+        0,
+        0,
+        0,
+        30,
+        26,
+        1,
+        0,
+        0,
+        0,
+        30,
+        31,
+        1,
+        0,
+        0,
+        0,
+        31,
+        63,
+        1,
+        0,
+        0,
+        0,
+        32,
+        35,
+        5,
+        2,
+        0,
+        0,
+        33,
+        34,
+        5,
+        11,
+        0,
+        0,
+        34,
+        36,
+        5,
+        10,
+        0,
+        0,
+        35,
+        33,
+        1,
+        0,
+        0,
+        0,
+        35,
+        36,
+        1,
+        0,
+        0,
+        0,
+        36,
+        37,
+        1,
+        0,
+        0,
+        0,
+        37,
+        38,
+        5,
+        11,
+        0,
+        0,
+        38,
+        39,
+        5,
+        5,
+        0,
+        0,
+        39,
+        40,
+        3,
+        6,
+        3,
+        0,
+        40,
+        41,
+        5,
+        6,
+        0,
+        0,
+        41,
+        63,
+        1,
+        0,
+        0,
+        0,
+        42,
+        43,
+        5,
+        2,
+        0,
+        0,
+        43,
+        44,
+        5,
+        10,
+        0,
+        0,
+        44,
+        45,
+        5,
+        11,
+        0,
+        0,
+        45,
+        63,
+        3,
+        8,
+        4,
+        0,
+        46,
+        47,
+        5,
+        2,
+        0,
+        0,
+        47,
+        63,
+        5,
+        11,
+        0,
+        0,
+        48,
+        49,
+        5,
+        2,
+        0,
+        0,
+        49,
+        51,
+        5,
+        11,
+        0,
+        0,
+        50,
+        52,
+        3,
+        8,
+        4,
+        0,
+        51,
+        50,
+        1,
+        0,
+        0,
+        0,
+        51,
+        52,
+        1,
+        0,
+        0,
+        0,
+        52,
+        53,
+        1,
+        0,
+        0,
+        0,
+        53,
+        54,
+        5,
+        5,
+        0,
+        0,
+        54,
+        63,
+        3,
+        6,
+        3,
+        0,
+        55,
+        56,
+        5,
+        2,
+        0,
+        0,
+        56,
+        63,
+        3,
+        8,
+        4,
+        0,
+        57,
+        58,
+        5,
+        2,
+        0,
+        0,
+        58,
+        59,
+        5,
+        5,
+        0,
+        0,
+        59,
+        60,
+        3,
+        6,
+        3,
+        0,
+        60,
+        61,
+        5,
+        6,
+        0,
+        0,
+        61,
+        63,
+        1,
+        0,
+        0,
+        0,
+        62,
+        19,
+        1,
+        0,
+        0,
+        0,
+        62,
+        32,
+        1,
+        0,
+        0,
+        0,
+        62,
+        42,
+        1,
+        0,
+        0,
+        0,
+        62,
+        46,
+        1,
+        0,
+        0,
+        0,
+        62,
+        48,
+        1,
+        0,
+        0,
+        0,
+        62,
+        55,
+        1,
+        0,
+        0,
+        0,
+        62,
+        57,
+        1,
+        0,
+        0,
+        0,
+        63,
+        3,
+        1,
+        0,
+        0,
+        0,
+        64,
+        65,
+        5,
+        3,
+        0,
+        0,
+        65,
+        67,
+        3,
+        2,
+        1,
+        0,
+        66,
+        64,
+        1,
+        0,
+        0,
+        0,
+        67,
+        68,
+        1,
+        0,
+        0,
+        0,
+        68,
+        66,
+        1,
+        0,
+        0,
+        0,
+        68,
+        69,
+        1,
+        0,
+        0,
+        0,
+        69,
+        77,
+        1,
+        0,
+        0,
+        0,
+        70,
+        71,
+        5,
+        3,
+        0,
+        0,
+        71,
+        73,
+        3,
+        14,
+        7,
+        0,
+        72,
+        70,
+        1,
+        0,
+        0,
+        0,
+        73,
+        74,
+        1,
+        0,
+        0,
+        0,
+        74,
+        72,
+        1,
+        0,
+        0,
+        0,
+        74,
+        75,
+        1,
+        0,
+        0,
+        0,
+        75,
+        77,
+        1,
+        0,
+        0,
+        0,
+        76,
+        66,
+        1,
+        0,
+        0,
+        0,
+        76,
+        72,
+        1,
+        0,
+        0,
+        0,
+        77,
+        5,
+        1,
+        0,
+        0,
+        0,
+        78,
+        81,
+        3,
+        14,
+        7,
+        0,
+        79,
+        81,
+        3,
+        2,
+        1,
+        0,
+        80,
+        78,
+        1,
+        0,
+        0,
+        0,
+        80,
+        79,
+        1,
+        0,
+        0,
+        0,
+        81,
+        84,
+        1,
+        0,
+        0,
+        0,
+        82,
+        80,
+        1,
+        0,
+        0,
+        0,
+        82,
+        83,
+        1,
+        0,
+        0,
+        0,
+        83,
+        86,
+        1,
+        0,
+        0,
+        0,
+        84,
+        82,
+        1,
+        0,
+        0,
+        0,
+        85,
+        87,
+        3,
+        4,
+        2,
+        0,
+        86,
+        85,
+        1,
+        0,
+        0,
+        0,
+        86,
+        87,
+        1,
+        0,
+        0,
+        0,
+        87,
+        7,
+        1,
+        0,
+        0,
+        0,
+        88,
+        89,
+        5,
+        9,
+        0,
+        0,
+        89,
+        112,
+        5,
+        13,
+        0,
+        0,
+        90,
+        91,
+        5,
+        9,
+        0,
+        0,
+        91,
+        96,
+        3,
+        10,
+        5,
+        0,
+        92,
+        93,
+        5,
+        14,
+        0,
+        0,
+        93,
+        95,
+        3,
+        10,
+        5,
+        0,
+        94,
+        92,
+        1,
+        0,
+        0,
+        0,
+        95,
+        98,
+        1,
+        0,
+        0,
+        0,
+        96,
+        94,
+        1,
+        0,
+        0,
+        0,
+        96,
+        97,
+        1,
+        0,
+        0,
+        0,
+        97,
+        99,
+        1,
+        0,
+        0,
+        0,
+        98,
+        96,
+        1,
+        0,
+        0,
+        0,
+        99,
+        100,
+        5,
+        13,
+        0,
+        0,
+        100,
+        112,
+        1,
+        0,
+        0,
+        0,
+        101,
+        112,
+        5,
+        9,
+        0,
+        0,
+        102,
+        103,
+        5,
+        9,
+        0,
+        0,
+        103,
+        108,
+        3,
+        10,
+        5,
+        0,
+        104,
+        105,
+        5,
+        14,
+        0,
+        0,
+        105,
+        107,
+        3,
+        10,
+        5,
+        0,
+        106,
+        104,
+        1,
+        0,
+        0,
+        0,
+        107,
+        110,
+        1,
+        0,
+        0,
+        0,
+        108,
+        106,
+        1,
+        0,
+        0,
+        0,
+        108,
+        109,
+        1,
+        0,
+        0,
+        0,
+        109,
+        112,
+        1,
+        0,
+        0,
+        0,
+        110,
+        108,
+        1,
+        0,
+        0,
+        0,
+        111,
+        88,
+        1,
+        0,
+        0,
+        0,
+        111,
+        90,
+        1,
+        0,
+        0,
+        0,
+        111,
+        101,
+        1,
+        0,
+        0,
+        0,
+        111,
+        102,
+        1,
+        0,
+        0,
+        0,
+        112,
+        9,
+        1,
+        0,
+        0,
+        0,
+        113,
+        114,
+        5,
+        18,
+        0,
+        0,
+        114,
+        115,
+        5,
+        19,
+        0,
+        0,
+        115,
+        119,
+        3,
+        12,
+        6,
+        0,
+        116,
+        119,
+        5,
+        18,
+        0,
+        0,
+        117,
+        119,
+        3,
+        12,
+        6,
+        0,
+        118,
+        113,
+        1,
+        0,
+        0,
+        0,
+        118,
+        116,
+        1,
+        0,
+        0,
+        0,
+        118,
+        117,
+        1,
+        0,
+        0,
+        0,
+        119,
+        11,
+        1,
+        0,
+        0,
+        0,
+        120,
+        121,
+        7,
+        0,
+        0,
+        0,
+        121,
+        13,
+        1,
+        0,
+        0,
+        0,
+        122,
+        123,
+        5,
+        4,
+        0,
+        0,
+        123,
+        15,
+        1,
+        0,
+        0,
+        0,
+        15,
+        22,
+        30,
+        35,
+        51,
+        62,
+        68,
+        74,
+        76,
+        80,
+        82,
+        86,
+        96,
+        108,
+        111,
+        118,
+    ]
 
 
 class TagTemplateParser(Parser):
-
     grammarFileName = "TagTemplateParser.g4"
 
     atn = ATNDeserializer().deserialize(serializedATN())
@@ -71,6 +1177,7 @@ class TagTemplateParser(Parser):
         "<INVALID>",
         "<INVALID>",
         "'('",
+        "'.'",
         "<INVALID>",
         "<INVALID>",
         "')'",
@@ -93,6 +1200,7 @@ class TagTemplateParser(Parser):
         "ANY",
         "TAG_WHITESPACE",
         "ARGS_START",
+        "CATEGORY_SEPARATOR",
         "TAG_ID",
         "ARGS_WHITESPACE",
         "ARGS_END",
@@ -134,19 +1242,20 @@ class TagTemplateParser(Parser):
     ANY = 7
     TAG_WHITESPACE = 8
     ARGS_START = 9
-    TAG_ID = 10
-    ARGS_WHITESPACE = 11
-    ARGS_END = 12
-    ARG_SEPARATOR = 13
-    NUMERIC_VALUE = 14
-    BOOLEAN_VALUE = 15
-    STRING_VALUE = 16
-    ARG_NAME = 17
-    ARG_EQUALS = 18
+    CATEGORY_SEPARATOR = 10
+    TAG_ID = 11
+    ARGS_WHITESPACE = 12
+    ARGS_END = 13
+    ARG_SEPARATOR = 14
+    NUMERIC_VALUE = 15
+    BOOLEAN_VALUE = 16
+    STRING_VALUE = 17
+    ARG_NAME = 18
+    ARG_EQUALS = 19
 
     def __init__(self, input: TokenStream, output: TextIO = sys.stdout):
         super().__init__(input, output)
-        self.checkVersion("4.9.2")
+        self.checkVersion("4.13.1")
         self._interp = ParserATNSimulator(
             self, self.atn, self.decisionsToDFA, self.sharedContextCache
         )
@@ -177,7 +1286,6 @@ class TagTemplateParser(Parser):
                 return visitor.visitChildren(self)
 
     def rootPattern(self):
-
         localctx = TagTemplateParser.RootPatternContext(self, self._ctx, self.state)
         self.enterRule(localctx, 0, self.RULE_rootPattern)
         try:
@@ -202,6 +1310,9 @@ class TagTemplateParser(Parser):
         ):
             super().__init__(parent, invokingState)
             self.parser = parser
+            self.categoryId = None  # Token
+            self.tagId = None  # Token
+            self.errorMissingCategoryId = None  # Token
             self.errorNoArgumentList = None  # Token
             self.errorUnclosedContext = None  # Token
             self.errorMissingTagId = None  # Token
@@ -209,11 +1320,17 @@ class TagTemplateParser(Parser):
         def TAG_START(self):
             return self.getToken(TagTemplateParser.TAG_START, 0)
 
-        def TAG_ID(self):
-            return self.getToken(TagTemplateParser.TAG_ID, 0)
-
         def argumentList(self):
             return self.getTypedRuleContext(TagTemplateParser.ArgumentListContext, 0)
+
+        def TAG_ID(self, i: int = None):
+            if i is None:
+                return self.getTokens(TagTemplateParser.TAG_ID)
+            else:
+                return self.getToken(TagTemplateParser.TAG_ID, i)
+
+        def CATEGORY_SEPARATOR(self):
+            return self.getToken(TagTemplateParser.CATEGORY_SEPARATOR, 0)
 
         def CONTEXT_START(self):
             return self.getToken(TagTemplateParser.CONTEXT_START, 0)
@@ -234,65 +1351,127 @@ class TagTemplateParser(Parser):
                 return visitor.visitChildren(self)
 
     def tag(self):
-
         localctx = TagTemplateParser.TagContext(self, self._ctx, self.state)
         self.enterRule(localctx, 2, self.RULE_tag)
         self._la = 0  # Token type
         try:
-            self.state = 38
+            self.state = 62
             self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input, 1, self._ctx)
+            la_ = self._interp.adaptivePredict(self._input, 4, self._ctx)
             if la_ == 1:
                 self.enterOuterAlt(localctx, 1)
                 self.state = 19
                 self.match(TagTemplateParser.TAG_START)
-                self.state = 20
-                self.match(TagTemplateParser.TAG_ID)
-                self.state = 21
+                self.state = 22
+                self._errHandler.sync(self)
+                la_ = self._interp.adaptivePredict(self._input, 0, self._ctx)
+                if la_ == 1:
+                    self.state = 20
+                    localctx.categoryId = self.match(TagTemplateParser.TAG_ID)
+                    self.state = 21
+                    self.match(TagTemplateParser.CATEGORY_SEPARATOR)
+
+                self.state = 24
+                localctx.tagId = self.match(TagTemplateParser.TAG_ID)
+                self.state = 25
                 self.argumentList()
-                self.state = 26
+                self.state = 30
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if _la == TagTemplateParser.CONTEXT_START:
-                    self.state = 22
+                if _la == 5:
+                    self.state = 26
                     self.match(TagTemplateParser.CONTEXT_START)
-                    self.state = 23
+                    self.state = 27
                     self.pattern()
-                    self.state = 24
+                    self.state = 28
                     self.match(TagTemplateParser.CONTEXT_END)
 
                 pass
 
             elif la_ == 2:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 28
+                self.state = 32
                 self.match(TagTemplateParser.TAG_START)
-                self.state = 29
-                localctx.errorNoArgumentList = self.match(TagTemplateParser.TAG_ID)
+                self.state = 35
+                self._errHandler.sync(self)
+                la_ = self._interp.adaptivePredict(self._input, 2, self._ctx)
+                if la_ == 1:
+                    self.state = 33
+                    localctx.categoryId = self.match(TagTemplateParser.TAG_ID)
+                    self.state = 34
+                    self.match(TagTemplateParser.CATEGORY_SEPARATOR)
+
+                self.state = 37
+                localctx.tagId = self.match(TagTemplateParser.TAG_ID)
+                self.state = 38
+                self.match(TagTemplateParser.CONTEXT_START)
+                self.state = 39
+                self.pattern()
+                self.state = 40
+                self.match(TagTemplateParser.CONTEXT_END)
                 pass
 
             elif la_ == 3:
                 self.enterOuterAlt(localctx, 3)
-                self.state = 30
+                self.state = 42
                 self.match(TagTemplateParser.TAG_START)
-                self.state = 31
-                self.match(TagTemplateParser.TAG_ID)
-                self.state = 32
-                self.argumentList()
-                self.state = 33
-                localctx.errorUnclosedContext = self.match(
-                    TagTemplateParser.CONTEXT_START
+                self.state = 43
+                localctx.errorMissingCategoryId = self.match(
+                    TagTemplateParser.CATEGORY_SEPARATOR
                 )
-                self.state = 34
-                self.pattern()
+                self.state = 44
+                localctx.tagId = self.match(TagTemplateParser.TAG_ID)
+                self.state = 45
+                self.argumentList()
                 pass
 
             elif la_ == 4:
                 self.enterOuterAlt(localctx, 4)
-                self.state = 36
+                self.state = 46
+                self.match(TagTemplateParser.TAG_START)
+                self.state = 47
+                localctx.errorNoArgumentList = self.match(TagTemplateParser.TAG_ID)
+                pass
+
+            elif la_ == 5:
+                self.enterOuterAlt(localctx, 5)
+                self.state = 48
+                self.match(TagTemplateParser.TAG_START)
+                self.state = 49
+                localctx.tagId = self.match(TagTemplateParser.TAG_ID)
+                self.state = 51
+                self._errHandler.sync(self)
+                _la = self._input.LA(1)
+                if _la == 9:
+                    self.state = 50
+                    self.argumentList()
+
+                self.state = 53
+                localctx.errorUnclosedContext = self.match(
+                    TagTemplateParser.CONTEXT_START
+                )
+                self.state = 54
+                self.pattern()
+                pass
+
+            elif la_ == 6:
+                self.enterOuterAlt(localctx, 6)
+                self.state = 55
                 localctx.errorMissingTagId = self.match(TagTemplateParser.TAG_START)
-                self.state = 37
+                self.state = 56
                 self.argumentList()
+                pass
+
+            elif la_ == 7:
+                self.enterOuterAlt(localctx, 7)
+                self.state = 57
+                localctx.errorMissingTagId = self.match(TagTemplateParser.TAG_START)
+                self.state = 58
+                self.match(TagTemplateParser.CONTEXT_START)
+                self.state = 59
+                self.pattern()
+                self.state = 60
+                self.match(TagTemplateParser.CONTEXT_END)
                 pass
 
         except RecognitionException as re:
@@ -341,50 +1520,49 @@ class TagTemplateParser(Parser):
                 return visitor.visitChildren(self)
 
     def pipeList(self):
-
         localctx = TagTemplateParser.PipeListContext(self, self._ctx, self.state)
         self.enterRule(localctx, 4, self.RULE_pipeList)
         try:
-            self.state = 52
+            self.state = 76
             self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input, 4, self._ctx)
+            la_ = self._interp.adaptivePredict(self._input, 7, self._ctx)
             if la_ == 1:
                 self.enterOuterAlt(localctx, 1)
-                self.state = 42
+                self.state = 66
                 self._errHandler.sync(self)
                 _alt = 1
                 while _alt != 2 and _alt != ATN.INVALID_ALT_NUMBER:
                     if _alt == 1:
-                        self.state = 40
+                        self.state = 64
                         self.match(TagTemplateParser.PIPE)
-                        self.state = 41
+                        self.state = 65
                         self.tag()
 
                     else:
                         raise NoViableAltException(self)
-                    self.state = 44
+                    self.state = 68
                     self._errHandler.sync(self)
-                    _alt = self._interp.adaptivePredict(self._input, 2, self._ctx)
+                    _alt = self._interp.adaptivePredict(self._input, 5, self._ctx)
 
                 pass
 
             elif la_ == 2:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 48
+                self.state = 72
                 self._errHandler.sync(self)
                 _alt = 1
                 while _alt != 2 and _alt != ATN.INVALID_ALT_NUMBER:
                     if _alt == 1:
-                        self.state = 46
+                        self.state = 70
                         self.match(TagTemplateParser.PIPE)
-                        self.state = 47
+                        self.state = 71
                         localctx.errorNonTagInPipeList = self.rawText()
 
                     else:
                         raise NoViableAltException(self)
-                    self.state = 50
+                    self.state = 74
                     self._errHandler.sync(self)
-                    _alt = self._interp.adaptivePredict(self._input, 3, self._ctx)
+                    _alt = self._interp.adaptivePredict(self._input, 6, self._ctx)
 
                 pass
 
@@ -431,39 +1609,38 @@ class TagTemplateParser(Parser):
                 return visitor.visitChildren(self)
 
     def pattern(self):
-
         localctx = TagTemplateParser.PatternContext(self, self._ctx, self.state)
         self.enterRule(localctx, 6, self.RULE_pattern)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 58
+            self.state = 82
             self._errHandler.sync(self)
-            _alt = self._interp.adaptivePredict(self._input, 6, self._ctx)
+            _alt = self._interp.adaptivePredict(self._input, 9, self._ctx)
             while _alt != 2 and _alt != ATN.INVALID_ALT_NUMBER:
                 if _alt == 1:
-                    self.state = 56
+                    self.state = 80
                     self._errHandler.sync(self)
                     token = self._input.LA(1)
-                    if token in [TagTemplateParser.TEXT]:
-                        self.state = 54
+                    if token in [4]:
+                        self.state = 78
                         self.rawText()
                         pass
-                    elif token in [TagTemplateParser.TAG_START]:
-                        self.state = 55
+                    elif token in [2]:
+                        self.state = 79
                         self.tag()
                         pass
                     else:
                         raise NoViableAltException(self)
 
-                self.state = 60
+                self.state = 84
                 self._errHandler.sync(self)
-                _alt = self._interp.adaptivePredict(self._input, 6, self._ctx)
+                _alt = self._interp.adaptivePredict(self._input, 9, self._ctx)
 
-            self.state = 62
+            self.state = 86
             self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input, 7, self._ctx)
+            la_ = self._interp.adaptivePredict(self._input, 10, self._ctx)
             if la_ == 1:
-                self.state = 61
+                self.state = 85
                 localctx.pipe_list = self.pipeList()
 
         except RecognitionException as re:
@@ -512,47 +1689,46 @@ class TagTemplateParser(Parser):
                 return visitor.visitChildren(self)
 
     def argumentList(self):
-
         localctx = TagTemplateParser.ArgumentListContext(self, self._ctx, self.state)
         self.enterRule(localctx, 8, self.RULE_argumentList)
         self._la = 0  # Token type
         try:
-            self.state = 87
+            self.state = 111
             self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input, 10, self._ctx)
+            la_ = self._interp.adaptivePredict(self._input, 13, self._ctx)
             if la_ == 1:
                 self.enterOuterAlt(localctx, 1)
-                self.state = 64
+                self.state = 88
                 self.match(TagTemplateParser.ARGS_START)
-                self.state = 65
+                self.state = 89
                 self.match(TagTemplateParser.ARGS_END)
                 pass
 
             elif la_ == 2:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 66
+                self.state = 90
                 self.match(TagTemplateParser.ARGS_START)
-                self.state = 67
+                self.state = 91
                 self.argument()
-                self.state = 72
+                self.state = 96
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                while _la == TagTemplateParser.ARG_SEPARATOR:
-                    self.state = 68
+                while _la == 14:
+                    self.state = 92
                     self.match(TagTemplateParser.ARG_SEPARATOR)
-                    self.state = 69
+                    self.state = 93
                     self.argument()
-                    self.state = 74
+                    self.state = 98
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
 
-                self.state = 75
+                self.state = 99
                 self.match(TagTemplateParser.ARGS_END)
                 pass
 
             elif la_ == 3:
                 self.enterOuterAlt(localctx, 3)
-                self.state = 77
+                self.state = 101
                 localctx.errorUnclosedArgumentList = self.match(
                     TagTemplateParser.ARGS_START
                 )
@@ -560,21 +1736,21 @@ class TagTemplateParser(Parser):
 
             elif la_ == 4:
                 self.enterOuterAlt(localctx, 4)
-                self.state = 78
+                self.state = 102
                 localctx.errorUnclosedArgumentList = self.match(
                     TagTemplateParser.ARGS_START
                 )
-                self.state = 79
+                self.state = 103
                 self.argument()
-                self.state = 84
+                self.state = 108
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                while _la == TagTemplateParser.ARG_SEPARATOR:
-                    self.state = 80
+                while _la == 14:
+                    self.state = 104
                     self.match(TagTemplateParser.ARG_SEPARATOR)
-                    self.state = 81
+                    self.state = 105
                     self.argument()
-                    self.state = 86
+                    self.state = 110
                     self._errHandler.sync(self)
                     _la = self._input.LA(1)
 
@@ -616,32 +1792,31 @@ class TagTemplateParser(Parser):
                 return visitor.visitChildren(self)
 
     def argument(self):
-
         localctx = TagTemplateParser.ArgumentContext(self, self._ctx, self.state)
         self.enterRule(localctx, 10, self.RULE_argument)
         try:
-            self.state = 94
+            self.state = 118
             self._errHandler.sync(self)
-            la_ = self._interp.adaptivePredict(self._input, 11, self._ctx)
+            la_ = self._interp.adaptivePredict(self._input, 14, self._ctx)
             if la_ == 1:
                 self.enterOuterAlt(localctx, 1)
-                self.state = 89
+                self.state = 113
                 self.match(TagTemplateParser.ARG_NAME)
-                self.state = 90
+                self.state = 114
                 self.match(TagTemplateParser.ARG_EQUALS)
-                self.state = 91
+                self.state = 115
                 self.argumentValue()
                 pass
 
             elif la_ == 2:
                 self.enterOuterAlt(localctx, 2)
-                self.state = 92
+                self.state = 116
                 self.match(TagTemplateParser.ARG_NAME)
                 pass
 
             elif la_ == 3:
                 self.enterOuterAlt(localctx, 3)
-                self.state = 93
+                self.state = 117
                 self.argumentValue()
                 pass
 
@@ -681,28 +1856,14 @@ class TagTemplateParser(Parser):
                 return visitor.visitChildren(self)
 
     def argumentValue(self):
-
         localctx = TagTemplateParser.ArgumentValueContext(self, self._ctx, self.state)
         self.enterRule(localctx, 12, self.RULE_argumentValue)
         self._la = 0  # Token type
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 96
+            self.state = 120
             _la = self._input.LA(1)
-            if not (
-                (
-                    ((_la) & ~0x3F) == 0
-                    and (
-                        (1 << _la)
-                        & (
-                            (1 << TagTemplateParser.NUMERIC_VALUE)
-                            | (1 << TagTemplateParser.BOOLEAN_VALUE)
-                            | (1 << TagTemplateParser.STRING_VALUE)
-                        )
-                    )
-                    != 0
-                )
-            ):
+            if not ((((_la) & ~0x3F) == 0 and ((1 << _la) & 229376) != 0)):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)
@@ -737,12 +1898,11 @@ class TagTemplateParser(Parser):
                 return visitor.visitChildren(self)
 
     def rawText(self):
-
         localctx = TagTemplateParser.RawTextContext(self, self._ctx, self.state)
         self.enterRule(localctx, 14, self.RULE_rawText)
         try:
             self.enterOuterAlt(localctx, 1)
-            self.state = 98
+            self.state = 122
             self.match(TagTemplateParser.TEXT)
         except RecognitionException as re:
             localctx.exception = re

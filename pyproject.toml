@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tempren"
-version = "0.2.0"
+version = "1.0.0"
 description = "Template-based renaming utility"
 readme = "README.md"
 license = "GPL-3.0-or-later"
@@ -8,7 +8,7 @@ authors = ["Paweł Żukowski <p.z.idlecode@gmail.com>"]
 homepage = "https://github.com/idle-code/tempren"
 keywords = ["batch-renaming", "cli", "filename"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Environment :: Console",
     "Intended Audience :: End Users/Desktop",
     "Intended Audience :: System Administrators",
@@ -22,21 +22,33 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.7"
-antlr4-python3-runtime = "^4.9.2"
-pydantic = "^1.8.1"
-Unidecode = "^1.2.0"
-pathvalidate = "^2.4.1"
+python = "^3.8"
+antlr4-python3-runtime = "4.13.1"
+Unidecode = "^1.3.6"
+pathvalidate = "^3.1.0"
+mutagen = "^1.46.0"
+docstring-parser = "^0.15"
+python-magic = "^0.4.27"
+Pillow = "^10.0.0"
+piexif = "^1.1.3"
+pymediainfo = {version = "^6.0.1", optional = true}
+isodate = "^0.6.1"
+gpxpy = "1.5.0"
+Pint = "^0.21.0"
 
 [tool.poetry.dev-dependencies]
-pytest = "^6.1"
-pytest-cov = "^2.10.1"
-coverage = "^5.3"
-pre-commit = "^2.7.1"
-mypy = "^0.790"
+pytest = "^7.4.0"
+pytest-cov = "^4.1"
+coverage = "^7.2.7"
+pre-commit = "^3.3.3"
+mypy = "^1.4.1"
+pylint = "^3.0.2"
+
+[tool.poetry.extras]
+video = ["pymediainfo"]
 
 [tool.poetry.scripts]
-tempren = "tempren.cli:main"
+tempren = "tempren.cli:throwing_main"
 
 [tool.isort]
 multi_line_output = 3
@@ -48,7 +60,11 @@ line_length = 88
 [tool.pytest.ini_options]
 addopts = "--cov-report=xml --cov-report=term-missing --cov=tempren"
 testpaths = ["tests"]
+markers = [
+    "e2e: slower, end-to-end tests often running tempren as a separate process",
+    "slow: slower tests that often use timeouts"
+]
 
 [build-system]
 requires = ["poetry_core>=1.0.0"]
-build-backend = "poetry.masonry.api"
+build-backend = "poetry.core.masonry.api"

@@ -4,8 +4,9 @@ import re
 from abc import ABC, abstractmethod
 from typing import Callable
 
-from tempren.path_generator import File
-from tempren.template.tree_elements import Pattern
+from tempren.evaluation import evaluate_expression
+from tempren.exceptions import ExpressionEvaluationError, TemplateEvaluationError
+from tempren.primitives import File, Pattern
 
 
 class FileFilter(ABC):
@@ -81,8 +82,17 @@ class TemplateFileFilter(FileFilter):
 
     def __call__(self, file: File) -> bool:
         self.log.debug("Rendering filter template for '%s'", file)
-        rendered_expression = self.pattern.process(file.relative_path)
+        rendered_expression = self.pattern.process_as_expression(file)
         self.log.debug("Evaluating filter expression '%s'", rendered_expression)
-        evaluation_result = eval(rendered_expression, {}, {})
-        self.log.debug("Evaluation result '%s'", repr(evaluation_result))
-        return bool(evaluation_result)
+        try:
+            evaluation_result = evaluate_expression(rendered_expression)
+            self.log.debug("Evaluation result '%s'", repr(evaluation_result))
+            return bool(evaluation_result)
+        except ExpressionEvaluationError as evaluation_error:
+            assert self.pattern.source_representation is not None
+            raise TemplateEvaluationError(
+                file,
+                self.pattern.source_representation,
+                evaluation_error.expression,
+                evaluation_error.message,
+            )

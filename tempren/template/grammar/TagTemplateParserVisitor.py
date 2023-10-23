@@ -1,7 +1,7 @@
-# Generated from TagTemplateParser.g4 by ANTLR 4.9.2
+# Generated from TagTemplateParser.g4 by ANTLR 4.13.1
 from antlr4 import *
 
-if __name__ is not None and "." in __name__:
+if "." in __name__:
     from .TagTemplateParser import TagTemplateParser
 else:
     from TagTemplateParser import TagTemplateParser
@@ -10,7 +10,6 @@ else:
 
 
 class TagTemplateParserVisitor(ParseTreeVisitor):
-
     # Visit a parse tree produced by TagTemplateParser#rootPattern.
     def visitRootPattern(self, ctx: TagTemplateParser.RootPatternContext):
         return self.visitChildren(ctx)

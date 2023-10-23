@@ -5,10 +5,23 @@ from typing import Callable
 import pytest
 from _pytest.tmpdir import TempPathFactory
 
+from tempren.primitives import File
+from tempren.template.ast import PatternElement, PatternElementSequence
+
 
 @pytest.fixture
 def nonexistent_path() -> Path:
     return Path("nonexistent", "path")
+
+
+@pytest.fixture
+def nonexistent_absolute_path() -> Path:
+    return Path("/nonexistent/path")
+
+
+@pytest.fixture
+def nonexistent_file(nonexistent_absolute_path: Path) -> File:
+    return File(nonexistent_absolute_path, Path("some.file"))
 
 
 @pytest.fixture
@@ -32,5 +45,44 @@ def test_data_dir(tmp_path_factory: TempPathFactory) -> Callable[[str], Path]:
 
 
 @pytest.fixture
+def hidden_data_dir(test_data_dir: Callable[[str], Path]) -> Path:
+    yield from test_data_dir("hidden")
+
+
+@pytest.fixture
+def nested_data_dir(test_data_dir: Callable[[str], Path]) -> Path:
+    yield from test_data_dir("nested")
+
+
+@pytest.fixture
+def tags_data_dir(test_data_dir: Callable[[str], Path]) -> Path:
+    yield from test_data_dir("tags")
+
+
+@pytest.fixture
 def text_data_dir(test_data_dir: Callable[[str], Path]) -> Path:
     yield from test_data_dir("text")
+
+
+@pytest.fixture
+def audio_data_dir(test_data_dir: Callable[[str], Path]) -> Path:
+    yield from test_data_dir("audio")
+
+
+@pytest.fixture
+def image_data_dir(test_data_dir: Callable[[str], Path]) -> Path:
+    yield from test_data_dir("image")
+
+
+@pytest.fixture
+def video_data_dir(test_data_dir: Callable[[str], Path]) -> Path:
+    yield from test_data_dir("video")
+
+
+@pytest.fixture
+def gpx_data_dir(test_data_dir: Callable[[str], Path]) -> Path:
+    yield from test_data_dir("gpx")
+
+
+def pattern_from(*args: PatternElement) -> PatternElementSequence:
+    return PatternElementSequence(list(args))

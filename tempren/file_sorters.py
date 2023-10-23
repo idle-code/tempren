@@ -2,8 +2,9 @@ import logging
 from abc import ABC, abstractmethod
 from typing import Iterable, Tuple
 
-from tempren.path_generator import File
-from tempren.template.tree_elements import Pattern
+from tempren.evaluation import evaluate_expression
+from tempren.exceptions import ExpressionEvaluationError, TemplateEvaluationError
+from tempren.primitives import File, Pattern
 
 
 class FileSorter(ABC):
@@ -19,6 +20,7 @@ class TemplateFileSorter(FileSorter):
 
     def __init__(self, pattern: Pattern, invert: bool = False):
         self.log = logging.getLogger(__name__)
+
         self.pattern = pattern
         self.invert = invert
 
@@ -27,8 +29,17 @@ class TemplateFileSorter(FileSorter):
 
     def _generate_sort_key(self, file: File) -> Tuple:
         self.log.debug("Rendering sorting value template for '%s'", file)
-        rendered_expression = "(" + self.pattern.process(file.relative_path) + ", )"
+        rendered_expression = "(" + self.pattern.process_as_expression(file) + ", )"
         self.log.debug("Evaluating sorting value expression '%s'", rendered_expression)
-        evaluation_result = eval(rendered_expression, {}, {})
-        self.log.debug("Evaluation result '%s'", repr(evaluation_result))
-        return evaluation_result
+        try:
+            evaluation_result = evaluate_expression(rendered_expression)
+            self.log.debug("Evaluation result '%s'", repr(evaluation_result))
+            return evaluation_result
+        except ExpressionEvaluationError as evaluation_error:
+            assert self.pattern.source_representation is not None
+            raise TemplateEvaluationError(
+                file,
+                self.pattern.source_representation,
+                evaluation_error.expression,
+                evaluation_error.message,
+            )

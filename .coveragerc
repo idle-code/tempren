@@ -2,6 +2,7 @@
 branch = True
 omit =
   tempren/template/grammar/*
+  **/grammar/*
 
 [report]
 exclude_lines =

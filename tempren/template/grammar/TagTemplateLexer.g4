@@ -50,10 +50,17 @@ ARGS_START
     : '(' -> mode(ARGS_MODE)
     ;
 
+CONTEXT_START_AFTER_TAG
+    : '{' -> mode(DEFAULT_MODE), type(CONTEXT_START)
+    ;
+
+CATEGORY_SEPARATOR
+    : '.'
+    ;
+
 TAG_ID
     : ID
     ;
-
 
 mode ARGS_MODE;
 
