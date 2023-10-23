@@ -1,4 +1,4 @@
-# Generated from TagTemplateParser.g4 by ANTLR 4.10.1
+# Generated from TagTemplateParser.g4 by ANTLR 4.13.1
 # encoding: utf-8
 import sys
 from io import StringIO
@@ -1255,7 +1255,7 @@ class TagTemplateParser(Parser):
 
     def __init__(self, input: TokenStream, output: TextIO = sys.stdout):
         super().__init__(input, output)
-        self.checkVersion("4.10.1")
+        self.checkVersion("4.13.1")
         self._interp = ParserATNSimulator(
             self, self.atn, self.decisionsToDFA, self.sharedContextCache
         )
@@ -1378,7 +1378,7 @@ class TagTemplateParser(Parser):
                 self.state = 30
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if _la == TagTemplateParser.CONTEXT_START:
+                if _la == 5:
                     self.state = 26
                     self.match(TagTemplateParser.CONTEXT_START)
                     self.state = 27
@@ -1442,7 +1442,7 @@ class TagTemplateParser(Parser):
                 self.state = 51
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                if _la == TagTemplateParser.ARGS_START:
+                if _la == 9:
                     self.state = 50
                     self.argumentList()
 
@@ -1621,11 +1621,11 @@ class TagTemplateParser(Parser):
                     self.state = 80
                     self._errHandler.sync(self)
                     token = self._input.LA(1)
-                    if token in [TagTemplateParser.TEXT]:
+                    if token in [4]:
                         self.state = 78
                         self.rawText()
                         pass
-                    elif token in [TagTemplateParser.TAG_START]:
+                    elif token in [2]:
                         self.state = 79
                         self.tag()
                         pass
@@ -1713,7 +1713,7 @@ class TagTemplateParser(Parser):
                 self.state = 96
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                while _la == TagTemplateParser.ARG_SEPARATOR:
+                while _la == 14:
                     self.state = 92
                     self.match(TagTemplateParser.ARG_SEPARATOR)
                     self.state = 93
@@ -1745,7 +1745,7 @@ class TagTemplateParser(Parser):
                 self.state = 108
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
-                while _la == TagTemplateParser.ARG_SEPARATOR:
+                while _la == 14:
                     self.state = 104
                     self.match(TagTemplateParser.ARG_SEPARATOR)
                     self.state = 105
@@ -1863,20 +1863,7 @@ class TagTemplateParser(Parser):
             self.enterOuterAlt(localctx, 1)
             self.state = 120
             _la = self._input.LA(1)
-            if not (
-                (
-                    ((_la) & ~0x3F) == 0
-                    and (
-                        (1 << _la)
-                        & (
-                            (1 << TagTemplateParser.NUMERIC_VALUE)
-                            | (1 << TagTemplateParser.BOOLEAN_VALUE)
-                            | (1 << TagTemplateParser.STRING_VALUE)
-                        )
-                    )
-                    != 0
-                )
-            ):
+            if not ((((_la) & ~0x3F) == 0 and ((1 << _la) & 229376) != 0)):
                 self._errHandler.recoverInline(self)
             else:
                 self._errHandler.reportMatch(self)

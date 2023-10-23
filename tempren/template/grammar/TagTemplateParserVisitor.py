@@ -1,7 +1,7 @@
-# Generated from TagTemplateParser.g4 by ANTLR 4.10.1
+# Generated from TagTemplateParser.g4 by ANTLR 4.13.1
 from antlr4 import *
 
-if __name__ is not None and "." in __name__:
+if "." in __name__:
     from .TagTemplateParser import TagTemplateParser
 else:
     from TagTemplateParser import TagTemplateParser

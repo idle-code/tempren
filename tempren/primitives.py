@@ -24,7 +24,7 @@ class File:
     def __init__(self, input_directory: Path, relative_path: Path):
         assert input_directory.is_absolute()
         assert not relative_path.is_absolute()
-        self.input_directory = input_directory
+        self.input_directory = input_directory.resolve()
         self.relative_path = relative_path
 
     def __str__(self):
