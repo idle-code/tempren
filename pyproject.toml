@@ -33,7 +33,7 @@ Pillow = "^10.0.0"
 piexif = "^1.1.3"
 pymediainfo = {version = "^6.0.1", optional = true}
 isodate = "^0.6.1"
-gpxpy = "^1.5.0"
+gpxpy = "1.5.0"
 Pint = "^0.21.0"
 
 [tool.poetry.dev-dependencies]
