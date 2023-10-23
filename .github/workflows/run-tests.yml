@@ -3,12 +3,15 @@ on: [push]
 jobs:
   run-tests:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [ "3.8", "3.9", "3.10", "3.11", "3.12" ]
     steps:
       - uses: actions/checkout@v3
-      - name: Install python
+      - name: Install Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
         with:
-          python-version: 3.8
+          python-version: ${{ matrix.python-version }}
       - name: Install poetry
         uses: snok/install-poetry@v1
         with:
