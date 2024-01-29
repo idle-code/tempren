@@ -16,7 +16,7 @@ repos:
     -   id: check-toml
     -   id: debug-statements
 -   repo: https://github.com/PyCQA/isort
-    rev: '5.13.0'
+    rev: '5.13.2'
     hooks:
     -    id: isort
          language_version: python3.8
@@ -28,7 +28,7 @@ repos:
     -   id: stylelint
         additional_dependencies: ['stylelint', 'stylelint-config-standard']
 -   repo: https://github.com/psf/black
-    rev: '23.11.0'
+    rev: '24.1.1'
     hooks:
     -   id: black
         language_version: python3.8
