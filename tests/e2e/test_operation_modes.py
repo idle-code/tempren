@@ -25,7 +25,7 @@ class CommonModeTestsBase(CliTestsBase):
 
     def test_same_name_generated(self, text_data_dir: Path, mode_flag: str):
         stdout, stderr, error_code = run_tempren(
-            mode_flag, "-s", "%Name()", "%Name()", text_data_dir
+            mode_flag, "-v", "-s", "%Name()", "%Name()", text_data_dir
         )
 
         assert error_code == ErrorCode.SUCCESS

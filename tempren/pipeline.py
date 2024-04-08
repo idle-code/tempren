@@ -160,7 +160,7 @@ class Pipeline:
                 raise
 
             if new_relative_path == file.relative_path:
-                self.log.info(
+                self.log.debug(
                     "Skipping renaming of: '%s' (source and destination are the same)",
                     new_relative_path,
                 )
