@@ -314,7 +314,6 @@ class DefaultOptionsHelpFormatter(argparse.HelpFormatter):
         return action.help
 
 
-# CHECK: use pydantic-cli for argument parsing
 def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
     log.debug("Parsing command line arguments")
     parser = argparse.ArgumentParser(
@@ -326,7 +325,7 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
     )
 
     parser.add_argument(
-        "-d",
+        "-dr",
         "--dry-run",
         action="store_true",
         help="Do not perform any renaming - just show expected operation results",
@@ -385,7 +384,7 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         dest="mode",
         const=OperationMode.name,
         default=OperationMode.name,
-        help="Use template to generate file name",
+        help="Use template to generate file name only",
     )
     operation_mode.add_argument(
         "-p",
@@ -394,6 +393,14 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         dest="mode",
         const=OperationMode.path,
         help="Use template to generate relative file path",
+    )
+    operation_mode.add_argument(
+        "-d",
+        "--directory",
+        action="store_const",
+        dest="mode",
+        const=OperationMode.directory,
+        help="Use template to generate directory names only",
     )
 
     conflict_resolution_group = parser.add_argument_group("conflict resolution")

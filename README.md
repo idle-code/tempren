@@ -77,7 +77,7 @@ Renamed: 1211740803547.jpg
 <summary>Sorting files into directories based on their MIME type</summary>
 
 ```commandline
-$ tempren -d --path "%Capitalize(){%Mime(subtype)}/%Name()" ~/Downloads
+$ tempren -dr --path "%Capitalize(){%Mime(subtype)}/%Name()" ~/Downloads
 Renamed: dotnet-install.sh
      to: X-shellscript/dotnet-install.sh
 Renamed: openrgb_0.7_amd64_buster_6128731.deb

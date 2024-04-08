@@ -48,6 +48,7 @@ class FilterType(Enum):
 class OperationMode(Enum):
     name = "name"
     path = "path"
+    directory = "directory"
 
 
 # TODO: Find a way to keep documentation close to the enum values and use it in argparser/generated help

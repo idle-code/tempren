@@ -340,7 +340,7 @@ To create an ad-hoc tag, you will need to provide an executable path as an argum
 tempren --ad-hoc awk --help awk
 ```
 
-> Note: When executing the ad-hoc tags, even with `--dry-run`/`-d` flag, `tempren` doesn't have control of the behaviour of the invoked executables.
+> Note: When executing the ad-hoc tags, even with `--dry-run`/`-dr` flag, `tempren` doesn't have control of the behaviour of the invoked executables.
 > Care should be taken to make sure that the user-provided program doesn't create any undesirable side effects upon template execution.
 
 There are two ways in which an executable associated with an ad-hoc tag can be invoked.
@@ -387,7 +387,7 @@ Tags created from the aliases cannot receive any arguments or context - they are
 
 # Various options
 ## Dry run
-To facilitate discovery-based usage learning, `tempren`'s `--dry-run`/`-d` flag can be used to disable the actual file renaming stage of the pipeline. This way, users can test their templates without making changes to the filesystem.
+To facilitate discovery-based usage learning, `tempren`'s `--dry-run`/`-dr` flag can be used to disable the actual file renaming stage of the pipeline. This way, users can test their templates without making changes to the filesystem.
 > Note: While dry-run is active, side effects from filtering/sorting template expressions (which are valid Python code), ad-hoc tags
 > or even tags themselves may still affect the file system.\
 > Be careful not to copy-paste templates that look suspicious.
