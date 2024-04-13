@@ -19,7 +19,7 @@ class TestVariousFlags(CliTestsBase):
         assert error_code == ErrorCode.SUCCESS
         assert re.match(r"\d+\.\d+\.\d+", stdout)
 
-    @pytest.mark.parametrize("flag", ["-d", "--dry-run"])
+    @pytest.mark.parametrize("flag", ["-dr", "--dry-run"])
     def test_dry_run(self, text_data_dir: Path, flag: str):
         stdout, stderr, error_code = run_tempren(
             flag, "%Upper(){%Name()}", text_data_dir

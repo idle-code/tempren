@@ -62,8 +62,6 @@ class TagCategory:
     ):
         if tag_name is None:
             tag_name = tag_factory.tag_name
-        if not tag_name:
-            raise ValueError(f"Invalid tag name '{repr(tag_name)}'")
         if tag_name in self.tag_map:
             raise ValueError(f"Factory for tag '{tag_name}' already registered")
         self.tag_map[tag_name] = tag_factory
@@ -79,10 +77,6 @@ class TagRegistry:
     def __init__(self):
         self.log = logging.getLogger(self.__class__.__name__)
         self.category_map = {}
-
-    @property
-    def categories(self) -> List[CategoryName]:
-        return sorted(self.category_map.keys())
 
     def find_category(self, category_name: CategoryName) -> Optional[TagCategory]:
         category = self.category_map.get(category_name, None)

@@ -45,3 +45,22 @@ class GroupTag(Tag):
     def process(self, file: File, context: Optional[str]) -> str:
         # TODO: Maybe if context is present parse it as a path?
         return file.absolute_path.group()
+
+
+class EntryCountTag(Tag):
+    """Number of entries (files and directories) in the processed directory
+
+    In directory mode, processed directory means the one being renamed.
+    In name and path modes, parent directory entry count is used instead.
+    """
+
+    require_context = False
+
+    def process(self, file: File, context: Optional[str]) -> int:
+        if file.absolute_path.is_dir():
+            target_directory = file.absolute_path
+        else:
+            target_directory = file.absolute_path.parent
+
+        # CHECK: How hidden files should be counted?
+        return len(os.listdir(target_directory))

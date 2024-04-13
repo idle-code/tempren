@@ -88,6 +88,26 @@ class RecursiveFileGatherer(FilesystemGatherer):
                 )
 
 
+class RecursiveDirectoryGatherer(FilesystemGatherer):
+    def __init__(self, start_directory: Path):
+        self._start_directory = start_directory.absolute()
+
+    def gather_files(self) -> Iterable[File]:
+        yield from self._gather_in(self._start_directory)
+
+    def _gather_in(self, directory: Path) -> Iterable[File]:
+        print(f"Gathering in {directory}")
+        for dir_entry in directory.iterdir():
+            if not self._include_path_in_result(dir_entry):
+                continue
+
+            if dir_entry.is_dir():
+                yield File(
+                    self._start_directory, dir_entry.relative_to(self._start_directory)
+                )
+                yield from self._gather_in(dir_entry)
+
+
 class ExplicitFileGatherer(FileGatherer):
     def __init__(self, files: List[Path]):
         self._files_to_provide = files

@@ -117,12 +117,21 @@ The output of this command will list all available tag names sorted by name and 
 
 
 # Modes of operation
-`tempren` have two main modes of operation: **name** and **path**.
+`tempren` have three main modes of operation: **name**, **directory** and **path**.
 
 In the (default) **name** mode (represented by `--name`/`-n` flag), the template is used for filename generation only.
 This mode is used most often as it doesn't alter directory structure and focuses just on the files. In this mode, if a path separator (i.e. `/`) is present in the generated path, an error will be reported.
 
 Name mode is used mostly when operating on a single directory or files specified directly in the command-line arguments.
+
+Similarly, with **directory** mode selected (by `--directory`/`-d` flag), template generates new names for directories only - without changing filesystem hierarchy.
+
+> Note: In directory mode only contextual and directory-enabled tags are available
+<!--
+TODO: `--directory --list` flags combination (in that order) can be used to list supported tags.
+-->
+
+> Note: Currently sorting is not available in the directory mode
 
 In the **path** mode (enabled by `--path`/`-p` flag), for each processed file, the template generates a whole, new path (relative to the input directory).
 This way you can move (sort) files into dynamically generated catalogues.
@@ -340,7 +349,7 @@ To create an ad-hoc tag, you will need to provide an executable path as an argum
 tempren --ad-hoc awk --help awk
 ```
 
-> Note: When executing the ad-hoc tags, even with `--dry-run`/`-d` flag, `tempren` doesn't have control of the behaviour of the invoked executables.
+> Note: When executing the ad-hoc tags, even with `--dry-run`/`-dr` flag, `tempren` doesn't have control of the behaviour of the invoked executables.
 > Care should be taken to make sure that the user-provided program doesn't create any undesirable side effects upon template execution.
 
 There are two ways in which an executable associated with an ad-hoc tag can be invoked.
@@ -373,7 +382,7 @@ Program arguments can be passed in the ad-hoc tag arguments but care should be t
 separate them correctly as spaces do not delimit the arguments like in the shell environment.
 For example, to pass two parameters to the ad-hoc `Program`, the following syntax should be used:
 ```
-%Program("--flag-parameter", "positional")
+%Program("--flag", "flag-argument")
 ```
 
 # Tag aliases
@@ -387,7 +396,7 @@ Tags created from the aliases cannot receive any arguments or context - they are
 
 # Various options
 ## Dry run
-To facilitate discovery-based usage learning, `tempren`'s `--dry-run`/`-d` flag can be used to disable the actual file renaming stage of the pipeline. This way, users can test their templates without making changes to the filesystem.
+To facilitate discovery-based usage learning, `tempren`'s `--dry-run`/`-dr` flag can be used to disable the actual file renaming stage of the pipeline. This way, users can test their templates without making changes to the filesystem.
 > Note: While dry-run is active, side effects from filtering/sorting template expressions (which are valid Python code), ad-hoc tags
 > or even tags themselves may still affect the file system.\
 > Be careful not to copy-paste templates that look suspicious.

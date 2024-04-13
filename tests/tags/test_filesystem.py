@@ -3,7 +3,7 @@ import os.path
 from pathlib import Path
 
 from tempren.primitives import File
-from tempren.tags.filesystem import GroupTag, MTimeTag, OwnerTag, SizeTag
+from tempren.tags.filesystem import EntryCountTag, GroupTag, MTimeTag, OwnerTag, SizeTag
 
 
 class TestSizeTag:
@@ -61,3 +61,21 @@ class TestGroupTag:
         group = tag.process(hello_file, None)
 
         assert hello_group == group
+
+
+class TestEntryCountTag:
+    def test_count_parent_entries_for_file(self, nested_data_dir: Path):
+        tag = EntryCountTag()
+        file = File(nested_data_dir, Path("level-1.txt"))
+
+        entry_count = tag.process(file, None)
+
+        assert entry_count == 3
+
+    def test_entries_for_directory(self, nested_data_dir: Path):
+        tag = EntryCountTag()
+        nested_data_dir = File(nested_data_dir.parent, Path(nested_data_dir.name))
+
+        entry_count = tag.process(nested_data_dir, None)
+
+        assert entry_count == 3
