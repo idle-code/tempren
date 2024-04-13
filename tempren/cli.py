@@ -18,6 +18,7 @@ from tempren.primitives import CategoryName, QualifiedTagName, TagName
 from tempren.template.exceptions import TagError, TemplateError
 
 from .pipeline import (
+    ConfigurationError,
     ConflictResolutionStrategy,
     FilterType,
     InvalidDestinationError,
@@ -134,6 +135,7 @@ def validate_adhoc_tags(
     unique_names = set(names)
     if len(names) > len(unique_names):
         repeating_names = [name for name in unique_names if names.count(name) > 1]
+        # TODO: Test
         for duplicate_name in repeating_names:
             executables_with_the_same_name = list(
                 map(
@@ -159,6 +161,8 @@ def validate_aliases(aliases: List[List[Tuple[TagName, str]]]) -> Dict[TagName, 
     unique_names = set(names)
     if len(names) > len(unique_names):
         repeating_names = [name for name in unique_names if names.count(name) > 1]
+        # TODO: Test
+        # TODO: Refactor - the same code is found in validate_adhoc_tags
         for duplicate_name in repeating_names:
             patterns_with_the_same_name = list(
                 map(
@@ -175,7 +179,7 @@ def validate_aliases(aliases: List[List[Tuple[TagName, str]]]) -> Dict[TagName, 
     return dict(list_of_tuples)
 
 
-class SystemExitError(Exception):
+class SystemExitError(Exception):  # TODO: Use ConfigurationError instead
     status: int
 
     def __init__(self, status: int, message: Optional[str]):
@@ -200,9 +204,10 @@ class _ListAvailableTags(argparse.Action):
             category = registry.category_map[category_name]
 
             all_category_tags = sorted(category.tag_map.items())
-            if not all_category_tags:
+            if (
+                not all_category_tags
+            ):  # NOCOVER: Empty categories should not be present in the registry
                 # There is no tags in the category
-                # TODO: Empty categories should not be present in the registry
                 continue
             max_name_length = max(
                 [len(tag_name) for tag_name, factory in all_category_tags]
@@ -245,7 +250,8 @@ class _ShowHelp(argparse.Action):
                 tag_factory = registry.get_tag_factory(qualified_name)
             except TagError as tag_error:
                 parser.exit(ErrorCode.USAGE_ERROR, str(tag_error))
-                raise
+                # noinspection PyUnreachableCode
+                raise  # NOCOVER: required by mypy
             log.info("")
             log.info(indent(tag_factory.configuration_signature, "  "))
             log.info("")
@@ -657,6 +663,9 @@ def main() -> int:
         if exc.status != 0:
             log.error(exc)
         return exc.status
+    except ConfigurationError as exc:
+        log.error(exc)
+        return ErrorCode.USAGE_ERROR
     except TemplateEvaluationError as template_evaluation_error:
         render_template_evaluation_error(template_evaluation_error)
         return ErrorCode.TEMPLATE_EVALUATION_ERROR

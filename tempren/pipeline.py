@@ -15,7 +15,7 @@ from tempren.file_filters import (
     RegexPathFileFilter,
     TemplateFileFilter,
 )
-from tempren.file_sorters import TemplateFileSorter
+from tempren.file_sorters import PathDepthSorter, TemplateFileSorter
 from tempren.filesystem import (
     CombinedFileGatherer,
     DestinationAlreadyExistsError,
@@ -28,6 +28,7 @@ from tempren.filesystem import (
     FlatFileGatherer,
     InvalidDestinationError,
     PrintingRenamerWrapper,
+    RecursiveDirectoryGatherer,
     RecursiveFileGatherer,
 )
 from tempren.primitives import CategoryName, File, PathGenerator, Pattern, TagName
@@ -284,16 +285,28 @@ def build_pipeline(
     pipeline = Pipeline()
 
     file_gatherers: List[FileGatherer] = []
-    input_directories = filter(lambda p: p.is_dir(), config.input_paths)
-    for directory in input_directories:
-        if config.recursive:
-            file_gatherers.append(RecursiveFileGatherer(directory))
-        else:
-            file_gatherers.append(FlatFileGatherer(directory))
 
+    input_directories = filter(lambda p: p.is_dir(), config.input_paths)
     input_files = list(filter(lambda p: p.is_file(), config.input_paths))
-    if any(input_files):
-        file_gatherers.append(ExplicitFileGatherer(input_files))
+    if config.mode == OperationMode.directory:
+        if any(input_files):
+            raise ConfigurationError("File paths provided in directory mode")
+
+        if config.recursive:
+            for directory in input_directories:
+                file_gatherers.append(RecursiveDirectoryGatherer(directory))
+        else:
+            file_gatherers.append(ExplicitFileGatherer(input_directories))
+    else:
+        for directory in input_directories:
+            if config.recursive:
+                file_gatherers.append(RecursiveFileGatherer(directory))
+            else:
+                file_gatherers.append(FlatFileGatherer(directory))
+
+        if any(input_files):
+            file_gatherers.append(ExplicitFileGatherer(input_files))
+
     pipeline.file_gatherer = CombinedFileGatherer(file_gatherers)
     pipeline.file_gatherer.include_hidden = config.include_hidden
 
@@ -308,7 +321,7 @@ def build_pipeline(
 
     bound_pattern = _compile_template(config.template)
 
-    if config.mode == OperationMode.name:
+    if config.mode == OperationMode.name or config.mode == OperationMode.directory:
         pipeline.path_generator = TemplateNameGenerator(bound_pattern)
         if config.filter:
             if config.filter_type == FilterType.regex:
@@ -319,7 +332,7 @@ def build_pipeline(
                 bound_filter_pattern = _compile_template(config.filter)
                 pipeline.file_filter = TemplateFileFilter(bound_filter_pattern)
             else:
-                raise NotImplementedError("Unknown filter type")
+                raise NotImplementedError("Unknown filter type: " + str(config.filter))
     elif config.mode == OperationMode.path:
         pipeline.path_generator = TemplatePathGenerator(bound_pattern)
         if config.filter:
@@ -331,14 +344,20 @@ def build_pipeline(
                 bound_filter_pattern = _compile_template(config.filter)
                 pipeline.file_filter = TemplateFileFilter(bound_filter_pattern)
             else:
-                raise NotImplementedError("Unknown filter type")
+                raise NotImplementedError("Unknown filter type: " + str(config.filter))
     else:
-        raise NotImplementedError("Unknown operation mode")
+        raise NotImplementedError("Unknown operation mode: " + str(config.mode))
 
     if config.filter_invert and config.filter is not None:
         pipeline.file_filter = FileFilterInverter(pipeline.file_filter)
 
-    if config.sort:
+    if config.mode == OperationMode.directory:
+        # FIXME: This workaround allows us to mitigate conflicts arising from
+        #        trying to rename child directories after their parent has been renamed
+        if config.sort:
+            raise ConfigurationError("Sorting is not available in directory mode")
+        pipeline.sorter = PathDepthSorter()
+    elif config.sort:
         bound_sorter_pattern = _compile_template(config.sort)
         pipeline.sorter = TemplateFileSorter(bound_sorter_pattern, config.sort_invert)
 
@@ -347,9 +366,9 @@ def build_pipeline(
 
     if config.dry_run:
         pipeline.renamer = DryRunRenamer()
-        # FIXME: Use DryRunMover for path mode?
+        # FIXME: Use custom DryRunMover for path mode?
     else:
-        if config.mode == OperationMode.name:
+        if config.mode == OperationMode.name or config.mode == OperationMode.directory:
             pipeline.renamer = FileRenamer()
         elif config.mode == OperationMode.path:
             pipeline.renamer = FileMover()

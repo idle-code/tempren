@@ -43,3 +43,8 @@ class TemplateFileSorter(FileSorter):
                 evaluation_error.expression,
                 evaluation_error.message,
             )
+
+
+class PathDepthSorter(FileSorter):
+    def __call__(self, files: Iterable[File]) -> Iterable[File]:
+        return sorted(files, key=lambda f: (len(f.relative_path.parts),), reverse=True)
