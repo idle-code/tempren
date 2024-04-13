@@ -393,14 +393,6 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         help="Use template to generate file name only",
     )
     operation_mode.add_argument(
-        "-p",
-        "--path",
-        action="store_const",
-        dest="mode",
-        const=OperationMode.path,
-        help="Use template to generate relative file path",
-    )
-    operation_mode.add_argument(
         "-d",
         "--directory",
         action="store_const",
@@ -408,33 +400,13 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         const=OperationMode.directory,
         help="Use template to generate directory names only",
     )
-
-    conflict_resolution_group = parser.add_argument_group("conflict resolution")
-    conflict_resolution = conflict_resolution_group.add_mutually_exclusive_group()
-    conflict_resolution.add_argument(
-        "-cs",
-        "--conflict-stop",
-        action="store_true",
-        default=True,
-        help="Keep source file name intact and stop",
-    )
-    conflict_resolution.add_argument(
-        "-ci",
-        "--conflict-ignore",
-        action="store_true",
-        help="Keep source file name intact and continue",
-    )
-    conflict_resolution.add_argument(
-        "-co",
-        "--conflict-override",
-        action="store_true",
-        help="Override destination file",
-    )
-    conflict_resolution.add_argument(
-        "-cm",
-        "--conflict-manual",
-        action="store_true",
-        help="Prompt user to resolve conflict manually (choose an option or provide new filename)",
+    operation_mode.add_argument(
+        "-p",
+        "--path",
+        action="store_const",
+        dest="mode",
+        const=OperationMode.path,
+        help="Use template to generate relative file path",
     )
 
     filtering_group = parser.add_argument_group("filtering")
@@ -480,6 +452,34 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         "--sort-invert",
         action="store_true",
         help="Reverse sorting order",
+    )
+
+    conflict_resolution_group = parser.add_argument_group("conflict resolution")
+    conflict_resolution = conflict_resolution_group.add_mutually_exclusive_group()
+    conflict_resolution.add_argument(
+        "-cs",
+        "--conflict-stop",
+        action="store_true",
+        default=True,
+        help="Keep source file name intact and stop",
+    )
+    conflict_resolution.add_argument(
+        "-ci",
+        "--conflict-ignore",
+        action="store_true",
+        help="Keep source file name intact and continue",
+    )
+    conflict_resolution.add_argument(
+        "-co",
+        "--conflict-override",
+        action="store_true",
+        help="Override destination file",
+    )
+    conflict_resolution.add_argument(
+        "-cm",
+        "--conflict-manual",
+        action="store_true",
+        help="Prompt user to resolve conflict manually (choose an option or provide new filename)",
     )
 
     parser.add_argument(

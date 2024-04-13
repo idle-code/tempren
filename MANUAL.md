@@ -117,12 +117,21 @@ The output of this command will list all available tag names sorted by name and 
 
 
 # Modes of operation
-`tempren` have two main modes of operation: **name** and **path**.
+`tempren` have three main modes of operation: **name**, **directory** and **path**.
 
 In the (default) **name** mode (represented by `--name`/`-n` flag), the template is used for filename generation only.
 This mode is used most often as it doesn't alter directory structure and focuses just on the files. In this mode, if a path separator (i.e. `/`) is present in the generated path, an error will be reported.
 
 Name mode is used mostly when operating on a single directory or files specified directly in the command-line arguments.
+
+Similarly, with **directory** mode selected (by `--directory`/`-d` flag), template generates new names for directories only - without changing filesystem hierarchy.
+
+> Note: In directory mode only contextual and directory-enabled tags are available
+<!--
+TODO: `--directory --list` flags combination (in that order) can be used to list supported tags.
+-->
+
+> Note: Currently sorting is not available in the directory mode
 
 In the **path** mode (enabled by `--path`/`-p` flag), for each processed file, the template generates a whole, new path (relative to the input directory).
 This way you can move (sort) files into dynamically generated catalogues.
@@ -373,7 +382,7 @@ Program arguments can be passed in the ad-hoc tag arguments but care should be t
 separate them correctly as spaces do not delimit the arguments like in the shell environment.
 For example, to pass two parameters to the ad-hoc `Program`, the following syntax should be used:
 ```
-%Program("--flag-parameter", "positional")
+%Program("--flag", "flag-argument")
 ```
 
 # Tag aliases
