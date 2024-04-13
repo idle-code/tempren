@@ -286,7 +286,7 @@ def build_pipeline(
 
     file_gatherers: List[FileGatherer] = []
 
-    input_directories = filter(lambda p: p.is_dir(), config.input_paths)
+    input_directories = list(filter(lambda p: p.is_dir(), config.input_paths))
     input_files = list(filter(lambda p: p.is_file(), config.input_paths))
     if config.mode == OperationMode.directory:
         if any(input_files):

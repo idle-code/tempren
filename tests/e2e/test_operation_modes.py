@@ -168,7 +168,7 @@ class TestDirectoryMode:
         )
 
         assert error_code == ErrorCode.SUCCESS
-        assert "File paths provided in directory mode" in stderr
+        assert "file paths provided in directory mode" in stderr
 
     def test_sorting_in_directory_mode_error(
         self, nested_data_dir: Path, mode_flag: str

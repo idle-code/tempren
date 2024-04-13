@@ -6,6 +6,9 @@ if [ -z "$BUMP_RULE" ]; then
   exit 1
 fi
 
+pytest
+mypy
+
 # Update python package version
 OLD_VERSION=$(poetry version --short)
 poetry version $BUMP_RULE
