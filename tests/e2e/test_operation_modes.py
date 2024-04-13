@@ -167,7 +167,7 @@ class TestDirectoryMode:
             mode_flag, "%Upper{%Name()}", text_data_dir / "hello.txt"
         )
 
-        assert error_code == ErrorCode.USAGE_ERROR
+        assert error_code == ErrorCode.SUCCESS
         assert "File paths provided in directory mode" in stderr
 
     def test_sorting_in_directory_mode_error(

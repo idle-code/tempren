@@ -290,7 +290,7 @@ def build_pipeline(
     input_files = list(filter(lambda p: p.is_file(), config.input_paths))
     if config.mode == OperationMode.directory:
         if any(input_files):
-            raise ConfigurationError("File paths provided in directory mode")
+            log.warning("Ignoring file paths provided in directory mode")
 
         if config.recursive:
             for directory in input_directories:
