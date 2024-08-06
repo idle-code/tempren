@@ -150,7 +150,7 @@ class TestDurationTag(VideoInfoTagTests):
 
         duration = tag.process(video_file, None)
 
-        assert duration == timedelta(seconds=2, milliseconds=800)
+        assert duration == "PT2.8S"
 
 
 class TestBitRateTag(VideoInfoTagTests):

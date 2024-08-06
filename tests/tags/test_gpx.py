@@ -90,7 +90,7 @@ class TestDurationTag(GpxTagTests):
 
         result = tag.process(walk_file, None)
 
-        assert result == timedelta(minutes=26, seconds=42, microseconds=274000)
+        assert result == "PT26M42.274S"
 
 
 class TestDistanceTag(GpxTagTests):

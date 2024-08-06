@@ -242,8 +242,8 @@ Sometimes it is desirable to create a chain of context invocations such as:
 %Lower{%Collapse{%Strip{%Name()}}}
 ```
 
-To streamline such operations, _pipe list_ syntax sugar can be used.
-The, following expression is equivalent to the one above:
+To streamline such operations, _pipe list_ syntax sugar can be used
+and above expression can be written as:
 ```
 %Name()|%Strip()|%Collapse()|%Lower()
 ```

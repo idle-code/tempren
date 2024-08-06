@@ -1,7 +1,9 @@
+import datetime
 from abc import ABC
 from datetime import timedelta
 from typing import Any, Dict, Optional
 
+import isodate
 import mutagen
 import mutagen.mp3
 from mutagen.easyid3 import EasyID3
@@ -31,19 +33,28 @@ class MutagenTagBase(Tag, ABC):
         audio_file = mutagen.File(file.absolute_path)
         if audio_file is None:
             raise FileNotSupportedError()
-        metadata_dict = dict()
-        metadata_dict["duration"] = audio_file.info.length
-        metadata_dict["channels"] = audio_file.info.channels
-        metadata_dict["sample_rate"] = audio_file.info.sample_rate
-        metadata_dict["bitrate"] = audio_file.info.bitrate
+        metadata_dict: Dict[str, Any] = dict()
+        self.try_to_extract_property(metadata_dict, audio_file.info, "length")
+        self.try_to_extract_property(metadata_dict, audio_file.info, "channels")
+        self.try_to_extract_property(metadata_dict, audio_file.info, "sample_rate")
+        self.try_to_extract_property(metadata_dict, audio_file.info, "bitrate")
         if isinstance(audio_file, mutagen.mp3.MP3):
             metadata_dict["comments"] = audio_file.get("COMM::XXX", "")
             audio_file = mutagen.mp3.MP3(file.absolute_path, ID3=EasyID3)
         else:
-            metadata_dict["bits_per_sample"] = audio_file.info.bits_per_sample
+            self.try_to_extract_property(
+                metadata_dict, audio_file.info, "bits_per_sample"
+            )
 
         metadata_dict.update(dict(audio_file))
         return metadata_dict
+
+    @staticmethod
+    def try_to_extract_property(
+        metadata_dict: Dict[str, Any], audio_info, property_name: str
+    ):
+        if hasattr(audio_info, property_name):
+            metadata_dict[property_name] = getattr(audio_info, property_name)
 
     def format_value(self, metadata_value: Any):
         return metadata_value
@@ -92,13 +103,13 @@ class TrackTag(MutagenTagBase):
 
 
 class DurationTag(MutagenTagBase):
-    """Track duration in seconds"""
+    """Track duration in ISO 8601 notation"""
 
-    tag_key = "duration"
+    tag_key = "length"
 
     def format_value(self, metadata_value: Any):
-        duration_in_seconds = float(super().format_value(metadata_value))
-        return timedelta(seconds=duration_in_seconds)
+        duration_seconds = float(super().format_value(metadata_value))
+        return isodate.duration_isoformat(timedelta(seconds=duration_seconds))
 
 
 class ChannelsTag(MutagenTagBase):

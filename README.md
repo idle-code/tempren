@@ -30,7 +30,7 @@ You can also take a look on the following examples.
 -->
 
 ## Examples
-**Note: When experimenting on your own please use `--dry-run` flag!** \
+**Note: When experimenting on your own please use `-dr`/`--dry-run` flag!** \
 **`tempren` will not override your files by default but invalid template can mangle their names.**
 
 <details>

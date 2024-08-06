@@ -603,7 +603,7 @@ def render_template_evaluation_error(
 def cli_prompt_conflict_resolver(
     source_path: Path, destination_path: Path
 ) -> Union[ConflictResolutionStrategy, Path]:
-    log.warning("White processing:")
+    log.warning("While processing:")
     log.warning(f"  {source_path}")
     log.warning("following path was generated:")
     log.warning(f"  {destination_path}")
