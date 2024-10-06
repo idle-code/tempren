@@ -13,6 +13,16 @@ jobs:
         uses: JRubics/poetry-publish@v1.17
         with:
           pypi_token: ${{ secrets.PYPI_TOKEN }}
+      - name: Get release version
+        id: vars
+        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      - name: Wait for package to be published
+        uses: martolini/wait-for-pypi-action@v1
+        with:
+          package_name: tempren
+          package_version: ${{ env.RELEASE_VERSION }}
+          delay_between_requests: 5
+          timeout: 60
 
       - name: Build snap package
         uses: snapcore/action-build@v1
