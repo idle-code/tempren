@@ -3,6 +3,7 @@ from datetime import timedelta
 from typing import Any, Optional
 
 import gpxpy
+import isodate
 from gpxpy.gpx import GPX, GPXXMLSyntaxException
 
 from tempren.exceptions import FileNotSupportedError, MissingMetadataError
@@ -56,13 +57,13 @@ class ActivityTag(GpxTagBase):
 
 
 class DurationTag(GpxTagBase):
-    """Duration of the activity"""
+    """Duration of the activity in ISO 8601 notation"""
 
     def extract_metadata(self, gpx: GPX) -> timedelta:
         duration_seconds = gpx.get_duration()
         if not duration_seconds:
             raise MissingMetadataError()
-        return timedelta(seconds=duration_seconds)
+        return isodate.duration_isoformat(timedelta(seconds=duration_seconds))
 
 
 class DistanceTag(GpxTagBase):

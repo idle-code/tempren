@@ -30,7 +30,7 @@ You can also take a look on the following examples.
 -->
 
 ## Examples
-**Note: When experimenting on your own please use `--dry-run` flag!** \
+**Note: When experimenting on your own please use `-dr`/`--dry-run` flag!** \
 **`tempren` will not override your files by default but invalid template can mangle their names.**
 
 <details>
@@ -77,7 +77,7 @@ Renamed: 1211740803547.jpg
 <summary>Sorting files into directories based on their MIME type</summary>
 
 ```commandline
-$ tempren -d --path "%Capitalize(){%Mime(subtype)}/%Name()" ~/Downloads
+$ tempren -dr --path "%Capitalize(){%Mime(subtype)}/%Name()" ~/Downloads
 Renamed: dotnet-install.sh
      to: X-shellscript/dotnet-install.sh
 Renamed: openrgb_0.7_amd64_buster_6128731.deb

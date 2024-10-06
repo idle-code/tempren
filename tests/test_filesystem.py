@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import List
 
 import pytest
 
@@ -13,6 +12,7 @@ from tempren.filesystem import (
     FileRenamer,
     FlatFileGatherer,
     InvalidDestinationError,
+    RecursiveDirectoryGatherer,
     RecursiveFileGatherer,
 )
 from tempren.primitives import File
@@ -122,6 +122,48 @@ class TestRecursiveFileGatherer(FilesystemFileGathererTests):
             nested_data_dir / "second" / "third" / "level-3.file",
         }
         assert files == test_files
+
+
+class TestRecursiveDirectoryGatherer:
+    def test_empty_directory(self, tmp_path: Path):
+        gatherer = RecursiveDirectoryGatherer(tmp_path)
+
+        file_iterator = iter(gatherer.gather_files())
+
+        with pytest.raises(StopIteration):
+            next(file_iterator)
+
+    def test_hidden_files_are_skipped_by_default(self, hidden_data_dir: Path):
+        gatherer = RecursiveDirectoryGatherer(hidden_data_dir)
+
+        asd = list(gatherer.gather_files())
+        file_iterator = iter(gatherer.gather_files())
+
+        with pytest.raises(StopIteration):
+            next(file_iterator)
+
+    def test_hidden_directories_can_be_found_with_include_hidden(
+        self, hidden_data_dir: Path
+    ):
+        gatherer = RecursiveDirectoryGatherer(hidden_data_dir)
+        gatherer.include_hidden = True
+
+        files = set(map(file_to_absolute_path, gatherer.gather_files()))
+
+        test_directories = {hidden_data_dir / ".hidden"}
+        assert files == test_directories
+
+    def test_nested_directories(self, nested_data_dir: Path):
+        gatherer = RecursiveDirectoryGatherer(nested_data_dir)
+
+        files = set(map(file_to_absolute_path, gatherer.gather_files()))
+
+        test_directories = {
+            nested_data_dir / "first",
+            nested_data_dir / "second",
+            nested_data_dir / "second" / "third",
+        }
+        assert files == test_directories
 
 
 class TestExplicitFileGatherer:

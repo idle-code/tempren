@@ -25,7 +25,7 @@ class CommonModeTestsBase(CliTestsBase):
 
     def test_same_name_generated(self, text_data_dir: Path, mode_flag: str):
         stdout, stderr, error_code = run_tempren(
-            mode_flag, "-s", "%Name()", "%Name()", text_data_dir
+            mode_flag, "-v", "-s", "%Name()", "%Name()", text_data_dir
         )
 
         assert error_code == ErrorCode.SUCCESS
@@ -138,3 +138,44 @@ class TestPathMode(CommonModeTestsBase):
         assert error_code == ErrorCode.SUCCESS
         assert (nested_data_dir / "subdir" / "level-1.file").exists()
         assert (nested_data_dir / "first" / "subdir" / "level-2.file").exists()
+
+
+@pytest.mark.parametrize("mode_flag", ["-d", "--directory"])
+class TestDirectoryMode:
+    def test_single_directory_mode(self, nested_data_dir: Path, mode_flag: str):
+        stdout, stderr, error_code = run_tempren(
+            mode_flag, "%Upper{%Name()}", nested_data_dir / "first"
+        )
+
+        assert error_code == ErrorCode.SUCCESS
+        assert (nested_data_dir / "FIRST").exists()
+
+    def test_recursive_directory_mode(self, nested_data_dir: Path, mode_flag: str):
+        stdout, stderr, error_code = run_tempren(
+            mode_flag, "--recursive", "%Upper{%Name()}", nested_data_dir
+        )
+
+        assert error_code == ErrorCode.SUCCESS
+        assert (nested_data_dir / "FIRST").exists()
+        assert (nested_data_dir / "SECOND").exists()
+        assert (nested_data_dir / "SECOND" / "THIRD").exists()
+
+    def test_file_provided_in_directory_mode_error(
+        self, text_data_dir: Path, mode_flag: str
+    ):
+        stdout, stderr, error_code = run_tempren(
+            mode_flag, "%Upper{%Name()}", text_data_dir / "hello.txt"
+        )
+
+        assert error_code == ErrorCode.SUCCESS
+        assert "file paths provided in directory mode" in stderr
+
+    def test_sorting_in_directory_mode_error(
+        self, nested_data_dir: Path, mode_flag: str
+    ):
+        stdout, stderr, error_code = run_tempren(
+            mode_flag, "--sort", "%Name()", "%Upper{%Name()}", nested_data_dir
+        )
+
+        assert error_code == ErrorCode.USAGE_ERROR
+        assert "Sorting is not available in directory mode" in stderr

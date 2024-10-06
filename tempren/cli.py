@@ -18,6 +18,7 @@ from tempren.primitives import CategoryName, QualifiedTagName, TagName
 from tempren.template.exceptions import TagError, TemplateError
 
 from .pipeline import (
+    ConfigurationError,
     ConflictResolutionStrategy,
     FilterType,
     InvalidDestinationError,
@@ -134,6 +135,7 @@ def validate_adhoc_tags(
     unique_names = set(names)
     if len(names) > len(unique_names):
         repeating_names = [name for name in unique_names if names.count(name) > 1]
+        # TODO: Test
         for duplicate_name in repeating_names:
             executables_with_the_same_name = list(
                 map(
@@ -159,6 +161,8 @@ def validate_aliases(aliases: List[List[Tuple[TagName, str]]]) -> Dict[TagName, 
     unique_names = set(names)
     if len(names) > len(unique_names):
         repeating_names = [name for name in unique_names if names.count(name) > 1]
+        # TODO: Test
+        # TODO: Refactor - the same code is found in validate_adhoc_tags
         for duplicate_name in repeating_names:
             patterns_with_the_same_name = list(
                 map(
@@ -175,7 +179,7 @@ def validate_aliases(aliases: List[List[Tuple[TagName, str]]]) -> Dict[TagName, 
     return dict(list_of_tuples)
 
 
-class SystemExitError(Exception):
+class SystemExitError(Exception):  # TODO: Use ConfigurationError instead
     status: int
 
     def __init__(self, status: int, message: Optional[str]):
@@ -200,9 +204,10 @@ class _ListAvailableTags(argparse.Action):
             category = registry.category_map[category_name]
 
             all_category_tags = sorted(category.tag_map.items())
-            if not all_category_tags:
+            if (
+                not all_category_tags
+            ):  # NOCOVER: Empty categories should not be present in the registry
                 # There is no tags in the category
-                # TODO: Empty categories should not be present in the registry
                 continue
             max_name_length = max(
                 [len(tag_name) for tag_name, factory in all_category_tags]
@@ -245,7 +250,8 @@ class _ShowHelp(argparse.Action):
                 tag_factory = registry.get_tag_factory(qualified_name)
             except TagError as tag_error:
                 parser.exit(ErrorCode.USAGE_ERROR, str(tag_error))
-                raise
+                # noinspection PyUnreachableCode
+                raise  # NOCOVER: required by mypy
             log.info("")
             log.info(indent(tag_factory.configuration_signature, "  "))
             log.info("")
@@ -314,7 +320,6 @@ class DefaultOptionsHelpFormatter(argparse.HelpFormatter):
         return action.help
 
 
-# CHECK: use pydantic-cli for argument parsing
 def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
     log.debug("Parsing command line arguments")
     parser = argparse.ArgumentParser(
@@ -326,7 +331,7 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
     )
 
     parser.add_argument(
-        "-d",
+        "-dr",
         "--dry-run",
         action="store_true",
         help="Do not perform any renaming - just show expected operation results",
@@ -385,7 +390,15 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         dest="mode",
         const=OperationMode.name,
         default=OperationMode.name,
-        help="Use template to generate file name",
+        help="Use template to generate file name only",
+    )
+    operation_mode.add_argument(
+        "-d",
+        "--directory",
+        action="store_const",
+        dest="mode",
+        const=OperationMode.directory,
+        help="Use template to generate directory names only",
     )
     operation_mode.add_argument(
         "-p",
@@ -394,34 +407,6 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         dest="mode",
         const=OperationMode.path,
         help="Use template to generate relative file path",
-    )
-
-    conflict_resolution_group = parser.add_argument_group("conflict resolution")
-    conflict_resolution = conflict_resolution_group.add_mutually_exclusive_group()
-    conflict_resolution.add_argument(
-        "-cs",
-        "--conflict-stop",
-        action="store_true",
-        default=True,
-        help="Keep source file name intact and stop",
-    )
-    conflict_resolution.add_argument(
-        "-ci",
-        "--conflict-ignore",
-        action="store_true",
-        help="Keep source file name intact and continue",
-    )
-    conflict_resolution.add_argument(
-        "-co",
-        "--conflict-override",
-        action="store_true",
-        help="Override destination file",
-    )
-    conflict_resolution.add_argument(
-        "-cm",
-        "--conflict-manual",
-        action="store_true",
-        help="Prompt user to resolve conflict manually (choose an option or provide new filename)",
     )
 
     filtering_group = parser.add_argument_group("filtering")
@@ -467,6 +452,34 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
         "--sort-invert",
         action="store_true",
         help="Reverse sorting order",
+    )
+
+    conflict_resolution_group = parser.add_argument_group("conflict resolution")
+    conflict_resolution = conflict_resolution_group.add_mutually_exclusive_group()
+    conflict_resolution.add_argument(
+        "-cs",
+        "--conflict-stop",
+        action="store_true",
+        default=True,
+        help="Keep source file name intact and stop",
+    )
+    conflict_resolution.add_argument(
+        "-ci",
+        "--conflict-ignore",
+        action="store_true",
+        help="Keep source file name intact and continue",
+    )
+    conflict_resolution.add_argument(
+        "-co",
+        "--conflict-override",
+        action="store_true",
+        help="Override destination file",
+    )
+    conflict_resolution.add_argument(
+        "-cm",
+        "--conflict-manual",
+        action="store_true",
+        help="Prompt user to resolve conflict manually (choose an option or provide new filename)",
     )
 
     parser.add_argument(
@@ -590,7 +603,7 @@ def render_template_evaluation_error(
 def cli_prompt_conflict_resolver(
     source_path: Path, destination_path: Path
 ) -> Union[ConflictResolutionStrategy, Path]:
-    log.warning("White processing:")
+    log.warning("While processing:")
     log.warning(f"  {source_path}")
     log.warning("following path was generated:")
     log.warning(f"  {destination_path}")
@@ -650,6 +663,9 @@ def main() -> int:
         if exc.status != 0:
             log.error(exc)
         return exc.status
+    except ConfigurationError as exc:
+        log.error(exc)
+        return ErrorCode.USAGE_ERROR
     except TemplateEvaluationError as template_evaluation_error:
         render_template_evaluation_error(template_evaluation_error)
         return ErrorCode.TEMPLATE_EVALUATION_ERROR

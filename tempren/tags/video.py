@@ -3,6 +3,7 @@ from datetime import timedelta
 from fractions import Fraction
 from typing import Any, Optional
 
+import isodate
 from pymediainfo import MediaInfo
 
 from tempren.exceptions import FileNotSupportedError, MissingMetadataError
@@ -92,10 +93,10 @@ class FrameCountTag(VideoInfoTagBase):
 
 
 class DurationTag(VideoInfoTagBase):
-    """Video duration in seconds"""
+    """Video duration in ISO 8601 notation"""
 
     def extract_video_metadata(self, video_track) -> timedelta:
-        return timedelta(milliseconds=video_track.duration)
+        return isodate.duration_isoformat(timedelta(milliseconds=video_track.duration))
 
 
 class BitRateTag(VideoInfoTagBase):

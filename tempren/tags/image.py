@@ -7,7 +7,7 @@ import piexif
 import PIL
 from piexif import TAGS
 from piexif import TYPES as TAG_TYPES
-from PIL import Image
+from PIL.Image import Image
 
 from tempren.alias import TagAlias
 from tempren.exceptions import FileNotSupportedError, MissingMetadataError
@@ -21,9 +21,9 @@ class PillowTagBase(Tag, ABC):
 
     def process(self, file: File, context: Optional[str]) -> Any:
         try:
-            with Image.open(file.absolute_path) as img:
+            with PIL.Image.open(file.absolute_path) as img:
                 return self.extract_metadata(img)
-        except PIL.UnidentifiedImageError:
+        except (PIL.UnidentifiedImageError, SystemError):
             raise FileNotSupportedError()
 
     @abstractmethod

@@ -81,7 +81,7 @@ class TestMutagenTags:
 
         duration = tag.process(sample_file, None)
 
-        assert duration == timedelta(seconds=1, microseconds=288707)
+        assert duration == "PT1.288707S"
 
     def test_channels_extraction(self, sample_file: File):
         tag = ChannelsTag()

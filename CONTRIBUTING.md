@@ -119,4 +119,4 @@ The only difference between those modes is that in the case of name generation, 
 
 Actual renaming depends on the mode which determines what filesystem operations will be used.
 For the **path** mode, `move` filesystem operation is used, while **name** mode, utilizes the `rename` operation.
-If `--dry-run`/`-d` flag has been specified, `DryRunRenamer` is selected and no renaming is performed. All other stages are unaffected by this flag.
+If `--dry-run`/`-dr` flag has been specified, `DryRunRenamer` is selected and no renaming is performed. All other stages are unaffected by this flag.
