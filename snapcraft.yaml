@@ -1,7 +1,7 @@
 name: tempren
 title: tempren
 summary: Template-based file renaming utility
-base: core20
+base: core24
 adopt-info: tempren
 source-code: https://github.com/idle-code/tempren.git
 description: |
@@ -10,11 +10,11 @@ description: |
   A rich library of built-in tags helps with working with many common file types out-of-the-box.
 grade: stable
 confinement: strict
-architectures:
-  - build-on: amd64
-  - build-on: arm64
-  - build-on: armhf
-
+platforms:
+  amd64:
+  arm64:
+    build-on: [amd64, arm64]
+    build-for: [arm64]
 
 parts:
   poetry:
@@ -25,7 +25,7 @@ parts:
     override-pull: |
       curl https://install.python-poetry.org > install-poetry.py
       export POETRY_HOME=/opt/poetry
-      python3 install-poetry.py --version 1.5.1
+      python3 install-poetry.py --version 1.8.3
       #$POETRY_HOME/bin/poetry --version
       #export TEMPREN_VERSION="$($POETRY_HOME/bin/poetry version --short)"
       #echo $TEMPREN_VERSION | tee /tmp/tempren_version
@@ -37,7 +37,7 @@ parts:
     build-environment:
       - PATH: "/opt/poetry/bin:$PATH"
     build-packages:
-        - python3-pip
+      - python3-pip
     override-pull: |
       snapcraftctl pull
 
@@ -46,14 +46,14 @@ parts:
       snapcraftctl set-version $TEMPREN_VERSION
 
       # Prepare requirements.txt to install tempren from the PyPi
-      # This is required as default build alghorithm doesn't correctly
+      # This is required as default build algorithm doesn't correctly
       # export scripts declared in pyproject.toml
       poetry export --extras=video --output=requirements.txt
       python3 -m pip download "tempren[video]==$TEMPREN_VERSION"
       export TEMPREN_HASH=$(python3 -m pip hash tempren*.whl | tail -1)
       echo "tempren==$TEMPREN_VERSION $TEMPREN_HASH" >> requirements.txt
 
-    requirements: [requirements.txt]
+#    requirements: [requirements.txt]
     stage-packages:
       - libmagic1
       - libmediainfo0v5
