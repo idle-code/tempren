@@ -23,7 +23,7 @@ class PillowTagBase(Tag, ABC):
         try:
             with PIL.Image.open(file.absolute_path) as img:
                 return self.extract_metadata(img)
-        except PIL.UnidentifiedImageError:
+        except (PIL.UnidentifiedImageError, SystemError):
             raise FileNotSupportedError()
 
     @abstractmethod
