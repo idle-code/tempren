@@ -12,10 +12,7 @@ NEW_VERSION=$(poetry version --short)
 pytest
 mypy
 
-git commit -a -m "Version v$NEW_VERSION"
-git tag "v$NEW_VERSION"
-git flow release finish
-
+git flow release finish --message "$NEW_VERSION"
 
 confirm() {
   QUESTION=$1
@@ -31,6 +28,7 @@ if confirm "Do you want to push the changes?"; then
   git push
   git push --tags
 else
+  echo
   echo "To publish:"
   echo "    git push && git push --tags"
 fi
