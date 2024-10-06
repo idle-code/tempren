@@ -11,5 +11,6 @@ NEXT_VERSION=$(poetry version --dry-run --short "$BUMP_RULE")
 
 git flow release start "v$NEXT_VERSION"
 poetry version "$BUMP_RULE"
+git commit -a -m "Version updated to v$NEW_VERSION"
 
 echo "Type release-finish.sh to make the release"
