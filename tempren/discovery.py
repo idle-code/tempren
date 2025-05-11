@@ -40,12 +40,15 @@ def _discover_classes_in_package(
 
     def _visitor(module: ModuleType, klass: type):
         if not _is_base_class(klass):
+            log.debug(f"{klass} has no valid base ({base_klass})")
             return
+
         if module.__package__:
             category_name = CategoryName(module.__name__[len(module.__package__) + 1 :])
         else:
             category_name = CategoryName(module.__name__)
 
+        log.debug(f"Adding {klass} to {category_name} category")
         found_classes[category_name].append(klass)
 
     visit_types_in_package(package, _visitor)
@@ -80,4 +83,5 @@ def visit_types_in_module(
 
     for _, tag_class in inspect.getmembers(module):
         if isinstance(tag_class, type):
+            log.debug(f"Found tag {tag_class}")
             visitor(module, tag_class)

@@ -463,3 +463,13 @@ class AsDistanceTag(Tag):
         src_value = float(context) * self._src_unit
         dst_value = src_value.to(self._dst_unit)
         return dst_value.magnitude
+
+
+class NotTag(Tag):
+    """Negate truthfulness of provided context"""
+
+    require_context = True
+
+    def process(self, file: File, context: Optional[str]) -> bool:
+        assert context is not None
+        return not bool(context)

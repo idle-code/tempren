@@ -209,6 +209,26 @@ class SplitCaseTag(Tag):
         assert separator
         self.separator = separator
 
-    def process(self, file: File, context: Optional[str]) -> Any:
+    def process(self, file: File, context: Optional[str]) -> str:
         assert context is not None
         return self._pattern.sub("".join((r"\1", self.separator, r"\2")), context)
+
+
+class IsEmptyTag(Tag):
+    """Check if passed context is empty"""
+
+    require_context = True
+
+    def process(self, file: File, context: Optional[str]) -> bool:
+        assert context is not None
+        return len(str(context)) == 0
+
+
+class LengthTag(Tag):
+    """Number of characters in provided context"""
+
+    require_context = True
+
+    def process(self, file: File, context: Optional[str]) -> int:
+        assert context is not None
+        return len(str(context))

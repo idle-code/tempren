@@ -148,14 +148,20 @@ class ExifTag(Tag):
         exif_dict = piexif.load(str(file.absolute_path))
         for src in exif_dict.values():
             if isinstance(src, dict) and self.tag_id in src:
-                return self._extract_value(src[self.tag_id])
+                return self._extract_value(self.tag_type, src[self.tag_id])
         else:
             raise MissingMetadataError()
 
-    def _extract_value(self, tag_value):
-        if self.tag_type in (TAG_TYPES.Rational, TAG_TYPES.SRational):
-            return round(tag_value[0] / tag_value[1], 1)
-        if self.tag_type == TAG_TYPES.Ascii:
+    def _extract_value(self, tag_type, tag_value):
+        if tag_type in (TAG_TYPES.Rational, TAG_TYPES.SRational):
+            if isinstance(tag_value[0], tuple):
+                return " ".join(str(self._extract_value(v)) for v in tag_value)
+            else:
+                if tag_value[1] == 1:
+                    return tag_value[0]
+                else:
+                    return round(tag_value[0] / tag_value[1], 1)
+        if tag_type == TAG_TYPES.Ascii:
             return tag_value.decode("ascii")
         return tag_value
 
@@ -187,3 +193,16 @@ ExifTag.__doc__ = "\n".join(
 
 class ResolutionTagAlias(TagAlias):
     """%Image.Width()x%Image.Height()"""
+
+
+class GpsPositionTag(ExifTag):
+    """Latitude and longitude of place where photo was taken"""
+
+    def configure(self):
+        self.latitude_tag_id, self.latitude_tag_type = self._tag_name_to_id_type(
+            "GpsLatitude"
+        )
+
+
+class HasGpsPositionTagAlias(TagAlias):
+    """%Core.Not(){%Text.IsEmpty(){%Image.GpsPosition()}}"""
