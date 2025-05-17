@@ -5,6 +5,7 @@ from typing import Any, Iterator, Optional, Tuple
 
 import piexif
 import PIL
+from geopy import Point
 from piexif import TAGS
 from piexif import TYPES as TAG_TYPES
 from PIL.Image import Image
@@ -122,11 +123,50 @@ class IsOrientationTag(PillowTagBase):
         raise NotImplementedError()
 
 
+def extract_exif_value(exif_dict, tag_name: str):
+    tag_id, tag_type = tag_name_to_id_type(tag_name)
+    for src in exif_dict.values():
+        if isinstance(src, dict) and tag_id in src:
+            tag_value = src[tag_id]
+            return convert_tag_value(tag_type, tag_value)
+    else:
+        raise MissingMetadataError()
+
+
+def tag_name_to_id_type(tag_name: str) -> Tuple[int, int]:
+    for _, tags in TAGS.items():
+        for tag_id, description in tags.items():
+            if description["name"] == tag_name:
+                return tag_id, description["type"]
+    raise ValueError(f"Could not find tag id for '{tag_name}'")
+
+
+def convert_tag_value(tag_type, tag_value):
+    if tag_type in (TAG_TYPES.Rational, TAG_TYPES.SRational):
+        if isinstance(tag_value[0], tuple):
+            if len(tag_value) == 3:
+                # We are probably dealing with GPS coordinates
+                (
+                    degrees,
+                    minutes,
+                    seconds,
+                ) = (convert_tag_value(tag_type, v) for v in tag_value)
+                return f"{degrees}°{minutes}′{seconds}″"
+            return " ".join(str(convert_tag_value(tag_type, v)) for v in tag_value)
+        else:
+            if tag_value[1] == 1:
+                return tag_value[0]
+            else:
+                return tag_value[0] / tag_value[1]
+    if tag_type == TAG_TYPES.Ascii:
+        return tag_value.decode("ascii")
+    return tag_value
+
+
 class ExifTag(Tag):
     """Extract value of any EXIF tag"""
 
-    tag_id: int
-    tag_type: int
+    tag_name: str
 
     def configure(self, tag_name: str):  # type: ignore
         """
@@ -134,36 +174,11 @@ class ExifTag(Tag):
         """
         # TODO: generate list of supported tags dynamically
         assert tag_name, "expected non empty tag name"
-        self.tag_id, self.tag_type = self._tag_name_to_id_type(tag_name)
-
-    @staticmethod
-    def _tag_name_to_id_type(tag_name: str) -> Tuple[int, int]:
-        for _, tags in TAGS.items():
-            for tag_id, description in tags.items():
-                if description["name"] == tag_name:
-                    return tag_id, description["type"]
-        raise ValueError(f"Could not find tag id for '{tag_name}'")
+        self.tag_name = tag_name
 
     def process(self, file: File, context: Optional[str]) -> Any:
         exif_dict = piexif.load(str(file.absolute_path))
-        for src in exif_dict.values():
-            if isinstance(src, dict) and self.tag_id in src:
-                return self._extract_value(self.tag_type, src[self.tag_id])
-        else:
-            raise MissingMetadataError()
-
-    def _extract_value(self, tag_type, tag_value):
-        if tag_type in (TAG_TYPES.Rational, TAG_TYPES.SRational):
-            if isinstance(tag_value[0], tuple):
-                return " ".join(str(self._extract_value(v)) for v in tag_value)
-            else:
-                if tag_value[1] == 1:
-                    return tag_value[0]
-                else:
-                    return round(tag_value[0] / tag_value[1], 1)
-        if tag_type == TAG_TYPES.Ascii:
-            return tag_value.decode("ascii")
-        return tag_value
+        return extract_exif_value(exif_dict, self.tag_name)
 
 
 _tag_type_map = {
@@ -195,13 +210,32 @@ class ResolutionTagAlias(TagAlias):
     """%Image.Width()x%Image.Height()"""
 
 
-class GpsPositionTag(ExifTag):
+class GpsPositionTag(Tag):
     """Latitude and longitude of place where photo was taken"""
 
-    def configure(self):
-        self.latitude_tag_id, self.latitude_tag_type = self._tag_name_to_id_type(
-            "GpsLatitude"
-        )
+    require_context = False
+
+    use_decimal: bool
+
+    def configure(self, decimal: bool = True):
+        """
+        :param decimal: Use simpler decimal notation instead of degrees-minutes-seconds
+        """
+        self.use_decimal = decimal
+
+    def process(self, file: File, context: Optional[str]) -> Any:
+        assert context is None
+
+        exif_dict = piexif.load(str(file.absolute_path))
+        latitude = extract_exif_value(exif_dict, "GPSLatitude")
+        latitude_ref = extract_exif_value(exif_dict, "GPSLatitudeRef")
+        longitude = extract_exif_value(exif_dict, "GPSLongitude")
+        longitude_ref = extract_exif_value(exif_dict, "GPSLongitudeRef")
+
+        degrees_notation = f"{latitude}{latitude_ref}, {longitude}{longitude_ref}"
+        if self.use_decimal:
+            return Point.from_string(degrees_notation).format_decimal()
+        return degrees_notation
 
 
 class HasGpsPositionTagAlias(TagAlias):
