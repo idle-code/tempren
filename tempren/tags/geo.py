@@ -46,6 +46,7 @@ class KmlPlaceNameTag(Tag):
         use_look_at: bool = True,
         use_folders: bool = True,
         default: str = "",
+        to_csv: Optional[str] = None,
     ) -> None:
         """
         :param kml: Path to the KML file containing the places
@@ -63,6 +64,15 @@ class KmlPlaceNameTag(Tag):
         self.places = self._load_file(kml, use_look_at, use_folders)
         self.default = default
 
+        if to_csv is not None:
+            with open(to_csv, "w") as csv_file:
+                csv_file.writelines(
+                    [
+                        f"{p.latitude}, {p.longitude}, {p.radius / 1000}, {p.name}\n"
+                        for p in self.places
+                    ]
+                )
+
     def _load_file(
         self, kml_path: str, use_look_at: bool, use_folders: bool
     ) -> List[Place]:
@@ -76,7 +86,7 @@ class KmlPlaceNameTag(Tag):
                         "/".join(prefix + [kml.name]),
                         kml.view.latitude,
                         kml.view.longitude,
-                        radius=kml.view.range,
+                        radius=kml.view.range / 2,
                     )
                     prefix = prefix + [kml.name]
                     return [folder_place] + list(
@@ -92,13 +102,13 @@ class KmlPlaceNameTag(Tag):
                             "/".join(prefix + [kml.name]),
                             kml.view.latitude,
                             kml.view.longitude,
-                            radius=kml.view.range,
+                            radius=kml.view.range / 2,
                         )
                     ]
                 else:
                     latitude = kml.kml_geometry.kml_coordinates.coords[0][0]
                     longitude = kml.kml_geometry.kml_coordinates.coords[0][1]
-                    radius = kml.view.range if kml.view is not None else None
+                    radius = kml.view.range if kml.view / 2 is not None else None
                     return [
                         Place(
                             "/".join(prefix + [kml.name]),
@@ -135,10 +145,25 @@ class KmlPlaceNameTag(Tag):
     @staticmethod
     def _find_best_match(places: List[Place], point: Point) -> Optional[Place]:
         gc = great_circle()
-        min_distance_place: Optional[Place] = None
-        for place in places:
-            if min_distance_place is None or gc.measure(
-                place.position, point
-            ) < gc.measure(min_distance_place.position, point):
-                min_distance_place = place
-        return min_distance_place
+
+        places_in_range = filter(
+            lambda p: gc.measure(p.position, point) < p.radius, places
+        )
+
+        # FIXME: Fix the types
+        smallest_place_in_range = next(
+            sorted(places_in_range, key=lambda p: p.radius), None
+        )
+        return smallest_place_in_range
+
+        # min_distance: float = -1
+        # min_distance_place: Optional[Place] = None
+        #
+        # for place in places_in_range:
+        #     distance = gc.measure(place.position, point)
+        #     if distance > place.radius:
+        #         continue
+        #     if min_distance_place is None or distance < min_distance:
+        #         min_distance = distance
+        #         min_distance_place = place
+        # return min_distance_place

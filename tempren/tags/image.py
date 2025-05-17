@@ -157,6 +157,8 @@ def convert_tag_value(tag_type, tag_value):
             if tag_value[1] == 1:
                 return tag_value[0]
             else:
+                if tag_value[1] == 0:
+                    return 0
                 return tag_value[0] / tag_value[1]
     if tag_type == TAG_TYPES.Ascii:
         return tag_value.decode("ascii")
@@ -227,16 +229,26 @@ class GpsPositionTag(Tag):
         assert context is None
 
         exif_dict = piexif.load(str(file.absolute_path))
-        latitude = extract_exif_value(exif_dict, "GPSLatitude")
-        latitude_ref = extract_exif_value(exif_dict, "GPSLatitudeRef")
-        longitude = extract_exif_value(exif_dict, "GPSLongitude")
-        longitude_ref = extract_exif_value(exif_dict, "GPSLongitudeRef")
+        try:
+            latitude = extract_exif_value(exif_dict, "GPSLatitude")
+            latitude_ref = extract_exif_value(exif_dict, "GPSLatitudeRef")
+            longitude = extract_exif_value(exif_dict, "GPSLongitude")
+            longitude_ref = extract_exif_value(exif_dict, "GPSLongitudeRef")
 
-        degrees_notation = f"{latitude}{latitude_ref}, {longitude}{longitude_ref}"
-        if self.use_decimal:
-            return Point.from_string(degrees_notation).format_decimal()
-        return degrees_notation
+            degrees_notation = f"{latitude}{latitude_ref}, {longitude}{longitude_ref}"
+            if self.use_decimal:
+                return Point.from_string(degrees_notation).format_decimal()
+            return degrees_notation
+        except ValueError:
+            return ""
 
 
-class HasGpsPositionTagAlias(TagAlias):
-    """%Core.Not(){%Text.IsEmpty(){%Image.GpsPosition()}}"""
+class HasGpsPositionTag(GpsPositionTag):
+    """Check if file contains valid GPS coordinates that can be extracted by GpsPosition tag"""
+
+    def process(self, file: File, context: Optional[str]) -> bool:
+        # noinspection PyBroadException
+        try:
+            return super().process(file, context) != ""
+        except:
+            return False
