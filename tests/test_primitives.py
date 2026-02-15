@@ -1,4 +1,4 @@
-from _pytest.python_api import raises
+from pytest import raises
 
 from tempren.primitives import CategoryName, TagName
 
