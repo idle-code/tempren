@@ -176,6 +176,8 @@ class ExifTag(Tag):
         """
         # TODO: generate list of supported tags dynamically
         assert tag_name, "expected non empty tag name"
+        # Validate tag name exists (raises ValueError if unknown)
+        tag_name_to_id_type(tag_name)
         self.tag_name = tag_name
 
     def process(self, file: File, context: Optional[str]) -> Any:
