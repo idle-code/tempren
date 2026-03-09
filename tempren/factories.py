@@ -1,5 +1,4 @@
 import textwrap
-from typing import Optional, Type
 
 from docstring_parser import parse as parse_docstring
 
@@ -9,7 +8,7 @@ from tempren.primitives import Tag, TagFactory, TagName
 class TagFactoryFromClass(TagFactory):
     """Produces tag instances by instantiating provided python class"""
 
-    _tag_class: Type[Tag]
+    _tag_class: type[Tag]
     _tag_name: TagName
 
     @property
@@ -50,7 +49,7 @@ class TagFactoryFromClass(TagFactory):
         single_line_signature = f"%{self._tag_name}{signature_str}{context_metavar}"
         return single_line_signature
 
-    def _create_arguments_description(self) -> Optional[str]:
+    def _create_arguments_description(self) -> str | None:
         argument_description = []
         for argument in self._parsed_configure_docstring.params:
             argument_description.append(f"{argument.arg_name} - {argument.description}")
@@ -65,10 +64,10 @@ class TagFactoryFromClass(TagFactory):
         return ""
 
     @property
-    def long_description(self) -> Optional[str]:
+    def long_description(self) -> str | None:
         return self._parsed_class_docstring.long_description
 
-    def __init__(self, tag_class: Type[Tag], tag_name: TagName):
+    def __init__(self, tag_class: type[Tag], tag_name: TagName):
         self._tag_class = tag_class
         self._tag_name = tag_name
         self._parsed_class_docstring = parse_docstring(

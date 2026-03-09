@@ -2,7 +2,7 @@ import fnmatch
 import logging
 import re
 from abc import ABC, abstractmethod
-from typing import Callable
+from collections.abc import Callable
 
 from tempren.evaluation import evaluate_expression
 from tempren.exceptions import ExpressionEvaluationError, TemplateEvaluationError

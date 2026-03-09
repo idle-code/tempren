@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
+from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Any, List, Mapping, Optional
+from typing import Any
 
 from tempren.exceptions import MissingMetadataError
 from tempren.primitives import File, Location, Pattern, QualifiedTagName, Tag
@@ -29,10 +30,8 @@ class RawText(PatternElement):
 class PatternElementSequence(PatternElement, Pattern):
     """Represents pattern tree - a chain of text/tag invocations"""
 
-    sub_elements: List[PatternElement] = field(default_factory=list)
-    source_representation: Optional[str] = field(
-        init=False, default=None, compare=False
-    )
+    sub_elements: list[PatternElement] = field(default_factory=list)
+    source_representation: str | None = field(init=False, default=None, compare=False)
 
     def process(self, file: File) -> str:
         """Recursively renders pattern as a string"""
@@ -72,8 +71,8 @@ class TagPlaceholder(PatternElement):
 
     location: Location = field(init=False, compare=False)
     tag_name: QualifiedTagName
-    context: Optional[PatternElementSequence] = None
-    args: List[Any] = field(default_factory=list)
+    context: PatternElementSequence | None = None
+    args: list[Any] = field(default_factory=list)
     kwargs: Mapping[str, Any] = field(default_factory=dict)
 
     def process(self, file: File) -> Any:
@@ -87,7 +86,7 @@ class TagInstance(PatternElement):
     """Represents a tag bound to the implementation"""
 
     tag: Tag
-    context: Optional[PatternElementSequence] = None
+    context: PatternElementSequence | None = None
 
     def process(self, file: File) -> Any:
         context_str = self.context.process(file) if self.context else None

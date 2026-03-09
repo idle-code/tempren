@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from datetime import timedelta
-from typing import Any, Optional
+from typing import Any
 
 import gpxpy
 import isodate
@@ -13,7 +13,7 @@ from tempren.primitives import File, Tag
 class GpxTagBase(Tag, ABC):
     require_context = False
 
-    def process(self, file: File, context: Optional[str]) -> Any:
+    def process(self, file: File, context: str | None) -> Any:
         try:
             with open(file.absolute_path, "r") as gpx_file:
                 parsed_gpx = gpxpy.parse(gpx_file)

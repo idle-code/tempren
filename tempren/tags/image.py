@@ -1,7 +1,8 @@
 import itertools
 from abc import ABC, abstractmethod
+from collections.abc import Iterator
 from fractions import Fraction
-from typing import Any, Iterator, Optional, Tuple
+from typing import Any
 
 import piexif
 import PIL
@@ -20,7 +21,7 @@ class PillowTagBase(Tag, ABC):
 
     require_context = False
 
-    def process(self, file: File, context: Optional[str]) -> Any:
+    def process(self, file: File, context: str | None) -> Any:
         try:
             with PIL.Image.open(file.absolute_path) as img:
                 return self.extract_metadata(img)
@@ -133,7 +134,7 @@ def extract_exif_value(exif_dict, tag_name: str):
         raise MissingMetadataError()
 
 
-def tag_name_to_id_type(tag_name: str) -> Tuple[int, int]:
+def tag_name_to_id_type(tag_name: str) -> tuple[int, int]:
     for _, tags in TAGS.items():
         for tag_id, description in tags.items():
             if description["name"] == tag_name:
@@ -180,7 +181,7 @@ class ExifTag(Tag):
         tag_name_to_id_type(tag_name)
         self.tag_name = tag_name
 
-    def process(self, file: File, context: Optional[str]) -> Any:
+    def process(self, file: File, context: str | None) -> Any:
         exif_dict = piexif.load(str(file.absolute_path))
         return extract_exif_value(exif_dict, self.tag_name)
 
@@ -227,7 +228,7 @@ class GpsPositionTag(Tag):
         """
         self.use_decimal = decimal
 
-    def process(self, file: File, context: Optional[str]) -> Any:
+    def process(self, file: File, context: str | None) -> Any:
         assert context is None
 
         exif_dict = piexif.load(str(file.absolute_path))
@@ -248,7 +249,7 @@ class GpsPositionTag(Tag):
 class HasGpsPositionTag(GpsPositionTag):
     """Check if file contains valid GPS coordinates that can be extracted by GpsPosition tag"""
 
-    def process(self, file: File, context: Optional[str]) -> bool:
+    def process(self, file: File, context: str | None) -> bool:
         # noinspection PyBroadException
         try:
             return super().process(file, context) != ""

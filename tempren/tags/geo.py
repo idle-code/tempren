@@ -2,7 +2,6 @@ import itertools
 import logging
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional
 
 import fastkml.geometry
 import fastkml.kml
@@ -18,7 +17,7 @@ class Place:
     name: str
     latitude: float
     longitude: float
-    radius: Optional[float]
+    radius: float | None
 
     @property
     def position(self) -> Point:
@@ -36,7 +35,7 @@ class KmlPlaceNameTag(Tag):
     log: logging.Logger
 
     # TODO: Introduce global cache for storing data between different files processing
-    places: List[Place]
+    places: list[Place]
     default: str
 
     def __init__(self):
@@ -48,7 +47,7 @@ class KmlPlaceNameTag(Tag):
         use_look_at: bool = True,
         use_folders: bool = True,
         default: str = "",
-        to_csv: Optional[str] = None,
+        to_csv: str | None = None,
     ) -> None:
         """
         :param kml: Path to the KML file containing the places
@@ -77,11 +76,11 @@ class KmlPlaceNameTag(Tag):
 
     def _load_file(
         self, kml_path: str, use_look_at: bool, use_folders: bool
-    ) -> List[Place]:
+    ) -> list[Place]:
         self.log.debug("Loading %s", kml_path)
         kml_file = fastkml.kml.KML.parse(kml_path)
 
-        def _collect_places(kml, prefix: List[str]) -> List[Place]:
+        def _collect_places(kml, prefix: list[str]) -> list[Place]:
             if isinstance(kml, fastkml.containers.Folder):
                 if (
                     use_folders
@@ -175,7 +174,7 @@ class KmlPlaceNameTag(Tag):
 
         return places
 
-    def process(self, file: File, context: Optional[str]) -> str:
+    def process(self, file: File, context: str | None) -> str:
         assert context is not None
         coordinates = Point.from_string(context)
         place = self._find_best_match(self.places, coordinates)
@@ -184,7 +183,7 @@ class KmlPlaceNameTag(Tag):
         return place.name
 
     @staticmethod
-    def _find_best_match(places: List[Place], point: Point) -> Optional[Place]:
+    def _find_best_match(places: list[Place], point: Point) -> Place | None:
         gc = great_circle()
 
         places_in_range = [
@@ -200,7 +199,7 @@ class KmlPlaceNameTag(Tag):
         return min(places_in_range, key=lambda p: p.radius or float("inf"))
 
         # min_distance: float = -1
-        # min_distance_place: Optional[Place] = None
+        # min_distance_place: Place | None = None
         #
         # for place in places_in_range:
         #     distance = gc.measure(place.position, point)

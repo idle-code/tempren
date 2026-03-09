@@ -3,8 +3,9 @@ import inspect
 import logging
 import pkgutil
 from collections import defaultdict
+from collections.abc import Callable
 from types import ModuleType
-from typing import Callable, Dict, List, Type, TypeVar
+from typing import TypeVar
 
 from tempren.alias import TagAlias
 from tempren.primitives import CategoryName, Tag
@@ -12,11 +13,11 @@ from tempren.primitives import CategoryName, Tag
 log = logging.getLogger(__name__)
 
 
-def discover_tags_in_package(package) -> Dict[CategoryName, List[Type[Tag]]]:
+def discover_tags_in_package(package) -> dict[CategoryName, list[type[Tag]]]:
     return _discover_classes_in_package(package, Tag)
 
 
-def discover_aliases_in_package(package) -> Dict[CategoryName, List[Type[TagAlias]]]:
+def discover_aliases_in_package(package) -> dict[CategoryName, list[type[TagAlias]]]:
     return _discover_classes_in_package(package, TagAlias)
 
 
@@ -24,8 +25,8 @@ BaseClass = TypeVar("BaseClass")
 
 
 def _discover_classes_in_package(
-    package, base_klass: Type[BaseClass]
-) -> Dict[CategoryName, List[Type[BaseClass]]]:
+    package, base_klass: type[BaseClass]
+) -> dict[CategoryName, list[type[BaseClass]]]:
     def _is_base_class(klass: type):
         if (
             not inspect.isclass(klass)

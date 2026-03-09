@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Optional
+from typing import Any
 
 from tempren.alias import TagAlias
 from tempren.primitives import File, Tag
@@ -8,7 +8,7 @@ from tempren.primitives import File, Tag
 class FirstLevelTag(Tag):
     require_context = None
 
-    def process(self, path: File, context: Optional[str]) -> str:
+    def process(self, path: File, context: str | None) -> str:
         raise NotImplementedError()
 
 
@@ -19,7 +19,7 @@ class AbstractTag(Tag, ABC):
     def implementation_detail(self):
         raise NotImplementedError()
 
-    def process(self, file: File, context: Optional[str]) -> Any:
+    def process(self, file: File, context: str | None) -> Any:
         self.implementation_detail()
 
 

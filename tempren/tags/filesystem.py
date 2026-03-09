@@ -1,6 +1,6 @@
 import datetime
 import os.path
-from typing import Any, Optional
+from typing import Any
 
 from tempren.primitives import File, Tag
 
@@ -10,7 +10,7 @@ class SizeTag(Tag):
 
     require_context = False
 
-    def process(self, file: File, context: Optional[str]) -> int:
+    def process(self, file: File, context: str | None) -> int:
         assert context is None
         return os.path.getsize(file.absolute_path)
 
@@ -20,7 +20,7 @@ class MTimeTag(Tag):
 
     require_context = False
 
-    def process(self, file: File, context: Optional[str]) -> Any:
+    def process(self, file: File, context: str | None) -> Any:
         assert context is None
         mtime_seconds = os.path.getmtime(file.absolute_path)
         mtime = datetime.datetime.fromtimestamp(mtime_seconds)
@@ -32,7 +32,7 @@ class OwnerTag(Tag):
 
     require_context = False
 
-    def process(self, file: File, context: Optional[str]) -> str:
+    def process(self, file: File, context: str | None) -> str:
         # TODO: Maybe if context is present parse it as a path?
         return file.absolute_path.owner()
 
@@ -42,7 +42,7 @@ class GroupTag(Tag):
 
     require_context = False
 
-    def process(self, file: File, context: Optional[str]) -> str:
+    def process(self, file: File, context: str | None) -> str:
         # TODO: Maybe if context is present parse it as a path?
         return file.absolute_path.group()
 
@@ -56,7 +56,7 @@ class EntryCountTag(Tag):
 
     require_context = False
 
-    def process(self, file: File, context: Optional[str]) -> int:
+    def process(self, file: File, context: str | None) -> int:
         if file.absolute_path.is_dir():
             target_directory = file.absolute_path
         else:

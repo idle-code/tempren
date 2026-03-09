@@ -1,7 +1,7 @@
 import datetime
 from abc import ABC
 from datetime import timedelta
-from typing import Any, Dict, Optional
+from typing import Any
 
 import isodate
 import mutagen
@@ -19,7 +19,7 @@ class MutagenTagBase(Tag, ABC):
 
     tag_key: str
 
-    def process(self, file: File, context: Optional[str]) -> Any:
+    def process(self, file: File, context: str | None) -> Any:
         metadata_dict = self._extract_metadata(file)
         if self.tag_key not in metadata_dict:
             raise MissingMetadataError()
@@ -28,12 +28,12 @@ class MutagenTagBase(Tag, ABC):
             tag_value = "\n".join(tag_value)
         return tag_value
 
-    def _extract_metadata(self, file: File) -> Dict[str, Any]:
+    def _extract_metadata(self, file: File) -> dict[str, Any]:
         # TODO: Check if File(..., easy=True) could improve readability here
         audio_file = mutagen.File(file.absolute_path)
         if audio_file is None:
             raise FileNotSupportedError()
-        metadata_dict: Dict[str, Any] = dict()
+        metadata_dict: dict[str, Any] = dict()
         self.try_to_extract_property(metadata_dict, audio_file.info, "length")
         self.try_to_extract_property(metadata_dict, audio_file.info, "channels")
         self.try_to_extract_property(metadata_dict, audio_file.info, "sample_rate")
@@ -51,7 +51,7 @@ class MutagenTagBase(Tag, ABC):
 
     @staticmethod
     def try_to_extract_property(
-        metadata_dict: Dict[str, Any], audio_info, property_name: str
+        metadata_dict: dict[str, Any], audio_info, property_name: str
     ):
         if hasattr(audio_info, property_name):
             metadata_dict[property_name] = getattr(audio_info, property_name)

@@ -4,7 +4,6 @@ import subprocess
 import sys
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
-from typing import Tuple
 
 import pytest
 
@@ -21,7 +20,7 @@ tempren_process_env["PYTHONPATH"] = ":".join(
 )
 
 
-def run_tempren_process(*args) -> Tuple[str, str, int]:
+def run_tempren_process(*args) -> tuple[str, str, int]:
     """Run tempren with provided arguments as separate process"""
     args = list(map(str, filter(lambda v: v is not None, args)))
     print("CWD:", os.getcwd())
@@ -60,7 +59,7 @@ def start_tempren_process(*args) -> subprocess.Popen:
     return tempren_process
 
 
-def run_tempren(*args) -> Tuple[str, str, int]:
+def run_tempren(*args) -> tuple[str, str, int]:
     """Run tempren's main() function with provided arguments"""
     args = list(map(str, filter(lambda v: v is not None, args)))
     old_sys_argv = sys.argv.copy()
