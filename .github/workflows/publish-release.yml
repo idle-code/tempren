@@ -27,7 +27,7 @@ jobs:
       - name: Build snap package
         uses: snapcore/action-build@v1
         id: build_snap
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           path: ${{ steps.build_snap.outputs.snap }}
       - name: Publish snap package to the snapcraft.io store
