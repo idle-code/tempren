@@ -3,7 +3,7 @@ import mimetypes
 from collections import defaultdict
 from math import ceil, floor
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any
 
 import isodate
 import magic
@@ -23,7 +23,7 @@ class CountTag(Tag):
     require_context = False
     step: int
     width: int
-    _common_counter: Optional[int] = None
+    _common_counter: int | None = None
     _per_directory_counters: defaultdict
 
     def configure(self, start: int = 0, step: int = 1, width: int = 0, common: bool = False):  # type: ignore
@@ -47,7 +47,7 @@ class CountTag(Tag):
             self._common_counter = start
         self._per_directory_counters = defaultdict(lambda: start)
 
-    def process(self, file: File, context: Optional[str]) -> Union[str, int]:
+    def process(self, file: File, context: str | None) -> str | int:
         value = self._get_counter_value_for(file)
         if self.width != 0:
             return str(value).zfill(self.width)
@@ -76,7 +76,7 @@ class ExtTag(Tag):
 
     require_context = None
 
-    def process(self, file: File, context: Optional[str]) -> str:
+    def process(self, file: File, context: str | None) -> str:
         if context:
             return str(Path(context).suffix)
         return str(file.relative_path.suffix)
@@ -91,7 +91,7 @@ class BaseTag(Tag):
 
     require_context = None
 
-    def process(self, file: File, context: Optional[str]) -> str:
+    def process(self, file: File, context: str | None) -> str:
         if context:
             return Path(context).stem
         return file.relative_path.stem
@@ -106,7 +106,7 @@ class DirTag(Tag):
 
     require_context = None
 
-    def process(self, file: File, context: Optional[str]) -> Path:
+    def process(self, file: File, context: str | None) -> Path:
         if context:
             return Path(context).parent
         return file.relative_path.parent
@@ -117,7 +117,7 @@ class NameTag(Tag):
 
     require_context = None
 
-    def process(self, file: File, context: Optional[str]) -> str:
+    def process(self, file: File, context: str | None) -> str:
         if context:
             return str(Path(context).name)
         return str(file.relative_path.name)
@@ -128,7 +128,7 @@ class SanitizeTag(Tag):
 
     require_context = True
 
-    def process(self, file: File, context: Optional[str]) -> str:
+    def process(self, file: File, context: str | None) -> str:
         assert context
         return str(pathvalidate.sanitize_filepath(context))
 
@@ -148,7 +148,7 @@ class MimeTag(Tag):
         self.select_type = type
         self.select_subtype = subtype
 
-    def process(self, file: File, context: Optional[str]) -> str:
+    def process(self, file: File, context: str | None) -> str:
         mime_type = magic.from_file(file.absolute_path, mime=True)
         if self.select_type and not self.select_subtype:
             return mime_type.split("/")[0]
@@ -162,7 +162,7 @@ class MimeExtTag(Tag):
 
     require_context = False
 
-    def process(self, file: File, context: Optional[str]) -> str:
+    def process(self, file: File, context: str | None) -> str:
         mime_type = magic.from_file(file.absolute_path, mime=True)
         return str(mimetypes.guess_extension(mime_type, False))
 
@@ -180,7 +180,7 @@ class IsMimeTag(Tag):
         """
         self.expected_type_prefix = type_prefix
 
-    def process(self, file: File, context: Optional[str]) -> Any:
+    def process(self, file: File, context: str | None) -> Any:
         mime_type = magic.from_file(file.absolute_path, mime=True)
         return mime_type.startswith(self.expected_type_prefix)
 
@@ -198,7 +198,7 @@ class DefaultTag(Tag):
         """
         self.default_value = default_value
 
-    def process(self, file: File, context: Optional[str]) -> Any:
+    def process(self, file: File, context: str | None) -> Any:
         if context and not context.isspace():
             return context
         return self.default_value
@@ -213,7 +213,7 @@ class AsSizeTag(Tag):
     require_context = True
 
     target_unit_multiplier: int
-    precision_digits: Optional[int]
+    precision_digits: int | None
 
     _unit_weights = {
         "k": 1024,
@@ -223,7 +223,7 @@ class AsSizeTag(Tag):
         "p": 1024**5,
     }
 
-    def configure(self, unit: str, ndigits: Optional[int] = None):  # type: ignore
+    def configure(self, unit: str, ndigits: int | None = None):  # type: ignore
         """
         :param unit: name of the target unit
         :param ndigits: number of decimal digits
@@ -242,7 +242,7 @@ class AsSizeTag(Tag):
             raise ValueError("Precision have to be positive")
         self.precision_digits = ndigits
 
-    def process(self, file: File, context: Optional[str]) -> str:
+    def process(self, file: File, context: str | None) -> str:
         assert context is not None
         size_in_bytes = float(context)
         size_in_target_unit = size_in_bytes / self.target_unit_multiplier
@@ -256,7 +256,7 @@ class RoundTag(Tag):
     require_context = True
 
     precision_digits: int
-    direction: Optional[bool]
+    direction: bool | None
 
     def configure(self, ndigits: int = 0, down: bool = False, up: bool = False):  # type: ignore
         """
@@ -276,7 +276,7 @@ class RoundTag(Tag):
             self.direction = None
         self.precision_digits = ndigits
 
-    def process(self, file: File, context: Optional[str]) -> Any:
+    def process(self, file: File, context: str | None) -> Any:
         assert context is not None
         number = float(context)
         if self.direction is None:
@@ -295,7 +295,7 @@ class EvalTag(Tag):
 
     require_context = True
 
-    def process(self, file: File, context: Optional[str]) -> Any:  # type ignore
+    def process(self, file: File, context: str | None) -> Any:  # type ignore
         assert context is not None
         return evaluate_expression(context)
 
@@ -313,7 +313,7 @@ class AsTimeTag(Tag):
         """
         self.destination_format = format
 
-    def process(self, file: File, context: Optional[str]) -> str:  # type: ignore
+    def process(self, file: File, context: str | None) -> str:  # type: ignore
         assert context is not None
         parsed_datetime = datetime.datetime.fromisoformat(context)
         return parsed_datetime.strftime(self.destination_format)
@@ -371,7 +371,7 @@ class AsDurationTag(Tag):
         """
         self.destination_format = format
 
-    def process(self, file: File, context: Optional[str]) -> str:  # type: ignore
+    def process(self, file: File, context: str | None) -> str:  # type: ignore
         assert context is not None
         parsed_duration = isodate.parse_duration(context)
         return isodate.strftime(parsed_duration, self.destination_format)
@@ -425,7 +425,7 @@ class AsIntTag(Tag):
         self.src_base = src_base
         self.dst_base = dst_base
 
-    def process(self, file: File, context: Optional[str]) -> str:
+    def process(self, file: File, context: str | None) -> str:
         assert context is not None
 
         parsed_number = int(context, base=self.src_base)
@@ -440,7 +440,7 @@ class AsDistanceTag(Tag):
     _dst_unit: PlainUnit
     _src_unit: PlainUnit
 
-    _ureg_instance: Optional[pint.UnitRegistry] = None
+    _ureg_instance: pint.UnitRegistry | None = None
 
     @property
     def _ureg(self) -> pint.UnitRegistry:
@@ -458,8 +458,18 @@ class AsDistanceTag(Tag):
         self._dst_unit = self._ureg.parse_units(dst_unit)
         self._src_unit = self._ureg.parse_units(src_unit)
 
-    def process(self, file: File, context: Optional[str]) -> float:
+    def process(self, file: File, context: str | None) -> float:
         assert context is not None
         src_value = float(context) * self._src_unit
         dst_value = src_value.to(self._dst_unit)
         return dst_value.magnitude
+
+
+class NotTag(Tag):
+    """Negate truthfulness of provided context"""
+
+    require_context = True
+
+    def process(self, file: File, context: str | None) -> bool:
+        assert context is not None
+        return not bool(context)

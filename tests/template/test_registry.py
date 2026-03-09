@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional
 
 import pytest
 
@@ -37,7 +36,7 @@ class TestTagCategory:
             def configure(self, *args, **kwargs):
                 pass
 
-            def process(self, path: Path, context: Optional[str]) -> str:
+            def process(self, path: Path, context: str | None) -> str:
                 pass
 
         category = TagCategory(CategoryName("TestCategory"))
@@ -57,7 +56,7 @@ class TestTagCategory:
     # TODO: add tests for documentation rewriting from tag class to tag factory
 
 
-def qualified_name(name: str, category: Optional[str] = None) -> QualifiedTagName:
+def qualified_name(name: str, category: str | None = None) -> QualifiedTagName:
     if category:
         return QualifiedTagName(TagName(name), CategoryName(category))
     return QualifiedTagName(TagName(name))

@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 from tempren.primitives import Tag
 
@@ -9,5 +9,5 @@ class TestTag(Tag):
 
     require_context = False
 
-    def process(self, path: Path, context: Optional[str]) -> Any:
+    def process(self, path: Path, context: str | None) -> Any:
         return ""

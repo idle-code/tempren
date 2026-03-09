@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional
 
 import pytest
 from pint import UndefinedUnitError
@@ -468,7 +467,7 @@ class TestAsSizeTag:
         nonexistent_file: File,
         unit: str,
         unit_multiplier: float,
-        precision: Optional[int],
+        precision: int | None,
         size_multiplier: float,
         expected_output: str,
     ):

@@ -3,8 +3,9 @@ import inspect
 import logging
 import pkgutil
 from collections import defaultdict
+from collections.abc import Callable
 from types import ModuleType
-from typing import Callable, Dict, List, Type, TypeVar
+from typing import TypeVar
 
 from tempren.alias import TagAlias
 from tempren.primitives import CategoryName, Tag
@@ -12,11 +13,11 @@ from tempren.primitives import CategoryName, Tag
 log = logging.getLogger(__name__)
 
 
-def discover_tags_in_package(package) -> Dict[CategoryName, List[Type[Tag]]]:
+def discover_tags_in_package(package) -> dict[CategoryName, list[type[Tag]]]:
     return _discover_classes_in_package(package, Tag)
 
 
-def discover_aliases_in_package(package) -> Dict[CategoryName, List[Type[TagAlias]]]:
+def discover_aliases_in_package(package) -> dict[CategoryName, list[type[TagAlias]]]:
     return _discover_classes_in_package(package, TagAlias)
 
 
@@ -24,8 +25,8 @@ BaseClass = TypeVar("BaseClass")
 
 
 def _discover_classes_in_package(
-    package, base_klass: Type[BaseClass]
-) -> Dict[CategoryName, List[Type[BaseClass]]]:
+    package, base_klass: type[BaseClass]
+) -> dict[CategoryName, list[type[BaseClass]]]:
     def _is_base_class(klass: type):
         if (
             not inspect.isclass(klass)
@@ -40,12 +41,15 @@ def _discover_classes_in_package(
 
     def _visitor(module: ModuleType, klass: type):
         if not _is_base_class(klass):
+            log.debug(f"{klass} has no valid base ({base_klass})")
             return
+
         if module.__package__:
             category_name = CategoryName(module.__name__[len(module.__package__) + 1 :])
         else:
             category_name = CategoryName(module.__name__)
 
+        log.debug(f"Adding {klass} to {category_name} category")
         found_classes[category_name].append(klass)
 
     visit_types_in_package(package, _visitor)
@@ -80,4 +84,5 @@ def visit_types_in_module(
 
     for _, tag_class in inspect.getmembers(module):
         if isinstance(tag_class, type):
+            log.debug(f"Found tag {tag_class}")
             visitor(module, tag_class)

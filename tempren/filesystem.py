@@ -2,8 +2,8 @@ import logging
 import os
 import shutil
 from abc import ABC, abstractmethod
+from collections.abc import Callable, Iterable
 from pathlib import Path
-from typing import Callable, Iterable, List, Set
 
 from tempren.primitives import File
 
@@ -109,7 +109,7 @@ class RecursiveDirectoryGatherer(FilesystemGatherer):
 
 
 class ExplicitFileGatherer(FileGatherer):
-    def __init__(self, files: List[Path]):
+    def __init__(self, files: list[Path]):
         self._files_to_provide = files
 
     def gather_files(self) -> Iterable[File]:
@@ -127,7 +127,7 @@ class CombinedFileGatherer(FileGatherer):
         for gatherer in self._gatherers:
             gatherer.include_hidden = include
 
-    def __init__(self, gatherers: List[FileGatherer]):
+    def __init__(self, gatherers: list[FileGatherer]):
         if not gatherers:
             raise ValueError("No subsequent file gatherers provided")
         self._gatherers = gatherers
@@ -168,8 +168,8 @@ class FileMover:
 
 class DryRunRenamer:
     def __init__(self):
-        self.removed_paths: Set[Path] = set()
-        self.created_paths: Set[Path] = set()
+        self.removed_paths: set[Path] = set()
+        self.created_paths: set[Path] = set()
 
     def __call__(
         self,

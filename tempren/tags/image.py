@@ -1,13 +1,15 @@
 import itertools
 from abc import ABC, abstractmethod
+from collections.abc import Iterator
 from fractions import Fraction
-from typing import Any, Iterator, Optional, Tuple
+from typing import Any
 
-import piexif
 import PIL
-from piexif import TAGS
-from piexif import TYPES as TAG_TYPES
+import PIL.ExifTags
+from geopy import Point
+from PIL.ExifTags import IFD
 from PIL.Image import Image
+from PIL.TiffImagePlugin import IFDRational
 
 from tempren.alias import TagAlias
 from tempren.exceptions import FileNotSupportedError, MissingMetadataError
@@ -19,7 +21,7 @@ class PillowTagBase(Tag, ABC):
 
     require_context = False
 
-    def process(self, file: File, context: Optional[str]) -> Any:
+    def process(self, file: File, context: str | None) -> Any:
         try:
             with PIL.Image.open(file.absolute_path) as img:
                 return self.extract_metadata(img)
@@ -122,11 +124,78 @@ class IsOrientationTag(PillowTagBase):
         raise NotImplementedError()
 
 
+# Reverse lookups: tag name -> tag ID
+_TAGS_BY_NAME: dict[str, int] = {
+    name: tag_id for tag_id, name in PIL.ExifTags.TAGS.items()
+}
+_GPS_TAGS_BY_NAME: dict[str, int] = {
+    name: tag_id for tag_id, name in PIL.ExifTags.GPSTAGS.items()
+}
+
+
+def _validate_tag_name(tag_name: str) -> None:
+    """Validate that a tag name is a known EXIF tag."""
+    if tag_name not in _TAGS_BY_NAME and tag_name not in _GPS_TAGS_BY_NAME:
+        raise ValueError(f"Could not find tag id for '{tag_name}'")
+
+
+def _convert_exif_value(value: Any) -> Any:
+    """Convert Pillow EXIF values to Python-native types."""
+    if isinstance(value, IFDRational):
+        if value.denominator == 0:
+            return 0
+        if value.denominator == 1:
+            return int(value.numerator)
+        return int(value.numerator) / int(value.denominator)
+    if isinstance(value, tuple):
+        if len(value) == 3 and all(isinstance(v, IFDRational) for v in value):
+            degrees, minutes, seconds = (_convert_exif_value(v) for v in value)
+            return f"{degrees}°{minutes}′{seconds}″"
+        return tuple(_convert_exif_value(v) for v in value)
+    return value
+
+
+def load_exif(file_path: str) -> dict[str, Any]:
+    """Load all EXIF data from an image file as a name-keyed dict."""
+    with PIL.Image.open(file_path) as img:
+        exif = img.getexif()
+        if not exif:
+            return {}
+
+        result: dict[str, Any] = {}
+
+        # IFD0 (base) tags
+        for tag_id, value in exif.items():
+            name = PIL.ExifTags.TAGS.get(tag_id)
+            if name:
+                result[name] = value
+
+        # Exif sub-IFD tags
+        for tag_id, value in exif.get_ifd(IFD.Exif).items():
+            name = PIL.ExifTags.TAGS.get(tag_id)
+            if name:
+                result[name] = value
+
+        # GPS sub-IFD tags
+        for tag_id, value in exif.get_ifd(IFD.GPSInfo).items():
+            name = PIL.ExifTags.GPSTAGS.get(tag_id)
+            if name:
+                result[name] = value
+
+        return result
+
+
+def extract_exif_value(exif_data: dict[str, Any], tag_name: str) -> Any:
+    """Extract and convert a named EXIF tag value from loaded EXIF data."""
+    if tag_name not in exif_data:
+        raise MissingMetadataError()
+    return _convert_exif_value(exif_data[tag_name])
+
+
 class ExifTag(Tag):
     """Extract value of any EXIF tag"""
 
-    tag_id: int
-    tag_type: int
+    tag_name: str
 
     def configure(self, tag_name: str):  # type: ignore
         """
@@ -134,56 +203,74 @@ class ExifTag(Tag):
         """
         # TODO: generate list of supported tags dynamically
         assert tag_name, "expected non empty tag name"
-        self.tag_id, self.tag_type = self._tag_name_to_id_type(tag_name)
+        # Validate tag name exists (raises ValueError if unknown)
+        _validate_tag_name(tag_name)
+        self.tag_name = tag_name
 
-    @staticmethod
-    def _tag_name_to_id_type(tag_name: str) -> Tuple[int, int]:
-        for _, tags in TAGS.items():
-            for tag_id, description in tags.items():
-                if description["name"] == tag_name:
-                    return tag_id, description["type"]
-        raise ValueError(f"Could not find tag id for '{tag_name}'")
-
-    def process(self, file: File, context: Optional[str]) -> Any:
-        exif_dict = piexif.load(str(file.absolute_path))
-        for src in exif_dict.values():
-            if isinstance(src, dict) and self.tag_id in src:
-                return self._extract_value(src[self.tag_id])
-        else:
-            raise MissingMetadataError()
-
-    def _extract_value(self, tag_value):
-        if self.tag_type in (TAG_TYPES.Rational, TAG_TYPES.SRational):
-            return round(tag_value[0] / tag_value[1], 1)
-        if self.tag_type == TAG_TYPES.Ascii:
-            return tag_value.decode("ascii")
-        return tag_value
-
-
-_tag_type_map = {
-    TAG_TYPES.__dict__[type_name]: type_name
-    for type_name in TAG_TYPES.__dict__.keys()
-    if isinstance(TAG_TYPES.__dict__[type_name], int)
-}
+    def process(self, file: File, context: str | None) -> Any:
+        exif_data = load_exif(str(file.absolute_path))
+        return extract_exif_value(exif_data, self.tag_name)
 
 
 def _generate_exif_tag_list() -> Iterator[str]:
-    for _, tags in TAGS.items():
-        for tag_id, description in tags.items():
-            tag_name = description["name"]
-            if tag_name.startswith("ZZZTest"):
-                continue
-            tag_type = _tag_type_map[description["type"]]
-            yield f"  {tag_name} ({tag_type})"
+    seen: set[str] = set()
+    for tag_name in sorted(
+        set(PIL.ExifTags.TAGS.values()) | set(PIL.ExifTags.GPSTAGS.values())
+    ):
+        if tag_name not in seen:
+            seen.add(tag_name)
+            yield f"  {tag_name}"
 
 
 ExifTag.__doc__ = "\n".join(
     itertools.chain(
         [str(ExifTag.__doc__), "Available tag names:"],
-        sorted(set(_generate_exif_tag_list())),
+        _generate_exif_tag_list(),
     )
 )
 
 
 class ResolutionTagAlias(TagAlias):
     """%Image.Width()x%Image.Height()"""
+
+
+class GpsPositionTag(Tag):
+    """Latitude and longitude of place where photo was taken"""
+
+    require_context = False
+
+    use_decimal: bool
+
+    def configure(self, decimal: bool = True):
+        """
+        :param decimal: Use simpler decimal notation instead of degrees-minutes-seconds
+        """
+        self.use_decimal = decimal
+
+    def process(self, file: File, context: str | None) -> Any:
+        assert context is None
+
+        exif_data = load_exif(str(file.absolute_path))
+        try:
+            latitude = extract_exif_value(exif_data, "GPSLatitude")
+            latitude_ref = extract_exif_value(exif_data, "GPSLatitudeRef")
+            longitude = extract_exif_value(exif_data, "GPSLongitude")
+            longitude_ref = extract_exif_value(exif_data, "GPSLongitudeRef")
+
+            degrees_notation = f"{latitude}{latitude_ref}, {longitude}{longitude_ref}"
+            if self.use_decimal:
+                return Point.from_string(degrees_notation).format_decimal()
+            return degrees_notation
+        except ValueError:
+            return ""
+
+
+class HasGpsPositionTag(GpsPositionTag):
+    """Check if file contains valid GPS coordinates that can be extracted by GpsPosition tag"""
+
+    def process(self, file: File, context: str | None) -> bool:
+        # noinspection PyBroadException
+        try:
+            return super().process(file, context) != ""
+        except:
+            return False

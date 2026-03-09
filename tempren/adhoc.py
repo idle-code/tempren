@@ -1,6 +1,5 @@
 import subprocess
 from pathlib import Path
-from typing import Optional, Tuple
 
 from tempren.exceptions import ExecutionTimeoutError, MissingMetadataError
 from tempren.factories import TagFactoryFromClass
@@ -17,7 +16,7 @@ class AdHocTagFactoryFromExecutable(TagFactoryFromClass):
         return self._render_description(super().short_description)
 
     @property
-    def long_description(self) -> Optional[str]:
+    def long_description(self) -> str | None:
         long_description = super().long_description
         if long_description:
             long_description = self._render_description(long_description)
@@ -59,7 +58,7 @@ class AdHocTag(Tag):
     """
 
     executable: Path
-    args: Tuple[str, ...] = ()
+    args: tuple[str, ...] = ()
     timeout_ms: int = 3000
 
     def __init__(self, executable: Path):
@@ -76,7 +75,7 @@ class AdHocTag(Tag):
         self.args = positional_args
         self.timeout_ms = timeout_ms
 
-    def process(self, file: File, context: Optional[str]) -> str:
+    def process(self, file: File, context: str | None) -> str:
         if context is None:
             command_line = (
                 [str(self.executable)] + list(self.args) + [str(file.relative_path)]

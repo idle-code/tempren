@@ -1,4 +1,4 @@
-from typing import Any, Optional, Type
+from typing import Any
 
 from tempren.factories import TagFactoryFromClass
 from tempren.primitives import File, Pattern, Tag, TagName
@@ -31,7 +31,7 @@ class AliasTag(Tag):
     def __init__(self, pattern: Pattern) -> None:
         self.pattern = pattern
 
-    def process(self, file: File, context: Optional[str]) -> Any:
+    def process(self, file: File, context: str | None) -> Any:
         return self.pattern.process(file)
 
 
@@ -46,7 +46,7 @@ class AliasTagFactory(TagFactoryFromClass):
         return self._render_description(super().short_description)
 
     @property
-    def long_description(self) -> Optional[str]:
+    def long_description(self) -> str | None:
         long_description = super().long_description
         assert long_description, "AliasTag description changed"
         long_description = self._render_description(long_description)
@@ -74,7 +74,7 @@ class AliasTagFactoryFromClass(AliasTagFactory):
 
     _tag_alias_suffix = "TagAlias"
 
-    def __init__(self, tag_alias_class: Type[TagAlias], compiler: TemplateCompiler):
+    def __init__(self, tag_alias_class: type[TagAlias], compiler: TemplateCompiler):
         class_name = tag_alias_class.__name__
         if class_name.endswith(self._tag_alias_suffix):
             alias_tag_name = TagName(class_name[: -len(self._tag_alias_suffix)])

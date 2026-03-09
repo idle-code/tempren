@@ -1,9 +1,9 @@
 import logging
 import os
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-from typing import Callable, Dict, Iterable, List, Optional, Union
 
 from tempren.alias import AliasTagFactory, AliasTagFactoryFromClass
 from tempren.discovery import discover_aliases_in_package, discover_tags_in_package
@@ -67,25 +67,25 @@ class ConflictResolutionStrategy(Enum):
     """Prompt user to resolve conflict manually (choose an option or provide new filename)"""
 
 
-ManualConflictResolver = Callable[[Path, Path], Union[ConflictResolutionStrategy, Path]]
+ManualConflictResolver = Callable[[Path, Path], ConflictResolutionStrategy | Path]
 
 
 @dataclass
 class RuntimeConfiguration:
     template: str
-    input_paths: List[Path]
+    input_paths: list[Path]
     recursive: bool = False
     include_hidden: bool = False
     dry_run: bool = False
     filter_type: FilterType = FilterType.glob
     filter_invert: bool = False
-    filter: Optional[str] = None
+    filter: str | None = None
     conflict_strategy: ConflictResolutionStrategy = ConflictResolutionStrategy.stop
     sort_invert: bool = False
-    sort: Optional[str] = None
+    sort: str | None = None
     mode: OperationMode = OperationMode.name
-    adhoc_tags: Dict[TagName, Path] = field(default_factory=dict)
-    aliases: Dict[TagName, str] = field(default_factory=dict)
+    adhoc_tags: dict[TagName, Path] = field(default_factory=dict)
+    aliases: dict[TagName, str] = field(default_factory=dict)
 
 
 class ConfigurationError(Exception):
@@ -94,14 +94,14 @@ class ConfigurationError(Exception):
 
 def manual_resolver_placeholder(
     source_path: Path, destination_path: Path
-) -> Union[ConflictResolutionStrategy, Path]:
+) -> ConflictResolutionStrategy | Path:
     raise NotImplementedError()
 
 
 class Pipeline:
     log: logging.Logger
     file_gatherer: FileGatherer
-    sorter: Optional[Callable[[Iterable[File]], Iterable[File]]] = None
+    sorter: Callable[[Iterable[File]], Iterable[File]] | None = None
     path_generator: PathGenerator
     conflict_strategy: ConflictResolutionStrategy = ConflictResolutionStrategy.stop
 
@@ -235,7 +235,7 @@ class Pipeline:
 
 
 def build_tag_registry(
-    adhoc_tags: Dict[TagName, Path], aliases: Dict[TagName, str]
+    adhoc_tags: dict[TagName, Path], aliases: dict[TagName, str]
 ) -> TagRegistry:
     import tempren.tags
 
@@ -284,7 +284,7 @@ def build_pipeline(
     log.debug("Building pipeline")
     pipeline = Pipeline()
 
-    file_gatherers: List[FileGatherer] = []
+    file_gatherers: list[FileGatherer] = []
 
     input_directories = list(filter(lambda p: p.is_dir(), config.input_paths))
     input_files = list(filter(lambda p: p.is_file(), config.input_paths))

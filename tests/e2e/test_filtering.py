@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional
 
 import pytest
 
@@ -9,20 +8,18 @@ from .conftest import CliTestsBase, ErrorCode, run_tempren
 @pytest.mark.parametrize("invert_flag", ["-fi", "--filter-invert", None])
 class TestNameFilterFlags(CliTestsBase):
     @pytest.mark.parametrize("flag", ["-fg", "--filter-glob"])
-    def test_glob_filter(
-        self, flag: str, invert_flag: Optional[str], text_data_dir: Path
-    ):
+    def test_glob_filter(self, flag: str, invert_flag: str | None, text_data_dir: Path):
         self._test_filter_type(flag, "*.txt", invert_flag, text_data_dir)
 
     @pytest.mark.parametrize("flag", ["-fr", "--filter-regex"])
     def test_regex_filter(
-        self, flag: str, invert_flag: Optional[str], text_data_dir: Path
+        self, flag: str, invert_flag: str | None, text_data_dir: Path
     ):
         self._test_filter_type(flag, r".*\.txt$", invert_flag, text_data_dir)
 
     @pytest.mark.parametrize("flag", ["-ft", "--filter-template"])
     def test_template_filter(
-        self, flag: str, invert_flag: Optional[str], text_data_dir: Path
+        self, flag: str, invert_flag: str | None, text_data_dir: Path
     ):
         self._test_filter_type(flag, "%Size() < 50", invert_flag, text_data_dir)
 
@@ -30,7 +27,7 @@ class TestNameFilterFlags(CliTestsBase):
         self,
         flag: str,
         expression: str,
-        invert_flag: Optional[str],
+        invert_flag: str | None,
         text_data_dir: Path,
     ):
         stdout, stderr, error_code = run_tempren(
@@ -58,13 +55,13 @@ class TestNameFilterFlags(CliTestsBase):
 class TestPathFilterFlags(CliTestsBase):
     @pytest.mark.parametrize("flag", ["-fg", "--filter-glob"])
     def test_glob_filter(
-        self, flag: str, invert_flag: Optional[str], nested_data_dir: Path
+        self, flag: str, invert_flag: str | None, nested_data_dir: Path
     ):
         self._test_filter_type(flag, "**/*-3.file", invert_flag, nested_data_dir)
 
     @pytest.mark.parametrize("flag", ["-fr", "--filter-regex"])
     def test_regex_filter(
-        self, flag: str, invert_flag: Optional[str], nested_data_dir: Path
+        self, flag: str, invert_flag: str | None, nested_data_dir: Path
     ):
         self._test_filter_type(
             flag, r"^second/third/.*\.file", invert_flag, nested_data_dir
@@ -72,7 +69,7 @@ class TestPathFilterFlags(CliTestsBase):
 
     @pytest.mark.parametrize("flag", ["-ft", "--filter-template"])
     def test_template_filter(
-        self, flag: str, invert_flag: Optional[str], nested_data_dir: Path
+        self, flag: str, invert_flag: str | None, nested_data_dir: Path
     ):
         self._test_filter_type(flag, "%Size() > 30", invert_flag, nested_data_dir)
 
@@ -80,7 +77,7 @@ class TestPathFilterFlags(CliTestsBase):
         self,
         flag: str,
         expression: str,
-        invert_flag: Optional[str],
+        invert_flag: str | None,
         nested_data_dir: Path,
     ):
         stdout, stderr, error_code = run_tempren(

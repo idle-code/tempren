@@ -5,12 +5,13 @@ import os.path
 import shutil
 import sys
 from argparse import ArgumentParser, Namespace
+from collections.abc import Sequence
 from enum import IntEnum
 from itertools import chain
 from logging import LogRecord
 from pathlib import Path
 from textwrap import indent
-from typing import Any, Dict, List, NoReturn, Optional, Sequence, Text, Tuple, Union
+from typing import Any, NoReturn
 
 from tempren.exceptions import FileNotSupportedError, TemplateEvaluationError
 from tempren.filesystem import DestinationAlreadyExistsError
@@ -87,7 +88,7 @@ def tag_name_from_executable(exec_path: Path) -> str:
     return base_name
 
 
-def adhoc_tag(val: str) -> Tuple[TagName, Path]:
+def adhoc_tag(val: str) -> tuple[TagName, Path]:
     val = nonempty_string(val)
     components = val.split("=", maxsplit=1)
     if len(components) == 1:
@@ -109,7 +110,7 @@ def adhoc_tag(val: str) -> Tuple[TagName, Path]:
         raise argparse.ArgumentTypeError(f"'{tag_name}' cannot be used as tag name")
 
 
-def alias(val: str) -> Tuple[TagName, str]:
+def alias(val: str) -> tuple[TagName, str]:
     val = nonempty_string(val)
     components = val.split("=", maxsplit=1)
     if len(components) < 2:
@@ -126,8 +127,8 @@ def alias(val: str) -> Tuple[TagName, str]:
 
 
 def validate_adhoc_tags(
-    adhoc_tags: List[List[Tuple[TagName, Path]]]
-) -> Dict[TagName, Path]:
+    adhoc_tags: list[list[tuple[TagName, Path]]],
+) -> dict[TagName, Path]:
     if not adhoc_tags:
         return dict()
     list_of_tuples = list(chain(*adhoc_tags))
@@ -152,7 +153,7 @@ def validate_adhoc_tags(
     return dict(list_of_tuples)
 
 
-def validate_aliases(aliases: List[List[Tuple[TagName, str]]]) -> Dict[TagName, str]:
+def validate_aliases(aliases: list[list[tuple[TagName, str]]]) -> dict[TagName, str]:
     # TODO: Merge with validate_adhoc_tags
     if not aliases:
         return dict()
@@ -182,7 +183,7 @@ def validate_aliases(aliases: List[List[Tuple[TagName, str]]]) -> Dict[TagName, 
 class SystemExitError(Exception):  # TODO: Use ConfigurationError instead
     status: int
 
-    def __init__(self, status: int, message: Optional[str]):
+    def __init__(self, status: int, message: str | None):
         super().__init__(message)
         self.status = status
 
@@ -192,8 +193,8 @@ class _ListAvailableTags(argparse.Action):
         self,
         parser: ArgumentParser,
         args: Namespace,
-        values: Union[Text, Sequence[Any], None],
-        option_string: Optional[Text] = None,
+        values: str | Sequence[Any] | None,
+        option_string: str | None = None,
     ):
         registry = build_tag_registry(
             validate_adhoc_tags(args.ad_hoc), validate_aliases(args.alias)
@@ -227,8 +228,8 @@ class _ShowHelp(argparse.Action):
         self,
         parser: ArgumentParser,
         args: Namespace,
-        values: Union[str, Sequence[Any], None],
-        option_string: Optional[Text] = None,
+        values: str | Sequence[Any] | None,
+        option_string: str | None = None,
     ):
         if values is None:
             parser.print_help()
@@ -268,8 +269,8 @@ class _ShowVersion(argparse.Action):
         self,
         parser: ArgumentParser,
         namespace: Namespace,
-        values: Union[Text, Sequence[Any], None],
-        option_string: Optional[Text] = None,
+        values: str | Sequence[Any] | None,
+        option_string: str | None = None,
     ):
         log.info(self.find_package_version())
         parser.exit()
@@ -290,8 +291,8 @@ class _IncreaseLogVerbosity(argparse.Action):
         self,
         parser: ArgumentParser,
         namespace: Namespace,
-        values: Union[Text, Sequence[Any], None],
-        option_string: Optional[Text] = None,
+        values: str | Sequence[Any] | None,
+        option_string: str | None = None,
     ):
         root_logger = logging.getLogger()
         root_logger.setLevel(root_logger.level - 10)
@@ -303,8 +304,8 @@ class _DecreaseLogVerbosity(argparse.Action):
         self,
         parser: ArgumentParser,
         namespace: Namespace,
-        values: Union[Text, Sequence[Any], None],
-        option_string: Optional[Text] = None,
+        values: str | Sequence[Any] | None,
+        option_string: str | None = None,
     ):
         root_logger = logging.getLogger()
         root_logger.setLevel(root_logger.level + 10)
@@ -320,7 +321,7 @@ class DefaultOptionsHelpFormatter(argparse.HelpFormatter):
         return action.help
 
 
-def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
+def process_cli_configuration(argv: list[str]) -> RuntimeConfiguration:
     log.debug("Parsing command line arguments")
     parser = argparse.ArgumentParser(
         prog="tempren",
@@ -520,7 +521,7 @@ def process_cli_configuration(argv: List[str]) -> RuntimeConfiguration:
     # We could catch resulting `SystemExit` exception but related error message still would be missing.
     # This behaviour is not comfortable for testing so here we monkeypatch exit method to
     # throw more practical exception instead.
-    def throwing_exit(status: int = 0, message: Optional[str] = "") -> NoReturn:
+    def throwing_exit(status: int = 0, message: str | None = "") -> NoReturn:
         raise SystemExitError(status, message)
 
     parser.exit = throwing_exit  # type: ignore
@@ -602,7 +603,7 @@ def render_template_evaluation_error(
 
 def cli_prompt_conflict_resolver(
     source_path: Path, destination_path: Path
-) -> Union[ConflictResolutionStrategy, Path]:
+) -> ConflictResolutionStrategy | Path:
     log.warning("While processing:")
     log.warning(f"  {source_path}")
     log.warning("following path was generated:")
@@ -681,9 +682,9 @@ def main() -> int:
     except FileNotSupportedError as exc:
         log.error(f"Error: {exc}")
         return ErrorCode.INVALID_DESTINATION_ERROR
-    except Exception as exc:  # NOCOVER: not really testable - final fallback
-        log.error(f"Unknown error: {exc.__class__.__name__} {exc}")
-        return ErrorCode.UNKNOWN_ERROR
+    # except Exception as exc:  # NOCOVER: not really testable - final fallback
+    #     log.error(f"Unknown error: {exc.__class__.__name__} {exc}")
+    #     return ErrorCode.UNKNOWN_ERROR
     finally:
         os.chdir(original_cwd)
 
