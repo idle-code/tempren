@@ -126,7 +126,7 @@ def alias(val: str) -> Tuple[TagName, str]:
 
 
 def validate_adhoc_tags(
-    adhoc_tags: List[List[Tuple[TagName, Path]]]
+    adhoc_tags: List[List[Tuple[TagName, Path]]],
 ) -> Dict[TagName, Path]:
     if not adhoc_tags:
         return dict()
