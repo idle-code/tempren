@@ -1,6 +1,6 @@
 import logging
+from collections.abc import Mapping
 from functools import reduce
-from typing import List, Mapping, Optional, Tuple, Union
 
 from antlr4 import CommonTokenStream, InputStream  # type: ignore
 from antlr4.error.ErrorListener import ErrorListener  # type: ignore
@@ -13,7 +13,7 @@ from .grammar.TagTemplateLexer import TagTemplateLexer
 from .grammar.TagTemplateParser import TagTemplateParser
 from .grammar.TagTemplateParserVisitor import TagTemplateParserVisitor
 
-ArgValue = Union[str, int, bool]
+ArgValue = str | int | bool
 
 
 escaped_characters = ("'", "\\", "{", "}", "|")
@@ -40,7 +40,7 @@ def location_from_symbol(symbol) -> Location:
     )
 
 
-def merge_locations(first: Optional[Location], second: Location) -> Location:
+def merge_locations(first: Location | None, second: Location) -> Location:
     if not first:
         return second
     assert first.line == second.line
@@ -50,7 +50,7 @@ def merge_locations(first: Optional[Location], second: Location) -> Location:
 
 
 class _TreeVisitor(TagTemplateParserVisitor):
-    def defaultResult(self) -> List[PatternElement]:
+    def defaultResult(self) -> list[PatternElement]:
         return list()
 
     def visitTerminal(self, node):
@@ -59,8 +59,8 @@ class _TreeVisitor(TagTemplateParserVisitor):
         raise NotImplementedError()
 
     def aggregateResult(
-        self, pattern: List[PatternElement], element: PatternElement
-    ) -> List[PatternElement]:
+        self, pattern: list[PatternElement], element: PatternElement
+    ) -> list[PatternElement]:
         if element is IGNORED_TERMINAL:
             return pattern
         return pattern + [element]
@@ -70,7 +70,7 @@ class _TreeVisitor(TagTemplateParserVisitor):
 
     def visitPipeList(
         self, ctx: TagTemplateParser.PipeListContext
-    ) -> List[TagPlaceholder]:
+    ) -> list[TagPlaceholder]:
         if ctx.errorNonTagInPipeList:
             non_tag_symbol = ctx.errorNonTagInPipeList.children[0].symbol
             raise TemplateSyntaxError(
@@ -137,7 +137,7 @@ class _TreeVisitor(TagTemplateParserVisitor):
 
     def visitArgumentList(
         self, ctx: TagTemplateParser.ArgumentListContext
-    ) -> Tuple[List[ArgValue], Mapping[str, ArgValue]]:
+    ) -> tuple[list[ArgValue], Mapping[str, ArgValue]]:
         if ctx is None:
             return [], {}
         if ctx.errorUnclosedArgumentList:
@@ -171,7 +171,7 @@ class _TreeVisitor(TagTemplateParserVisitor):
 
     def visitArgument(
         self, ctx: TagTemplateParser.ArgumentContext
-    ) -> Tuple[Optional[str], ArgValue]:
+    ) -> tuple[str | None, ArgValue]:
         arg_name = ctx.ARG_NAME().getText() if ctx.ARG_NAME() else None
         if ctx.argumentValue():
             arg_value = self.visitArgumentValue(ctx.argumentValue())

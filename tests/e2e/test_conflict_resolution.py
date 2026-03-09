@@ -1,5 +1,4 @@
 from pathlib import Path
-from typing import Optional
 
 import pytest
 
@@ -21,7 +20,7 @@ class TestConflictResolution(CliTestsBase):
         assert (text_data_dir / "2").exists()
 
     @pytest.mark.parametrize("flag", ["-cs", "--conflict-stop", None])
-    def test_stop_conflict_resolution(self, text_data_dir: Path, flag: Optional[str]):
+    def test_stop_conflict_resolution(self, text_data_dir: Path, flag: str | None):
         stdout, stderr, error_code = run_tempren(
             flag, "--sort", "%Name()", "StaticFilename", text_data_dir
         )

@@ -1,6 +1,6 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import Iterable, Tuple
+from collections.abc import Iterable
 
 from tempren.evaluation import evaluate_expression
 from tempren.exceptions import ExpressionEvaluationError, TemplateEvaluationError
@@ -27,7 +27,7 @@ class TemplateFileSorter(FileSorter):
     def __call__(self, files: Iterable[File]) -> Iterable[File]:
         return sorted(files, key=self._generate_sort_key, reverse=self.invert)
 
-    def _generate_sort_key(self, file: File) -> Tuple:
+    def _generate_sort_key(self, file: File) -> tuple:
         self.log.debug("Rendering sorting value template for '%s'", file)
         rendered_expression = "(" + self.pattern.process_as_expression(file) + ", )"
         self.log.debug("Evaluating sorting value expression '%s'", rendered_expression)

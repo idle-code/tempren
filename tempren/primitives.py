@@ -2,7 +2,7 @@ import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any
 
 tag_name_regex = re.compile(r"^[_a-z][0-9_a-z]*$", re.IGNORECASE)
 
@@ -55,12 +55,12 @@ class CategoryName(TagName):
 class QualifiedTagName:
     name: TagName
     # TODO: if this is meant to be a genuinely qualified name, the category should be specified:
-    category: Optional[CategoryName] = None
+    category: CategoryName | None = None
 
     def __init__(
         self,
-        name: Union[TagName, str],
-        category: Optional[Union[CategoryName, str]] = None,
+        name: TagName | str,
+        category: CategoryName | str | None = None,
     ) -> None:
         if not isinstance(name, TagName):
             name = TagName(name)
@@ -88,7 +88,7 @@ class Location:
 
 
 class Tag(ABC):
-    require_context: Optional[bool] = None
+    require_context: bool | None = None
     """Determine if tag requires context
 
     When set to True - an error is reported if no context is provided.
@@ -101,7 +101,7 @@ class Tag(ABC):
         pass
 
     @abstractmethod
-    def process(self, file: File, context: Optional[str]) -> Any:
+    def process(self, file: File, context: str | None) -> Any:
         """Execute tag logic on a single file/context"""
         raise NotImplementedError()
 
@@ -124,7 +124,7 @@ class TagFactory(ABC):
 
     @property
     @abstractmethod
-    def long_description(self) -> Optional[str]:
+    def long_description(self) -> str | None:
         """Longer tag documentation"""
 
     @abstractmethod
@@ -135,7 +135,7 @@ class TagFactory(ABC):
 class Pattern(ABC):
     """Facade to the template pattern tree"""
 
-    source_representation: Optional[str]
+    source_representation: str | None
     """Raw representation of this template pattern tree"""
 
     def process(self, file: File) -> str:

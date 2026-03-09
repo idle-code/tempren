@@ -1,7 +1,6 @@
 import hashlib
 import zlib
 from pathlib import Path
-from typing import Optional
 
 from tempren.primitives import File, Tag
 
@@ -20,7 +19,7 @@ class Md5Tag(Tag):
 
     require_context = False
 
-    def process(self, file: File, context: Optional[str]) -> str:
+    def process(self, file: File, context: str | None) -> str:
         assert context is None
         return _calculate_hash(hashlib.md5(), file.absolute_path, CHUNK_SIZE)
 
@@ -30,7 +29,7 @@ class Sha1Tag(Tag):
 
     require_context = False
 
-    def process(self, file: File, context: Optional[str]) -> str:
+    def process(self, file: File, context: str | None) -> str:
         assert context is None
         return _calculate_hash(hashlib.sha1(), file.absolute_path, CHUNK_SIZE)
 
@@ -40,7 +39,7 @@ class Sha256Tag(Tag):
 
     require_context = False
 
-    def process(self, file: File, context: Optional[str]) -> str:
+    def process(self, file: File, context: str | None) -> str:
         assert context is None
         return _calculate_hash(hashlib.sha256(), file.absolute_path, CHUNK_SIZE)
 
@@ -50,7 +49,7 @@ class Sha224Tag(Tag):
 
     require_context = False
 
-    def process(self, file: File, context: Optional[str]) -> str:
+    def process(self, file: File, context: str | None) -> str:
         assert context is None
         return _calculate_hash(hashlib.sha224(), file.absolute_path, CHUNK_SIZE)
 
@@ -60,7 +59,7 @@ class Crc32Tag(Tag):
 
     require_context = False
 
-    def process(self, file: File, context: Optional[str]) -> str:
+    def process(self, file: File, context: str | None) -> str:
         assert context is None
         hash_value = 0
         with open(file.absolute_path, "rb") as f:

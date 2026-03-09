@@ -1,5 +1,4 @@
 import logging
-from typing import List, Optional
 
 from tempren.primitives import Pattern, QualifiedTagName
 from tempren.template.ast import (
@@ -38,7 +37,7 @@ class TemplateCompiler:
     def _rewrite_pattern(
         self, pattern: PatternElementSequence
     ) -> PatternElementSequence:
-        new_elements: List[PatternElement] = []
+        new_elements: list[PatternElement] = []
         for element in pattern.sub_elements:
             if isinstance(element, TagPlaceholder):
                 new_elements.append(self._rewrite_tag_placeholder(element))
@@ -76,7 +75,7 @@ class TemplateCompiler:
                     tag_placeholder.location
                 )
 
-        context_pattern: Optional[PatternElementSequence] = None
+        context_pattern: PatternElementSequence | None = None
         if tag_placeholder.context:
             context_pattern = self._rewrite_pattern(tag_placeholder.context)
 

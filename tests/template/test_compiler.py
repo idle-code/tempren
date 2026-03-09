@@ -1,5 +1,5 @@
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, Dict, Optional, Type, Union
 
 import pytest
 
@@ -31,7 +31,7 @@ class CallableTagFactory(TagFactory):
         raise NotImplementedError()
 
     @property
-    def long_description(self) -> Optional[str]:
+    def long_description(self) -> str | None:
         raise NotImplementedError()
 
     def __call__(self, *args, **kwargs) -> Tag:
@@ -45,9 +45,9 @@ class CallableTagFactory(TagFactory):
 class TestTemplateCompiler:
     def create_compiler(
         self,
-        registry_representation: Optional[
-            Dict[str, Dict[str, Union[Type[Tag], Callable]]]
-        ] = None,
+        registry_representation: (
+            dict[str, dict[str, type[Tag] | Callable]] | None
+        ) = None,
     ) -> TemplateCompiler:
         registry = TagRegistry()
         if registry_representation:
@@ -155,7 +155,7 @@ class TestTemplateCompiler:
             def configure(self, foo: str):
                 pytest.fail("This shouldn't execute")
 
-            def process(self, path: Path, context: Optional[str]) -> str:
+            def process(self, path: Path, context: str | None) -> str:
                 pass
 
         compiler = self.create_compiler({"Test": {"Foo": FooTag}})
@@ -168,7 +168,7 @@ class TestTemplateCompiler:
             def configure(self):
                 raise ValueError("Some configurations is not valid")
 
-            def process(self, path: Path, context: Optional[str]) -> str:
+            def process(self, path: Path, context: str | None) -> str:
                 pass
 
         compiler = self.create_compiler({"Test": {"Foo": FooTag}})

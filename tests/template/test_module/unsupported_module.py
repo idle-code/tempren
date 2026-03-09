@@ -1,12 +1,10 @@
-from typing import Optional
-
 from tempren.primitives import File, Tag
 
 
 class UnsupportedTag(Tag):
     require_context = None
 
-    def process(self, file: File, context: Optional[str]) -> str:
+    def process(self, file: File, context: str | None) -> str:
         raise NotImplementedError()
 
 

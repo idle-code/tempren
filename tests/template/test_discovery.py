@@ -1,6 +1,5 @@
 import itertools
 from collections import defaultdict
-from typing import Dict, List
 
 from tempren.discovery import (
     discover_aliases_in_package,
@@ -12,7 +11,7 @@ from tempren.primitives import CategoryName
 
 
 class CollectingVisitor:
-    found_types: Dict[object, List[type]]
+    found_types: dict[object, list[type]]
 
     def __init__(self):
         self.found_types = defaultdict(list)

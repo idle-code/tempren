@@ -1,6 +1,6 @@
 import re
 from re import Pattern
-from typing import Any, List, Optional
+from typing import Any
 
 from unidecode import unidecode
 
@@ -12,7 +12,7 @@ class UnidecodeTag(Tag):
 
     require_context = True
 
-    def process(self, file: File, context: Optional[str]) -> str:
+    def process(self, file: File, context: str | None) -> str:
         assert context is not None
         return unidecode(context)
 
@@ -21,7 +21,7 @@ class RemoveTag(Tag):
     """Remove parts of the context based on RegEx patterns"""
 
     require_context = True
-    patterns: List[Pattern]
+    patterns: list[Pattern]
 
     def configure(self, *patterns: str, ignore_case: bool = False):  # type: ignore
         flags = 0
@@ -29,7 +29,7 @@ class RemoveTag(Tag):
             flags |= re.IGNORECASE  # TODO: make this configurable?
         self.patterns = list(map(lambda p: re.compile(p, flags), patterns))
 
-    def process(self, file: File, context: Optional[str]) -> str:
+    def process(self, file: File, context: str | None) -> str:
         assert context is not None
         result = context
         for pattern in self.patterns:
@@ -49,7 +49,7 @@ class ReplaceTag(Tag):
         self.pattern = re.compile(pattern)
         self.replacement = replacement
 
-    def process(self, file: File, context: Optional[str]) -> str:
+    def process(self, file: File, context: str | None) -> str:
         assert context
         return self.pattern.sub(self.replacement, context)
 
@@ -64,7 +64,7 @@ class CollapseTag(Tag):
         # TODO: check characters for empty string?
         self.pattern = re.compile(f"(?<=[{characters}])[{characters}]+")
 
-    def process(self, file: File, context: Optional[str]) -> str:
+    def process(self, file: File, context: str | None) -> str:
         assert context is not None
         return self.pattern.sub("", context)
 
@@ -74,7 +74,7 @@ class UpperTag(Tag):
 
     require_context = True
 
-    def process(self, file: File, context: Optional[str]) -> str:
+    def process(self, file: File, context: str | None) -> str:
         assert context is not None
         return context.upper()
 
@@ -84,7 +84,7 @@ class LowerTag(Tag):
 
     require_context = True
 
-    def process(self, file: File, context: Optional[str]) -> str:
+    def process(self, file: File, context: str | None) -> str:
         assert context is not None
         return context.lower()
 
@@ -102,7 +102,7 @@ class StripTag(Tag):
         self.left = left
         self.right = right
 
-    def process(self, file: File, context: Optional[str]) -> str:
+    def process(self, file: File, context: str | None) -> str:
         assert context is not None
         if self.left and not self.right:
             return context.lstrip(self.strip_characters)
@@ -136,7 +136,7 @@ class TrimTag(Tag):
         self.left = left
         self.right = right
 
-    def process(self, file: File, context: Optional[str]) -> str:
+    def process(self, file: File, context: str | None) -> str:
         assert context is not None
         if self.left:
             return context[-self.width :]
@@ -148,7 +148,7 @@ class CapitalizeTag(Tag):
 
     require_context = True
 
-    def process(self, file: File, context: Optional[str]) -> str:
+    def process(self, file: File, context: str | None) -> str:
         assert context is not None
         return context.capitalize()
 
@@ -158,7 +158,7 @@ class TitleTag(Tag):
 
     require_context = True
 
-    def process(self, file: File, context: Optional[str]) -> str:
+    def process(self, file: File, context: str | None) -> str:
         assert context is not None
         return context.title()
 
@@ -182,7 +182,7 @@ class PadTag(Tag):
         self.left = left
         self.right = right
 
-    def process(self, file: File, context: Optional[str]) -> str:
+    def process(self, file: File, context: str | None) -> str:
         assert context is not None
         if len(context) >= self.width:
             return context
@@ -209,7 +209,7 @@ class SplitCaseTag(Tag):
         assert separator
         self.separator = separator
 
-    def process(self, file: File, context: Optional[str]) -> str:
+    def process(self, file: File, context: str | None) -> str:
         assert context is not None
         return self._pattern.sub("".join((r"\1", self.separator, r"\2")), context)
 
@@ -219,7 +219,7 @@ class IsEmptyTag(Tag):
 
     require_context = True
 
-    def process(self, file: File, context: Optional[str]) -> bool:
+    def process(self, file: File, context: str | None) -> bool:
         assert context is not None
         return len(str(context)) == 0
 
@@ -229,6 +229,6 @@ class LengthTag(Tag):
 
     require_context = True
 
-    def process(self, file: File, context: Optional[str]) -> int:
+    def process(self, file: File, context: str | None) -> int:
         assert context is not None
         return len(str(context))

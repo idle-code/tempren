@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from datetime import timedelta
 from fractions import Fraction
-from typing import Any, Optional
+from typing import Any
 
 import isodate
 from pymediainfo import MediaInfo
@@ -16,7 +16,7 @@ if not MediaInfo.can_parse():
 class MediaInfoTagBase(Tag, ABC):
     require_context = False
 
-    def process(self, file: File, context: Optional[str]) -> Any:
+    def process(self, file: File, context: str | None) -> Any:
         media_info = MediaInfo.parse(file.absolute_path)
         if len(media_info.tracks) < 2:  # General track seems always present
             raise FileNotSupportedError()

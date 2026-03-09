@@ -1,7 +1,6 @@
 import logging
 from logging import Logger
 from pathlib import Path
-from typing import Dict, List, Optional, Type
 
 from tempren.adhoc import AdHocTagFactoryFromExecutable
 from tempren.factories import TagFactoryFromClass
@@ -20,21 +19,19 @@ class TagCategory:
     log: Logger
 
     name: CategoryName
-    description: Optional[str] = None
-    tag_map: Dict[str, TagFactory]
+    description: str | None = None
+    tag_map: dict[str, TagFactory]
 
     # CHECK: Move following to the TagRegistry? This would remove `tag_name` argument from `register_tag_class`
     _tag_class_suffix = "Tag"
 
-    def __init__(self, name: CategoryName, description: Optional[str] = None):
+    def __init__(self, name: CategoryName, description: str | None = None):
         self.log = logging.getLogger(self.__class__.__name__)
         self.tag_map = {}
         self.name = name
         self.description = description
 
-    def register_tag_class(
-        self, tag_class: Type[Tag], tag_name: Optional[TagName] = None
-    ):
+    def register_tag_class(self, tag_class: type[Tag], tag_name: TagName | None = None):
         if not tag_name:
             tag_class_name = tag_class.__name__
             if tag_class_name.endswith(self._tag_class_suffix):
@@ -58,7 +55,7 @@ class TagCategory:
         self.register_tag_factory(executable_tag_factory, tag_name)
 
     def register_tag_factory(
-        self, tag_factory: TagFactory, tag_name: Optional[TagName] = None
+        self, tag_factory: TagFactory, tag_name: TagName | None = None
     ):
         if tag_name is None:
             tag_name = tag_factory.tag_name
@@ -66,19 +63,19 @@ class TagCategory:
             raise ValueError(f"Factory for tag '{tag_name}' already registered")
         self.tag_map[tag_name] = tag_factory
 
-    def find_tag_factory(self, tag_name: TagName) -> Optional[TagFactory]:
+    def find_tag_factory(self, tag_name: TagName) -> TagFactory | None:
         return self.tag_map.get(tag_name, None)
 
 
 class TagRegistry:
     log: Logger
-    category_map: Dict[CategoryName, TagCategory]
+    category_map: dict[CategoryName, TagCategory]
 
     def __init__(self):
         self.log = logging.getLogger(self.__class__.__name__)
         self.category_map = {}
 
-    def find_category(self, category_name: CategoryName) -> Optional[TagCategory]:
+    def find_category(self, category_name: CategoryName) -> TagCategory | None:
         category = self.category_map.get(category_name, None)
         if category:
             return category
@@ -94,7 +91,7 @@ class TagRegistry:
     def _get_tag_factory_by_unique_name(self, tag_name: TagName) -> TagFactory:
         # In case there are tags with the same name in multiple categories,
         # category name have to be specified explicitly
-        found_tag_factories: Dict[CategoryName, TagFactory] = {}
+        found_tag_factories: dict[CategoryName, TagFactory] = {}
         for category in self.category_map.values():
             tag_factory = category.find_tag_factory(tag_name)
             if tag_factory:
@@ -123,7 +120,7 @@ class TagRegistry:
         return tag_factory
 
     def register_category(
-        self, category_name: CategoryName, description: Optional[str] = None
+        self, category_name: CategoryName, description: str | None = None
     ) -> TagCategory:
         # TODO: This method should receive already build (non-empty) TagCategory
         if self.find_category(category_name) is not None:
@@ -163,9 +160,9 @@ class UnknownCategoryError(TagError):
 
 
 class AmbiguousNameError(TagError):
-    category_names: List[CategoryName]
+    category_names: list[CategoryName]
 
-    def __init__(self, tag_name: QualifiedTagName, category_names: List[CategoryName]):
+    def __init__(self, tag_name: QualifiedTagName, category_names: list[CategoryName]):
         super().__init__(
             tag_name,
             f"This tag name is present in multiple categories: {', '.join(category_names)}",
