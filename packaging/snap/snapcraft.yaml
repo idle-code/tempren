@@ -17,47 +17,17 @@ platforms:
     build-for: [arm64]
 
 parts:
-  poetry:
-    plugin: dump
-    source: ../..
-    build-packages:
-      - curl
-    override-pull: |
-      curl https://install.python-poetry.org > install-poetry.py
-      export POETRY_HOME=/opt/poetry
-      python3 install-poetry.py --version 1.8.3
-      #$POETRY_HOME/bin/poetry --version
-      #export TEMPREN_VERSION="$($POETRY_HOME/bin/poetry version --short)"
-      #echo $TEMPREN_VERSION | tee /tmp/tempren_version
-
   tempren:
-    after: [poetry]
     plugin: python
-    source: ../..
-    build-environment:
-      - PATH: "/opt/poetry/bin:$PATH"
-    build-packages:
-      - python3-pip
+    source: .
     override-pull: |
       craftctl default
-
-      # Find out program version
-      export TEMPREN_VERSION="$(poetry version --short)"
-      craftctl set version=$TEMPREN_VERSION
-
-      # Prepare requirements.txt to install tempren from the PyPi
-      # This is required as default build algorithm doesn't correctly
-      # export scripts declared in pyproject.toml
-      poetry export --extras=video --output=requirements.txt
-      python3 -m pip download "tempren[video]==$TEMPREN_VERSION"
-      export TEMPREN_HASH=$(python3 -m pip hash tempren*.whl | tail -1)
-      echo "tempren==$TEMPREN_VERSION $TEMPREN_HASH" >> requirements.txt
-
-#    requirements: [requirements.txt]
+      craftctl set version=$(cat "$CRAFT_PART_SRC/version.txt")
+    python-packages:
+      - "tempren[video]"
     stage-packages:
       - libmagic1
       - libmediainfo0v5
-
 
 apps:
   tempren:
