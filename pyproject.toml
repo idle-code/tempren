@@ -38,13 +38,13 @@ geopy = "^2.4.1"
 fastkml = "^1.1.0"
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^8.3.5"
+pytest = "^9.3.5"
 pytest-cov = "^4.1"
 coverage = "^7.2.7"
 pre-commit = "^3.5"
 mypy = "^1.4.1"
 pylint = "^3.0.2"
-black = "^24.4.0"
+black = "^26.3.1"
 
 [tool.poetry.extras]
 video = ["pymediainfo"]
