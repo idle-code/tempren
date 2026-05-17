@@ -12,6 +12,15 @@ sudo apt-get install -y --no-install-recommends \
 # Install build tooling
 pip install --quiet python-appimage
 
+# Download appimagetool upfront so python-appimage finds it in PATH
+# (avoids its internal download from AppImage/appimagetool which lacks continuous releases)
+wget -q "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-${ARCH}.AppImage" \
+    -O /usr/local/bin/appimagetool
+chmod +x /usr/local/bin/appimagetool
+
+# Run AppImages without FUSE (not available on GitHub-hosted runners)
+export APPIMAGE_EXTRACT_AND_RUN=1
+
 # Build base Python AppImage and install tempren into it
 # python-appimage looks for .desktop and icon alongside the entrypoint script
 python -m python_appimage build app \
@@ -43,10 +52,6 @@ SYSTEM_MAGIC_DB="/usr/share/misc/magic.mgc"
 sed -i '2i export LD_LIBRARY_PATH="${APPDIR}/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"' \
     "${APPDIR}/AppRun"
 
-# Download appimagetool and squash into final AppImage
-wget -q "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-${ARCH}.AppImage" \
-    -O appimagetool
-chmod +x appimagetool
-ARCH="${ARCH}" ./appimagetool "${APPDIR}" "tempren-${VERSION}-${ARCH}.AppImage"
+ARCH="${ARCH}" appimagetool "${APPDIR}" "tempren-${VERSION}-${ARCH}.AppImage"
 
 echo "Built: tempren-${VERSION}-${ARCH}.AppImage"
