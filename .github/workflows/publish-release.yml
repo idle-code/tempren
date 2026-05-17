@@ -27,8 +27,11 @@ jobs:
       - name: Build snap package
         uses: snapcore/action-build@v1
         id: build_snap
+        with:
+          path: packaging/snap
       - uses: actions/upload-artifact@v4
         with:
+          name: snap-artifact
           path: ${{ steps.build_snap.outputs.snap }}
       - name: Publish snap package to the snapcraft.io store
         uses: snapcore/action-publish@v1
@@ -38,8 +41,21 @@ jobs:
           snap: ${{ steps.build_snap.outputs.snap }}
           release: edge
 
+      - name: Build AppImage
+        id: build_appimage
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          bash packaging/appimage/build-appimage.sh "${VERSION}"
+          echo "appimage=$(ls tempren-*.AppImage | head -1)" >> $GITHUB_OUTPUT
+      - uses: actions/upload-artifact@v4
+        with:
+          name: appimage-artifact
+          path: ${{ steps.build_appimage.outputs.appimage }}
+
       - name: Make a GitHub release
         uses: softprops/action-gh-release@v1
         with:
-          files: ${{ steps.build_snap.outputs.snap }}
+          files: |
+            ${{ steps.build_snap.outputs.snap }}
+            ${{ steps.build_appimage.outputs.appimage }}
           generate_release_notes: true

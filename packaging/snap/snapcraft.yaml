@@ -19,7 +19,7 @@ platforms:
 parts:
   poetry:
     plugin: dump
-    source: .
+    source: ../..
     build-packages:
       - curl
     override-pull: |
@@ -33,7 +33,7 @@ parts:
   tempren:
     after: [poetry]
     plugin: python
-    source: .
+    source: ../..
     build-environment:
       - PATH: "/opt/poetry/bin:$PATH"
     build-packages:

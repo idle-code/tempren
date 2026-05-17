@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=tempren
+Comment=Template-based file renaming utility
+Exec=tempren
+Icon=tempren
+Type=Application
+Categories=Utility;FileTools;
+Terminal=true
