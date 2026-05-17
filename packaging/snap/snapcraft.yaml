@@ -39,11 +39,11 @@ parts:
     build-packages:
       - python3-pip
     override-pull: |
-      snapcraftctl pull
+      craftctl default
 
       # Find out program version
       export TEMPREN_VERSION="$(poetry version --short)"
-      snapcraftctl set-version $TEMPREN_VERSION
+      craftctl set-version $TEMPREN_VERSION
 
       # Prepare requirements.txt to install tempren from the PyPi
       # This is required as default build algorithm doesn't correctly
