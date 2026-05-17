@@ -24,6 +24,14 @@ jobs:
           delay_between_requests: 5
           timeout: 60
 
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf /usr/local/lib/android
+          sudo rm -rf /opt/ghc
+          sudo rm -rf /opt/hostedtoolcache/CodeQL
+          df -h
+
       - name: Build snap package
         uses: snapcore/action-build@v1
         id: build_snap
