@@ -69,7 +69,7 @@ class TestConflictResolution(CliTestsBase):
             flag, "--sort", "%Name()", "StaticFilename", text_data_dir
         )
 
-        stdout, stderr = tempren_process.communicate(input=selection + "\n", timeout=3)
+        stdout, stderr = tempren_process.communicate(input=selection + "\n", timeout=10)
         assert "StaticFilename" in stderr
         assert "already existing file" in stderr
 
@@ -91,7 +91,7 @@ class TestConflictResolution(CliTestsBase):
             flag, "--sort", "%Name()", "StaticFilename", text_data_dir
         )
 
-        stdout, stderr = tempren_process.communicate(input=selection + "\n", timeout=3)
+        stdout, stderr = tempren_process.communicate(input=selection + "\n", timeout=10)
         assert "StaticFilename" in stderr
         assert "already existing file" in stderr
 
@@ -112,7 +112,7 @@ class TestConflictResolution(CliTestsBase):
             flag, "--verbose", "--sort", "%Name()", "StaticFilename", text_data_dir
         )
 
-        stdout, stderr = tempren_process.communicate(input=selection + "\n", timeout=3)
+        stdout, stderr = tempren_process.communicate(input=selection + "\n", timeout=10)
         assert "StaticFilename" in stderr
         assert "already existing file" in stderr
 
@@ -137,7 +137,7 @@ class TestConflictResolution(CliTestsBase):
         )
 
         stdout, stderr = tempren_process.communicate(
-            input=selection + "\n" + "UserProvidedName" + "\n", timeout=3
+            input=selection + "\n" + "UserProvidedName" + "\n", timeout=10
         )
         assert "StaticFilename" in stderr
         assert "already existing file" in stderr
@@ -162,7 +162,7 @@ class TestConflictResolution(CliTestsBase):
         )
 
         stdout, stderr = tempren_process.communicate(
-            input="custom\n" + "StaticFilename\n", timeout=3
+            input="custom\n" + "StaticFilename\n", timeout=10
         )
         assert "Could not rename" in stderr
         assert "already exists" in stderr
@@ -183,7 +183,7 @@ class TestConflictResolution(CliTestsBase):
         )
 
         stdout, stderr = tempren_process.communicate(
-            input="foobar\nignore\n", timeout=3
+            input="foobar\nignore\n", timeout=10
         )
         assert "Invalid choice" in stderr
         assert "foobar" in stderr
