@@ -252,5 +252,6 @@ gen/
 *.java
 *.class
 
-# Snap builds:
+# builds:
 *.snap
+*.AppImage

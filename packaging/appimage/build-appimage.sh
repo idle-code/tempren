@@ -20,20 +20,30 @@ python -m python_appimage build app \
     --python-version "${PYTHON_VERSION}" \
     packaging/appimage/entrypoint.py
 
-# Find the generated AppDir (python-appimage names it based on the script)
-APPDIR="$(ls -d *.AppDir 2>/dev/null | head -1)"
-[ -z "${APPDIR}" ] && { echo "AppDir not found"; exit 1; }
+# python-appimage names the AppDir {script_name}-{ARCH} when --no-packaging is used
+APPDIR="entrypoint.py-${ARCH}"
+[ -d "${APPDIR}" ] || { echo "AppDir not found: ${APPDIR}"; exit 1; }
 
 # Install tempren (with video extras) into the AppDir's Python
 "${APPDIR}/usr/bin/python${PYTHON_VERSION}" -m pip install --quiet \
     "tempren[video]==${VERSION}"
+
+# Patch AppRun to invoke tempren instead of starting a bare Python interpreter
+sed -i 's|"$APPDIR/opt/python'"${PYTHON_VERSION}"'/bin/python'"${PYTHON_VERSION}"'" "$@"|"$APPDIR/opt/python'"${PYTHON_VERSION}"'/bin/python'"${PYTHON_VERSION}"'" "$APPDIR/opt/python'"${PYTHON_VERSION}"'/bin/tempren" "$@"|' \
+    "${APPDIR}/AppRun"
+
+# Replace generic Python desktop entry and icon with tempren's own
+cp packaging/appimage/tempren.desktop "${APPDIR}/tempren.desktop"
+rm -f "${APPDIR}"/python*.desktop
+cp packaging/appimage/tempren.svg "${APPDIR}/tempren.svg"
+ln -sf tempren.svg "${APPDIR}/.DirIcon"
 
 # Bundle native shared libraries into AppDir/usr/lib so ctypes can find them
 APPDIR_LIB="${APPDIR}/usr/lib"
 mkdir -p "${APPDIR_LIB}"
 
 for lib in libmagic.so.1 libmediainfo.so.0 libzen.so.0; do
-    LIBPATH=$(ldconfig -p | grep " ${lib}" | awk '{print $NF}' | head -1)
+    LIBPATH=$(ldconfig -p | grep "[[:space:]]${lib}" | awk '{print $NF}' | head -1)
     [ -n "${LIBPATH}" ] && cp -v "${LIBPATH}" "${APPDIR_LIB}/"
 done
 
@@ -50,6 +60,6 @@ sed -i '2i export LD_LIBRARY_PATH="${APPDIR}/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBR
 wget -q "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-${ARCH}.AppImage" \
     -O appimagetool
 chmod +x appimagetool
-APPIMAGE_EXTRACT_AND_RUN=1 ARCH="${ARCH}" ./appimagetool "${APPDIR}" "tempren-${VERSION}-${ARCH}.AppImage"
+APPIMAGE_EXTRACT_AND_RUN=1 ARCH="${ARCH}" ./appimagetool --no-appstream "${APPDIR}" "tempren-${VERSION}-${ARCH}.AppImage"
 
 echo "Built: tempren-${VERSION}-${ARCH}.AppImage"
