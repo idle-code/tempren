@@ -74,7 +74,7 @@ def visit_types_in_package(
         except (NotImplementedError, ModuleNotFoundError) as exc:
             log.warning(f"Module {name} is currently unsupported: {exc}")
         except Exception as exc:
-            log.error(exc, f"Could not load module {name}")
+            log.error("Could not load module %s: %s", name, exc)
 
 
 def visit_types_in_module(

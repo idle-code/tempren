@@ -24,8 +24,10 @@ python -m python_appimage build app \
 APPDIR="entrypoint.py-${ARCH}"
 [ -d "${APPDIR}" ] || { echo "AppDir not found: ${APPDIR}"; exit 1; }
 
-# Install tempren (with video extras) into the AppDir's Python
-"${APPDIR}/usr/bin/python${PYTHON_VERSION}" -m pip install --quiet \
+# Install tempren (with video extras) into the AppDir's Python.
+# PYTHONNOUSERSITE=1 prevents pip from treating host ~/.local packages as
+# already satisfied and skipping their installation into the AppDir.
+PYTHONNOUSERSITE=1 "${APPDIR}/usr/bin/python${PYTHON_VERSION}" -m pip install --quiet \
     "tempren[video]==${VERSION}"
 
 # Patch AppRun to invoke tempren instead of starting a bare Python interpreter
@@ -54,6 +56,9 @@ SYSTEM_MAGIC_DB="/usr/share/misc/magic.mgc"
 # Patch AppRun to expose bundled libs to the dynamic linker
 sed -i '2i export LD_LIBRARY_PATH="${APPDIR}/usr/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"' \
     "${APPDIR}/AppRun"
+
+# Prevent host user site-packages from leaking into the bundled Python
+sed -i '2a export PYTHONNOUSERSITE=1' "${APPDIR}/AppRun"
 
 # Download appimagetool and pack the final AppImage
 # APPIMAGE_EXTRACT_AND_RUN avoids FUSE dependency on GitHub-hosted runners
