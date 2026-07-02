@@ -9,6 +9,27 @@ from tempren.primitives import File
 
 FileRenamerType = Callable[[Path, Path, bool], None]
 
+log = logging.getLogger(__name__)
+
+
+def _restore_times(destination_path: Path, source_stat: os.stat_result) -> None:
+    """Restore the source access and modification times on the destination.
+
+    shutil.move() (used by FileMover) can silently drop the original
+    timestamps when it falls back to copy+delete across filesystems, as
+    copystat swallows the OSError raised by os.utime on some setups. Applying
+    this explicitly to both renamers makes timestamp preservation reliable
+    instead of relying on the underlying operation's best-effort behavior.
+    """
+    try:
+        os.utime(destination_path, times=(source_stat.st_atime, source_stat.st_mtime))
+    except OSError as error:
+        log.warning(
+            "Could not preserve modification time for '%s': %s",
+            destination_path,
+            error,
+        )
+
 
 class InvalidDestinationError(Exception):
     pass
@@ -150,7 +171,9 @@ class FileRenamer:
             raise InvalidDestinationError(
                 f"Destination path {destination_path} targets different directory"
             )
+        source_stat = os.stat(source_path)
         os.rename(source_path, destination_path)
+        _restore_times(destination_path, source_stat)
 
 
 class FileMover:
@@ -162,8 +185,10 @@ class FileMover:
     ) -> None:
         if not override and destination_path.exists():
             raise DestinationAlreadyExistsError(source_path, destination_path)
+        source_stat = os.stat(source_path)
         destination_path.parent.mkdir(parents=True, exist_ok=True)
         shutil.move(str(source_path), destination_path)
+        _restore_times(destination_path, source_stat)
 
 
 class DryRunRenamer:

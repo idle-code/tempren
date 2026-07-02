@@ -1,3 +1,5 @@
+import os
+import time
 from pathlib import Path
 
 import pytest
@@ -138,6 +140,20 @@ class TestPathMode(CommonModeTestsBase):
         assert error_code == ErrorCode.SUCCESS
         assert (nested_data_dir / "subdir" / "level-1.file").exists()
         assert (nested_data_dir / "first" / "subdir" / "level-2.file").exists()
+
+    def test_preserves_modification_time(self, text_data_dir: Path, mode_flag: str):
+        src = text_data_dir / "hello.txt"
+        original_mtime = time.time() - 86400  # one day ago
+        os.utime(src, times=(original_mtime, original_mtime))
+
+        stdout, stderr, error_code = run_tempren(
+            mode_flag, "%Upper(){%Trim(-1,left){%Ext()}}/%Name()", text_data_dir
+        )
+
+        assert error_code == ErrorCode.SUCCESS
+        dst = text_data_dir / "TXT" / "hello.txt"
+        assert dst.exists()
+        assert os.stat(dst).st_mtime == pytest.approx(original_mtime, abs=1)
 
 
 @pytest.mark.parametrize("mode_flag", ["-d", "--directory"])
