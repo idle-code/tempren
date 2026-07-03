@@ -8,6 +8,7 @@ from pymediainfo import MediaInfo
 
 from tempren.exceptions import FileNotSupportedError, MissingMetadataError
 from tempren.primitives import File, Tag
+from tempren.tags._resolution import resolve_resolution_name
 
 if not MediaInfo.can_parse():
     raise NotImplementedError("MediaInfo library not found")
@@ -69,6 +70,24 @@ class AspectRatioTag(VideoInfoTagBase):
         else:
             aspect_ratio = Fraction(video_track.width, video_track.height)
             return f"{aspect_ratio.numerator}:{aspect_ratio.denominator}"
+
+
+class ResolutionNameTag(VideoInfoTagBase):
+    """Video resolution name based on display resolution standard"""
+
+    use_p_notation: bool
+
+    def configure(self, p_notation: bool = False):
+        """
+        :param p_notation: use height-based ``<H>p`` notation (e.g. ``1080p``)
+            instead of the display-standard abbreviation (e.g. ``FHD``)
+        """
+        self.use_p_notation = p_notation
+
+    def extract_video_metadata(self, video_track) -> Any:
+        return resolve_resolution_name(
+            video_track.width, video_track.height, self.use_p_notation
+        )
 
 
 class FrameRateTag(VideoInfoTagBase):
