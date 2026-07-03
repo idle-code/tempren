@@ -1,3 +1,5 @@
+import os
+import time
 from abc import ABC, abstractmethod
 from pathlib import Path
 
@@ -294,6 +296,18 @@ class TestFileRenamer:
         assert not src.exists()
         assert dst.exists()
 
+    def test_preserves_modification_time(self, text_data_dir: Path):
+        src = text_data_dir / "hello.txt"
+        dst = text_data_dir / "hi.txt"
+        original_mtime = time.time() - 86400  # one day ago
+        os.utime(src, times=(original_mtime, original_mtime))
+        renamer = FileRenamer()
+
+        renamer(src, dst)
+
+        assert dst.exists()
+        assert os.stat(dst).st_mtime == pytest.approx(original_mtime, abs=1)
+
 
 class TestFileMover:
     def test_simple_file(self, text_data_dir: Path):
@@ -396,6 +410,34 @@ class TestFileMover:
 
         assert not src.exists()
         assert dst.exists()
+
+    def test_preserves_modification_time(self, text_data_dir: Path):
+        src = text_data_dir / "hello.txt"
+        dst = text_data_dir / "hi.txt"
+        original_mtime = time.time() - 86400  # one day ago
+        os.utime(src, times=(original_mtime, original_mtime))
+        mover = FileMover()
+
+        mover(src, dst)
+
+        assert dst.exists()
+        assert os.stat(dst).st_mtime == pytest.approx(original_mtime, abs=1)
+
+    def test_preserves_modification_time_when_creating_directory(
+        self, nested_data_dir: Path
+    ):
+        src = nested_data_dir / "level-1.file"
+        nonexistent_dir = nested_data_dir / "nonexistent"
+        dst = nonexistent_dir / "level-1.file"
+        original_mtime = time.time() - 86400  # one day ago
+        os.utime(src, times=(original_mtime, original_mtime))
+        mover = FileMover()
+
+        mover(src, dst)
+
+        assert nonexistent_dir.exists()
+        assert dst.exists()
+        assert os.stat(dst).st_mtime == pytest.approx(original_mtime, abs=1)
 
 
 class TestDryRunRenamer:

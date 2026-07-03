@@ -14,6 +14,7 @@ from PIL.TiffImagePlugin import IFDRational
 from tempren.alias import TagAlias
 from tempren.exceptions import FileNotSupportedError, MissingMetadataError
 from tempren.primitives import File, Tag
+from tempren.tags._resolution import resolve_resolution_name
 
 
 class PillowTagBase(Tag, ABC):
@@ -94,6 +95,22 @@ class MPxTag(PillowTagBase):
 
     def extract_metadata(self, image: Image) -> Any:
         return round(image.width * image.height / 1_000_000, self.ndigits)
+
+
+class ResolutionNameTag(PillowTagBase):
+    """Image resolution name based on display resolution standard"""
+
+    use_p_notation: bool
+
+    def configure(self, p_notation: bool = False):
+        """
+        :param p_notation: use height-based ``<H>p`` notation (e.g. ``1080p``)
+            instead of the display-standard abbreviation (e.g. ``FHD``)
+        """
+        self.use_p_notation = p_notation
+
+    def extract_metadata(self, image: Image) -> Any:
+        return resolve_resolution_name(image.width, image.height, self.use_p_notation)
 
 
 class IsOrientationTag(PillowTagBase):
