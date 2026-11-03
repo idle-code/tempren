@@ -63,4 +63,4 @@ Tests mirror source structure under `tests/`. Tag tests in `tests/tags/`, templa
 
 - Optional dep `pymediainfo` requires system library `libmediainfo0v5`
 - Entry point: `tempren.cli:throwing_main`
-- Python >=3.11, mypy targets 3.11
+- Python >=3.11; mypy checks against the running interpreter (CI covers 3.11-3.14)
