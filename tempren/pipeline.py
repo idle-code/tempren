@@ -310,30 +310,29 @@ def build_pipeline(
 
     if config.mode == OperationMode.name or config.mode == OperationMode.directory:
         pipeline.path_generator = TemplateNameGenerator(bound_pattern)
-        if config.filter:
-            if config.filter_type == FilterType.regex:
-                pipeline.file_filter = RegexFilenameFileFilter(config.filter)
-            elif config.filter_type == FilterType.glob:
-                pipeline.file_filter = GlobFilenameFileFilter(config.filter)
-            elif config.filter_type == FilterType.template:
-                bound_filter_pattern = _compile_template(config.filter)
-                pipeline.file_filter = TemplateFileFilter(bound_filter_pattern)
-            else:
-                raise NotImplementedError("Unknown filter type: " + str(config.filter))
     elif config.mode == OperationMode.path:
         pipeline.path_generator = TemplatePathGenerator(bound_pattern)
-        if config.filter:
-            if config.filter_type == FilterType.regex:
-                pipeline.file_filter = RegexPathFileFilter(config.filter)
-            elif config.filter_type == FilterType.glob:
-                pipeline.file_filter = GlobPathFileFilter(config.filter)
-            elif config.filter_type == FilterType.template:
-                bound_filter_pattern = _compile_template(config.filter)
-                pipeline.file_filter = TemplateFileFilter(bound_filter_pattern)
-            else:
-                raise NotImplementedError("Unknown filter type: " + str(config.filter))
     else:
         raise NotImplementedError("Unknown operation mode: " + str(config.mode))
+
+    if config.filter:
+        # In path mode, glob/regex filters match the whole relative path
+        match_path = config.mode == OperationMode.path
+        if config.filter_type == FilterType.regex:
+            if match_path:
+                pipeline.file_filter = RegexPathFileFilter(config.filter)
+            else:
+                pipeline.file_filter = RegexFilenameFileFilter(config.filter)
+        elif config.filter_type == FilterType.glob:
+            if match_path:
+                pipeline.file_filter = GlobPathFileFilter(config.filter)
+            else:
+                pipeline.file_filter = GlobFilenameFileFilter(config.filter)
+        elif config.filter_type == FilterType.template:
+            bound_filter_pattern = _compile_template(config.filter)
+            pipeline.file_filter = TemplateFileFilter(bound_filter_pattern)
+        else:
+            raise NotImplementedError("Unknown filter type: " + str(config.filter))
 
     if config.filter_invert and config.filter is not None:
         pipeline.file_filter = FileFilterInverter(pipeline.file_filter)
