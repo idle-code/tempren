@@ -1,11 +1,15 @@
 import itertools
 import logging
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
 
-import fastkml.geometry
-import fastkml.kml
-import fastkml.views
+with warnings.catch_warnings():
+    # fastkml only uses lxml for pretty-printing, which tempren never does
+    warnings.filterwarnings("ignore", message="Package `lxml` missing")
+    import fastkml.geometry
+    import fastkml.kml
+    import fastkml.views
 from geopy import Point
 from geopy.distance import great_circle
 
