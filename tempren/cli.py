@@ -649,7 +649,6 @@ class ErrorCode(IntEnum):
 def main() -> int:
     configure_logging()
     argv = sys.argv[1:]
-    original_cwd = os.getcwd()
     try:
         config = process_cli_configuration(argv)
         registry = build_tag_registry(config.adhoc_tags, config.aliases)
@@ -685,8 +684,6 @@ def main() -> int:
     # except Exception as exc:  # NOCOVER: not really testable - final fallback
     #     log.error(f"Unknown error: {exc.__class__.__name__} {exc}")
     #     return ErrorCode.UNKNOWN_ERROR
-    finally:
-        os.chdir(original_cwd)
 
 
 def throwing_main():

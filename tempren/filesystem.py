@@ -220,33 +220,3 @@ class DryRunRenamer:
         self.created_paths.add(destination_path)
         self.removed_paths.discard(destination_path)
         self.created_paths.discard(source_path)
-
-
-class PrintingRenamerWrapper:
-    log: logging.Logger
-
-    def __init__(self, renamer_to_wrap: FileRenamerType):
-        assert renamer_to_wrap is not None
-        self.log = logging.getLogger(self.__class__.__name__)
-        self.renamer = renamer_to_wrap
-
-    def __call__(
-        self,
-        source_path: Path,
-        destination_path: Path,
-        override: bool = False,
-    ) -> None:
-        if override:
-            self.log.debug(
-                "Trying to override: %s to %s", source_path, destination_path
-            )
-        else:
-            self.log.debug("Trying to rename: %s to %s", source_path, destination_path)
-        self.renamer(source_path, destination_path, override)
-
-        self.log.info(f"Renamed: {source_path}")
-        if override:
-            self.log.info(f"         to: {destination_path} (override)")
-            # self.log.info(f"to existing: {destination_path} (override)")
-        else:
-            self.log.info(f"     to: {destination_path}")

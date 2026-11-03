@@ -1,5 +1,4 @@
 import logging
-import os
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from enum import Enum
@@ -27,7 +26,6 @@ from tempren.filesystem import (
     FileRenamerType,
     FlatFileGatherer,
     InvalidDestinationError,
-    PrintingRenamerWrapper,
     RecursiveDirectoryGatherer,
     RecursiveFileGatherer,
 )
@@ -134,12 +132,8 @@ class Pipeline:
         # In case when destination file exists in the first run, we add such name to the
         # backlog and try again (in reverse order) later. This should mitigate most of
         # transitional conflicts.
-        backlog = []
+        backlog: list[tuple[File, Path]] = []
         for file in all_files:
-            # Renamer will receive a relative path,
-            # to make it valid, current working directory has to be changed before processing:
-            os.chdir(file.input_directory)
-
             try:
                 self.log.debug("Generating new name for %r", file)
                 new_relative_path = self.path_generator.generate(file)
@@ -175,59 +169,79 @@ class Pipeline:
                 )
 
             try:
-                self.renamer(file.relative_path, new_relative_path)
+                self._rename(file, new_relative_path)
             except FileExistsError:
                 self.log.debug(
                     "Deferring renaming of %r as destination '%s' already exists",
                     file,
                     new_relative_path,
                 )
-                backlog.append((file.relative_path, new_relative_path))
+                backlog.append((file, new_relative_path))
 
         while backlog:
-            source_path, destination_path = backlog.pop()
+            file, new_relative_path = backlog.pop()
             self.log.debug(
-                "Trying again to rename '%s' into '%s'", source_path, destination_path
+                "Trying again to rename '%s' into '%s'", file, new_relative_path
             )
             try:
-                self.renamer(source_path, destination_path)
+                self._rename(file, new_relative_path)
             except FileExistsError:
-                self.resolve_conflict(
-                    source_path, destination_path, self.conflict_strategy
-                )
+                self.resolve_conflict(file, new_relative_path, self.conflict_strategy)
+
+    def _rename(
+        self, file: File, new_relative_path: Path, override: bool = False
+    ) -> None:
+        """Renames the file using absolute paths (independent of current working directory)
+
+        Paths relative to the file's input directory are used in user-facing messages.
+        """
+        destination_path = file.input_directory / new_relative_path
+        if override:
+            self.log.debug(
+                "Trying to override: %s to %s", file.relative_path, new_relative_path
+            )
+        else:
+            self.log.debug(
+                "Trying to rename: %s to %s", file.relative_path, new_relative_path
+            )
+        self.renamer(file.absolute_path, destination_path, override)
+
+        self.log.info(f"Renamed: {file.relative_path}")
+        if override:
+            self.log.info(f"         to: {new_relative_path} (override)")
+        else:
+            self.log.info(f"     to: {new_relative_path}")
 
     def resolve_conflict(
         self,
-        source_path: Path,
-        destination_path: Path,
+        file: File,
+        new_relative_path: Path,
         strategy: ConflictResolutionStrategy,
     ):
         if strategy == ConflictResolutionStrategy.stop:
-            raise DestinationAlreadyExistsError(source_path, destination_path)
+            raise DestinationAlreadyExistsError(file.relative_path, new_relative_path)
         elif strategy == ConflictResolutionStrategy.ignore:
             self.log.debug(
                 "Skipping renaming of '%s' to '%s' as destination path already exists",
-                source_path,
-                destination_path,
+                file.relative_path,
+                new_relative_path,
             )
         elif strategy == ConflictResolutionStrategy.override:
             self.log.warning(
-                "Overriding destination '%s' as it already exists", destination_path
+                "Overriding destination '%s' as it already exists", new_relative_path
             )
-            self.renamer(source_path, destination_path, True)
+            self._rename(file, new_relative_path, override=True)
         elif strategy == ConflictResolutionStrategy.manual:
             if self.manual_conflict_resolver is None:
                 raise NotImplementedError("Manual conflict resolver not configured")
             user_selected_strategy = self.manual_conflict_resolver(
-                source_path, destination_path
+                file.relative_path, new_relative_path
             )
             if isinstance(user_selected_strategy, Path):
-                user_provided_path: Path = user_selected_strategy
-                self.renamer(source_path, user_provided_path, False)
+                # Relative custom paths are resolved against the input directory
+                self._rename(file, user_selected_strategy)
             else:
-                self.resolve_conflict(
-                    source_path, destination_path, user_selected_strategy
-                )
+                self.resolve_conflict(file, new_relative_path, user_selected_strategy)
         else:
             raise NotImplementedError(
                 f"Unknown conflict resolution strategy: {strategy}"
@@ -375,5 +389,4 @@ def build_pipeline(
         else:
             raise NotImplementedError("Unknown operation mode")
 
-    pipeline.renamer = PrintingRenamerWrapper(pipeline.renamer)  # type: ignore
     return pipeline
