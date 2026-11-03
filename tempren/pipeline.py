@@ -29,6 +29,7 @@ from tempren.filesystem import (
     RecursiveDirectoryGatherer,
     RecursiveFileGatherer,
 )
+from tempren.frontend import Frontend, NullFrontend, SkipReason
 from tempren.primitives import CategoryName, File, PathGenerator, Pattern, TagName
 from tempren.template.compiler import TemplateCompiler
 from tempren.template.exceptions import InvalidFilenameError, TemplateError
@@ -65,9 +66,6 @@ class ConflictResolutionStrategy(Enum):
     """Prompt user to resolve conflict manually (choose an option or provide new filename)"""
 
 
-ManualConflictResolver = Callable[[Path, Path], ConflictResolutionStrategy | Path]
-
-
 @dataclass
 class RuntimeConfiguration:
     template: str
@@ -90,12 +88,6 @@ class ConfigurationError(Exception):
     pass
 
 
-def manual_resolver_placeholder(
-    source_path: Path, destination_path: Path
-) -> ConflictResolutionStrategy | Path:
-    raise NotImplementedError()
-
-
 class Pipeline:
     log: logging.Logger
     file_gatherer: FileGatherer
@@ -107,9 +99,7 @@ class Pipeline:
         self.log = logging.getLogger(__name__)
         self.file_filter: Callable[[File], bool] = lambda file: True
         self.renamer: FileRenamerType = DryRunRenamer()
-        self.manual_conflict_resolver: ManualConflictResolver = (
-            manual_resolver_placeholder
-        )
+        self.frontend: Frontend = NullFrontend()
 
     def execute(self):
         all_files = []
@@ -123,7 +113,7 @@ class Pipeline:
             self.log.debug("%s considered for renaming", file)
             all_files.append(file)
 
-        self.log.info("%d files considered for renaming", len(all_files))
+        self.frontend.files_gathered(len(all_files))
         if self.sorter:
             self.log.info("Sorting files")
             all_files = self.sorter(all_files)
@@ -156,9 +146,8 @@ class Pipeline:
                 raise
 
             if new_relative_path == file.relative_path:
-                self.log.debug(
-                    "Skipping renaming of: '%s' (source and destination are the same)",
-                    new_relative_path,
+                self.frontend.file_skipped(
+                    file, new_relative_path, SkipReason.same_path
                 )
                 continue
 
@@ -191,10 +180,7 @@ class Pipeline:
     def _rename(
         self, file: File, new_relative_path: Path, override: bool = False
     ) -> None:
-        """Renames the file using absolute paths (independent of current working directory)
-
-        Paths relative to the file's input directory are used in user-facing messages.
-        """
+        """Renames the file using absolute paths (independent of current working directory)"""
         destination_path = file.input_directory / new_relative_path
         if override:
             self.log.debug(
@@ -205,12 +191,7 @@ class Pipeline:
                 "Trying to rename: %s to %s", file.relative_path, new_relative_path
             )
         self.renamer(file.absolute_path, destination_path, override)
-
-        self.log.info(f"Renamed: {file.relative_path}")
-        if override:
-            self.log.info(f"         to: {new_relative_path} (override)")
-        else:
-            self.log.info(f"     to: {new_relative_path}")
+        self.frontend.file_renamed(file, new_relative_path, override)
 
     def resolve_conflict(
         self,
@@ -221,10 +202,8 @@ class Pipeline:
         if strategy == ConflictResolutionStrategy.stop:
             raise DestinationAlreadyExistsError(file.relative_path, new_relative_path)
         elif strategy == ConflictResolutionStrategy.ignore:
-            self.log.debug(
-                "Skipping renaming of '%s' to '%s' as destination path already exists",
-                file.relative_path,
-                new_relative_path,
+            self.frontend.file_skipped(
+                file, new_relative_path, SkipReason.conflict_ignored
             )
         elif strategy == ConflictResolutionStrategy.override:
             self.log.warning(
@@ -232,10 +211,8 @@ class Pipeline:
             )
             self._rename(file, new_relative_path, override=True)
         elif strategy == ConflictResolutionStrategy.manual:
-            if self.manual_conflict_resolver is None:
-                raise NotImplementedError("Manual conflict resolver not configured")
-            user_selected_strategy = self.manual_conflict_resolver(
-                file.relative_path, new_relative_path
+            user_selected_strategy = self.frontend.resolve_conflict(
+                file, new_relative_path
             )
             if isinstance(user_selected_strategy, Path):
                 # Relative custom paths are resolved against the input directory
@@ -293,7 +270,7 @@ def build_tag_registry(
 def build_pipeline(
     config: RuntimeConfiguration,
     registry: TagRegistry,
-    manual_conflict_resolver: ManualConflictResolver,  # TODO: Move to the RuntimeConfiguration
+    frontend: Frontend,
 ) -> Pipeline:
     log.debug("Building pipeline")
     pipeline = Pipeline()
@@ -376,7 +353,7 @@ def build_pipeline(
         pipeline.sorter = TemplateFileSorter(bound_sorter_pattern, config.sort_invert)
 
     pipeline.conflict_strategy = config.conflict_strategy
-    pipeline.manual_conflict_resolver = manual_conflict_resolver
+    pipeline.frontend = frontend
 
     if config.dry_run:
         pipeline.renamer = DryRunRenamer()

@@ -12,3 +12,4 @@ exclude_lines =
 	if __name__ == .__main__.:
 	def __repr__
   pass
+  ^\s*\.\.\.$

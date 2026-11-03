@@ -117,7 +117,7 @@ class RecursiveDirectoryGatherer(FilesystemGatherer):
         yield from self._gather_in(self._start_directory)
 
     def _gather_in(self, directory: Path) -> Iterable[File]:
-        print(f"Gathering in {directory}")
+        log.debug("Gathering in %s", directory)
         for dir_entry in directory.iterdir():
             if not self._include_path_in_result(dir_entry):
                 continue

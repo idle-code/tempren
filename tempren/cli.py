@@ -15,7 +15,8 @@ from typing import Any, NoReturn
 
 from tempren.exceptions import FileNotSupportedError, TemplateEvaluationError
 from tempren.filesystem import DestinationAlreadyExistsError
-from tempren.primitives import CategoryName, QualifiedTagName, TagName
+from tempren.frontend import SkipReason
+from tempren.primitives import CategoryName, File, QualifiedTagName, TagName
 from tempren.template.exceptions import TagError, TemplateError
 
 from .pipeline import (
@@ -601,29 +602,57 @@ def render_template_evaluation_error(
     log.error(indent(template_error.message, " " * indent_size))
 
 
-def cli_prompt_conflict_resolver(
-    source_path: Path, destination_path: Path
-) -> ConflictResolutionStrategy | Path:
-    log.warning("While processing:")
-    log.warning(f"  {source_path}")
-    log.warning("following path was generated:")
-    log.warning(f"  {destination_path}")
-    log.warning("but it cannot be used as it targets already existing file")
-    while True:
-        selected_option_name = input(
-            "[s]top, [o]verride, [c]ustom path, [I]gnore: "
-        ).lower()
-        if not selected_option_name or "ignore".startswith(selected_option_name):
-            return ConflictResolutionStrategy.ignore
-        if "stop".startswith(selected_option_name):
-            return ConflictResolutionStrategy.stop
-        if "override".startswith(selected_option_name):
-            return ConflictResolutionStrategy.override
-        if "custom path".startswith(selected_option_name):
-            custom_path = Path(input("Custom path: "))
-            return custom_path
+class CliFrontend:
+    """Reports pipeline progress via logging and prompts for decisions via stdin"""
 
-        log.error(f"Invalid choice '{selected_option_name}")
+    def resolve_conflict(
+        self, source: File, destination: Path
+    ) -> ConflictResolutionStrategy | Path:
+        log.warning("While processing:")
+        log.warning(f"  {source.relative_path}")
+        log.warning("following path was generated:")
+        log.warning(f"  {destination}")
+        log.warning("but it cannot be used as it targets already existing file")
+        while True:
+            selected_option_name = input(
+                "[s]top, [o]verride, [c]ustom path, [I]gnore: "
+            ).lower()
+            if not selected_option_name or "ignore".startswith(selected_option_name):
+                return ConflictResolutionStrategy.ignore
+            if "stop".startswith(selected_option_name):
+                return ConflictResolutionStrategy.stop
+            if "override".startswith(selected_option_name):
+                return ConflictResolutionStrategy.override
+            if "custom path".startswith(selected_option_name):
+                custom_path = Path(input("Custom path: "))
+                return custom_path
+
+            log.error(f"Invalid choice '{selected_option_name}")
+
+    def files_gathered(self, count: int) -> None:
+        log.info("%d files considered for renaming", count)
+
+    def file_renamed(self, source: File, destination: Path, overridden: bool) -> None:
+        log.info(f"Renamed: {source.relative_path}")
+        if overridden:
+            log.info(f"         to: {destination} (override)")
+        else:
+            log.info(f"     to: {destination}")
+
+    def file_skipped(self, source: File, destination: Path, reason: SkipReason) -> None:
+        if reason == SkipReason.same_path:
+            log.debug(
+                "Skipping renaming of: '%s' (source and destination are the same)",
+                destination,
+            )
+        elif reason == SkipReason.conflict_ignored:
+            log.debug(
+                "Skipping renaming of '%s' to '%s' as destination path already exists",
+                source.relative_path,
+                destination,
+            )
+        else:
+            raise NotImplementedError(f"Unknown skip reason: {reason}")
 
 
 class ErrorCode(IntEnum):
@@ -652,9 +681,7 @@ def main() -> int:
     try:
         config = process_cli_configuration(argv)
         registry = build_tag_registry(config.adhoc_tags, config.aliases)
-        pipeline = build_pipeline(
-            config, registry, manual_conflict_resolver=cli_prompt_conflict_resolver
-        )
+        pipeline = build_pipeline(config, registry, CliFrontend())
         pipeline.execute()
         log.info("Done")
         return ErrorCode.SUCCESS
