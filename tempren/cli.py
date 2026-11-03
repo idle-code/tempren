@@ -13,17 +13,20 @@ from pathlib import Path
 from textwrap import indent
 from typing import Any, NoReturn
 
-from tempren.exceptions import FileNotSupportedError, TemplateEvaluationError
-from tempren.filesystem import DestinationAlreadyExistsError
+from tempren.exceptions import (
+    ConfigurationError,
+    DestinationError,
+    FileNotSupportedError,
+    TemplateEvaluationError,
+    TemprenError,
+)
 from tempren.frontend import SkipReason
 from tempren.primitives import CategoryName, File, QualifiedTagName, TagName
 from tempren.template.exceptions import TagError, TemplateError
 
 from .pipeline import (
-    ConfigurationError,
     ConflictResolutionStrategy,
     FilterType,
-    InvalidDestinationError,
     OperationMode,
     RuntimeConfiguration,
     build_pipeline,
@@ -181,7 +184,13 @@ def validate_aliases(aliases: list[list[tuple[TagName, str]]]) -> dict[TagName, 
     return dict(list_of_tuples)
 
 
-class SystemExitError(Exception):  # TODO: Use ConfigurationError instead
+class SystemExitError(TemprenError):
+    """Request to exit the program with a given status (raised instead of sys.exit)
+
+    Used for argument parsing errors as well as for successful early exits
+    (e.g. --help or --version) so it cannot be replaced by ConfigurationError.
+    """
+
     status: int
 
     def __init__(self, status: int, message: str | None):
@@ -685,7 +694,6 @@ def main() -> int:
         pipeline.execute()
         log.info("Done")
         return ErrorCode.SUCCESS
-    # TODO: Clean up exception hierarchy
     except SystemExitError as exc:
         if exc.status != 0:
             log.error(exc)
@@ -699,18 +707,18 @@ def main() -> int:
     except TemplateError as template_error:
         render_template_error(template_error)
         return ErrorCode.TEMPLATE_SYNTAX_ERROR
-    except DestinationAlreadyExistsError as exc:
-        log.error(f"Error: {exc}")
-        return ErrorCode.INVALID_DESTINATION_ERROR
-    except InvalidDestinationError as exc:
+    except DestinationError as exc:
         log.error(f"Error: {exc}")
         return ErrorCode.INVALID_DESTINATION_ERROR
     except FileNotSupportedError as exc:
+        # TODO: Use dedicated error code (breaking change - planned for 2.0)
         log.error(f"Error: {exc}")
         return ErrorCode.INVALID_DESTINATION_ERROR
-    # except Exception as exc:  # NOCOVER: not really testable - final fallback
-    #     log.error(f"Unknown error: {exc.__class__.__name__} {exc}")
-    #     return ErrorCode.UNKNOWN_ERROR
+    except (
+        TemprenError
+    ) as exc:  # NOCOVER: final fallback - all errors should be handled above
+        log.error(f"Unknown error: {exc.__class__.__name__}: {exc}")
+        return ErrorCode.UNKNOWN_ERROR
 
 
 def throwing_main():

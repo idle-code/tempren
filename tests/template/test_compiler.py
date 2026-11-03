@@ -6,9 +6,9 @@ import pytest
 from tempren.primitives import CategoryName, Tag, TagFactory, TagName
 from tempren.template.ast import RawText, TagInstance
 from tempren.template.compiler import (
-    ConfigurationError,
     ContextForbiddenError,
     ContextMissingError,
+    TagConfigurationError,
     TemplateCompiler,
 )
 from tempren.template.registry import AmbiguousNameError, TagRegistry, UnknownNameError
@@ -160,7 +160,7 @@ class TestTemplateCompiler:
 
         compiler = self.create_compiler({"Test": {"Foo": FooTag}})
 
-        with pytest.raises(ConfigurationError):
+        with pytest.raises(TagConfigurationError):
             compiler.compile("%Foo(bar='text')")
 
     def test_default_tag_factory__configure_rethrows_error_with_cause(self):
@@ -173,7 +173,7 @@ class TestTemplateCompiler:
 
         compiler = self.create_compiler({"Test": {"Foo": FooTag}})
 
-        with pytest.raises(ConfigurationError) as exc:
+        with pytest.raises(TagConfigurationError) as exc:
             compiler.compile("%Foo()")
 
         assert isinstance(exc.value.__cause__, ValueError)

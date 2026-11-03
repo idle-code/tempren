@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable
 from pathlib import Path
 
+from tempren.exceptions import DestinationAlreadyExistsError, InvalidDestinationError
 from tempren.primitives import File
 
 FileRenamerType = Callable[[Path, Path, bool], None]
@@ -28,17 +29,6 @@ def _restore_times(destination_path: Path, source_stat: os.stat_result) -> None:
             "Could not preserve modification time for '%s': %s",
             destination_path,
             error,
-        )
-
-
-class InvalidDestinationError(Exception):
-    pass
-
-
-class DestinationAlreadyExistsError(FileExistsError):
-    def __init__(self, src: Path, dst: Path):
-        super().__init__(
-            f"Could not rename '{src}' as destination path '{dst}' already exists"
         )
 
 

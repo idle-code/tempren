@@ -99,7 +99,7 @@ class TestNameMode(CommonModeTestsBase):
         )
 
         assert error_code == ErrorCode.INVALID_DESTINATION_ERROR
-        assert "Invalid name generated for" in stderr
+        assert "Error: Invalid name generated for" in stderr
         assert "subdir/hello.txt" in stderr
 
 

@@ -6,6 +6,11 @@ from pathlib import Path
 
 from tempren.alias import AliasTagFactory, AliasTagFactoryFromClass
 from tempren.discovery import discover_aliases_in_package, discover_tags_in_package
+from tempren.exceptions import (
+    ConfigurationError,
+    DestinationAlreadyExistsError,
+    InvalidDestinationError,
+)
 from tempren.file_filters import (
     FileFilterInverter,
     GlobFilenameFileFilter,
@@ -17,7 +22,6 @@ from tempren.file_filters import (
 from tempren.file_sorters import PathDepthSorter, TemplateFileSorter
 from tempren.filesystem import (
     CombinedFileGatherer,
-    DestinationAlreadyExistsError,
     DryRunRenamer,
     ExplicitFileGatherer,
     FileGatherer,
@@ -25,7 +29,6 @@ from tempren.filesystem import (
     FileRenamer,
     FileRenamerType,
     FlatFileGatherer,
-    InvalidDestinationError,
     RecursiveDirectoryGatherer,
     RecursiveFileGatherer,
 )
@@ -84,10 +87,6 @@ class RuntimeConfiguration:
     aliases: dict[TagName, str] = field(default_factory=dict)
 
 
-class ConfigurationError(Exception):
-    pass
-
-
 class Pipeline:
     log: logging.Logger
     file_gatherer: FileGatherer
@@ -130,12 +129,9 @@ class Pipeline:
                 self.log.debug("Generated path: '%s'", new_relative_path)
             except InvalidFilenameError as error:
                 # TODO: Introduce flag similar to conflict resolver to take appropriate action
-                self.log.warning(
-                    "Invalid name generated for %r: %r",
-                    file,
-                    error.generated_name,
-                )
-                raise InvalidDestinationError()
+                raise InvalidDestinationError(
+                    f"Invalid name generated for {file!r}: {error.generated_name!r}"
+                ) from error
             except Exception as error:
                 # TODO: Test
                 self.log.error(
