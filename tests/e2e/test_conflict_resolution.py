@@ -1,3 +1,4 @@
+import io
 from pathlib import Path
 
 import pytest
@@ -189,3 +190,42 @@ class TestConflictResolution(CliTestsBase):
         assert "foobar" in stderr
 
         tempren_process.wait()
+
+    def test_transient_conflict_resolution_with_multiple_input_directories(
+        self, text_data_dir: Path, nested_data_dir: Path, tmp_path: Path, monkeypatch
+    ):
+        run_tempren("%Count(start=0)", text_data_dir)
+        assert (text_data_dir / "0").exists()
+        assert (text_data_dir / "1").exists()
+        # Run from a directory unrelated to any of the input directories
+        monkeypatch.chdir(tmp_path)
+
+        # "0" -> "1" in the first directory is deferred (transient conflict) and has
+        # to be retried after files from the second directory were processed
+        stdout, stderr, error_code = run_tempren(
+            "--sort",
+            "%Name()",
+            "%Count(start=1)",
+            text_data_dir,
+            nested_data_dir,
+        )
+
+        assert error_code == ErrorCode.SUCCESS
+        assert sorted(p.name for p in text_data_dir.iterdir()) == ["1", "2"]
+        assert (nested_data_dir / "1").is_file()
+        assert not (nested_data_dir / "level-1.file").exists()
+
+    def test_manual_conflict_resolution_relative_custom_path(
+        self, text_data_dir: Path, tmp_path: Path, monkeypatch
+    ):
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setattr("sys.stdin", io.StringIO("custom\nUserProvidedName\n"))
+
+        stdout, stderr, error_code = run_tempren(
+            "--conflict-manual", "--sort", "%Name()", "StaticFilename", text_data_dir
+        )
+
+        assert error_code == ErrorCode.SUCCESS
+        assert (text_data_dir / "StaticFilename").exists()
+        assert (text_data_dir / "UserProvidedName").exists()
+        assert not (tmp_path / "UserProvidedName").exists()

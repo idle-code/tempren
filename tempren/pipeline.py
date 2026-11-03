@@ -1,5 +1,4 @@
 import logging
-import os
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from enum import Enum
@@ -7,6 +6,11 @@ from pathlib import Path
 
 from tempren.alias import AliasTagFactory, AliasTagFactoryFromClass
 from tempren.discovery import discover_aliases_in_package, discover_tags_in_package
+from tempren.exceptions import (
+    ConfigurationError,
+    DestinationAlreadyExistsError,
+    InvalidDestinationError,
+)
 from tempren.file_filters import (
     FileFilterInverter,
     GlobFilenameFileFilter,
@@ -18,7 +22,6 @@ from tempren.file_filters import (
 from tempren.file_sorters import PathDepthSorter, TemplateFileSorter
 from tempren.filesystem import (
     CombinedFileGatherer,
-    DestinationAlreadyExistsError,
     DryRunRenamer,
     ExplicitFileGatherer,
     FileGatherer,
@@ -26,11 +29,10 @@ from tempren.filesystem import (
     FileRenamer,
     FileRenamerType,
     FlatFileGatherer,
-    InvalidDestinationError,
-    PrintingRenamerWrapper,
     RecursiveDirectoryGatherer,
     RecursiveFileGatherer,
 )
+from tempren.frontend import Frontend, NullFrontend, SkipReason
 from tempren.primitives import CategoryName, File, PathGenerator, Pattern, TagName
 from tempren.template.compiler import TemplateCompiler
 from tempren.template.exceptions import InvalidFilenameError, TemplateError
@@ -67,9 +69,6 @@ class ConflictResolutionStrategy(Enum):
     """Prompt user to resolve conflict manually (choose an option or provide new filename)"""
 
 
-ManualConflictResolver = Callable[[Path, Path], ConflictResolutionStrategy | Path]
-
-
 @dataclass
 class RuntimeConfiguration:
     template: str
@@ -88,16 +87,6 @@ class RuntimeConfiguration:
     aliases: dict[TagName, str] = field(default_factory=dict)
 
 
-class ConfigurationError(Exception):
-    pass
-
-
-def manual_resolver_placeholder(
-    source_path: Path, destination_path: Path
-) -> ConflictResolutionStrategy | Path:
-    raise NotImplementedError()
-
-
 class Pipeline:
     log: logging.Logger
     file_gatherer: FileGatherer
@@ -109,9 +98,7 @@ class Pipeline:
         self.log = logging.getLogger(__name__)
         self.file_filter: Callable[[File], bool] = lambda file: True
         self.renamer: FileRenamerType = DryRunRenamer()
-        self.manual_conflict_resolver: ManualConflictResolver = (
-            manual_resolver_placeholder
-        )
+        self.frontend: Frontend = NullFrontend()
 
     def execute(self):
         all_files = []
@@ -125,7 +112,7 @@ class Pipeline:
             self.log.debug("%s considered for renaming", file)
             all_files.append(file)
 
-        self.log.info("%d files considered for renaming", len(all_files))
+        self.frontend.files_gathered(len(all_files))
         if self.sorter:
             self.log.info("Sorting files")
             all_files = self.sorter(all_files)
@@ -134,24 +121,17 @@ class Pipeline:
         # In case when destination file exists in the first run, we add such name to the
         # backlog and try again (in reverse order) later. This should mitigate most of
         # transitional conflicts.
-        backlog = []
+        backlog: list[tuple[File, Path]] = []
         for file in all_files:
-            # Renamer will receive a relative path,
-            # to make it valid, current working directory has to be changed before processing:
-            os.chdir(file.input_directory)
-
             try:
                 self.log.debug("Generating new name for %r", file)
                 new_relative_path = self.path_generator.generate(file)
                 self.log.debug("Generated path: '%s'", new_relative_path)
             except InvalidFilenameError as error:
                 # TODO: Introduce flag similar to conflict resolver to take appropriate action
-                self.log.warning(
-                    "Invalid name generated for %r: %r",
-                    file,
-                    error.generated_name,
-                )
-                raise InvalidDestinationError()
+                raise InvalidDestinationError(
+                    f"Invalid name generated for {file!r}: {error.generated_name!r}"
+                ) from error
             except Exception as error:
                 # TODO: Test
                 self.log.error(
@@ -162,9 +142,8 @@ class Pipeline:
                 raise
 
             if new_relative_path == file.relative_path:
-                self.log.debug(
-                    "Skipping renaming of: '%s' (source and destination are the same)",
-                    new_relative_path,
+                self.frontend.file_skipped(
+                    file, new_relative_path, SkipReason.same_path
                 )
                 continue
 
@@ -175,59 +154,67 @@ class Pipeline:
                 )
 
             try:
-                self.renamer(file.relative_path, new_relative_path)
+                self._rename(file, new_relative_path)
             except FileExistsError:
                 self.log.debug(
                     "Deferring renaming of %r as destination '%s' already exists",
                     file,
                     new_relative_path,
                 )
-                backlog.append((file.relative_path, new_relative_path))
+                backlog.append((file, new_relative_path))
 
         while backlog:
-            source_path, destination_path = backlog.pop()
+            file, new_relative_path = backlog.pop()
             self.log.debug(
-                "Trying again to rename '%s' into '%s'", source_path, destination_path
+                "Trying again to rename '%s' into '%s'", file, new_relative_path
             )
             try:
-                self.renamer(source_path, destination_path)
+                self._rename(file, new_relative_path)
             except FileExistsError:
-                self.resolve_conflict(
-                    source_path, destination_path, self.conflict_strategy
-                )
+                self.resolve_conflict(file, new_relative_path, self.conflict_strategy)
+
+    def _rename(
+        self, file: File, new_relative_path: Path, override: bool = False
+    ) -> None:
+        """Renames the file using absolute paths (independent of current working directory)"""
+        destination_path = file.input_directory / new_relative_path
+        if override:
+            self.log.debug(
+                "Trying to override: %s to %s", file.relative_path, new_relative_path
+            )
+        else:
+            self.log.debug(
+                "Trying to rename: %s to %s", file.relative_path, new_relative_path
+            )
+        self.renamer(file.absolute_path, destination_path, override)
+        self.frontend.file_renamed(file, new_relative_path, override)
 
     def resolve_conflict(
         self,
-        source_path: Path,
-        destination_path: Path,
+        file: File,
+        new_relative_path: Path,
         strategy: ConflictResolutionStrategy,
     ):
         if strategy == ConflictResolutionStrategy.stop:
-            raise DestinationAlreadyExistsError(source_path, destination_path)
+            raise DestinationAlreadyExistsError(file.relative_path, new_relative_path)
         elif strategy == ConflictResolutionStrategy.ignore:
-            self.log.debug(
-                "Skipping renaming of '%s' to '%s' as destination path already exists",
-                source_path,
-                destination_path,
+            self.frontend.file_skipped(
+                file, new_relative_path, SkipReason.conflict_ignored
             )
         elif strategy == ConflictResolutionStrategy.override:
             self.log.warning(
-                "Overriding destination '%s' as it already exists", destination_path
+                "Overriding destination '%s' as it already exists", new_relative_path
             )
-            self.renamer(source_path, destination_path, True)
+            self._rename(file, new_relative_path, override=True)
         elif strategy == ConflictResolutionStrategy.manual:
-            if self.manual_conflict_resolver is None:
-                raise NotImplementedError("Manual conflict resolver not configured")
-            user_selected_strategy = self.manual_conflict_resolver(
-                source_path, destination_path
+            user_selected_strategy = self.frontend.resolve_conflict(
+                file, new_relative_path
             )
             if isinstance(user_selected_strategy, Path):
-                user_provided_path: Path = user_selected_strategy
-                self.renamer(source_path, user_provided_path, False)
+                # Relative custom paths are resolved against the input directory
+                self._rename(file, user_selected_strategy)
             else:
-                self.resolve_conflict(
-                    source_path, destination_path, user_selected_strategy
-                )
+                self.resolve_conflict(file, new_relative_path, user_selected_strategy)
         else:
             raise NotImplementedError(
                 f"Unknown conflict resolution strategy: {strategy}"
@@ -279,7 +266,7 @@ def build_tag_registry(
 def build_pipeline(
     config: RuntimeConfiguration,
     registry: TagRegistry,
-    manual_conflict_resolver: ManualConflictResolver,  # TODO: Move to the RuntimeConfiguration
+    frontend: Frontend,
 ) -> Pipeline:
     log.debug("Building pipeline")
     pipeline = Pipeline()
@@ -323,30 +310,29 @@ def build_pipeline(
 
     if config.mode == OperationMode.name or config.mode == OperationMode.directory:
         pipeline.path_generator = TemplateNameGenerator(bound_pattern)
-        if config.filter:
-            if config.filter_type == FilterType.regex:
-                pipeline.file_filter = RegexFilenameFileFilter(config.filter)
-            elif config.filter_type == FilterType.glob:
-                pipeline.file_filter = GlobFilenameFileFilter(config.filter)
-            elif config.filter_type == FilterType.template:
-                bound_filter_pattern = _compile_template(config.filter)
-                pipeline.file_filter = TemplateFileFilter(bound_filter_pattern)
-            else:
-                raise NotImplementedError("Unknown filter type: " + str(config.filter))
     elif config.mode == OperationMode.path:
         pipeline.path_generator = TemplatePathGenerator(bound_pattern)
-        if config.filter:
-            if config.filter_type == FilterType.regex:
-                pipeline.file_filter = RegexPathFileFilter(config.filter)
-            elif config.filter_type == FilterType.glob:
-                pipeline.file_filter = GlobPathFileFilter(config.filter)
-            elif config.filter_type == FilterType.template:
-                bound_filter_pattern = _compile_template(config.filter)
-                pipeline.file_filter = TemplateFileFilter(bound_filter_pattern)
-            else:
-                raise NotImplementedError("Unknown filter type: " + str(config.filter))
     else:
         raise NotImplementedError("Unknown operation mode: " + str(config.mode))
+
+    if config.filter:
+        # In path mode, glob/regex filters match the whole relative path
+        match_path = config.mode == OperationMode.path
+        if config.filter_type == FilterType.regex:
+            if match_path:
+                pipeline.file_filter = RegexPathFileFilter(config.filter)
+            else:
+                pipeline.file_filter = RegexFilenameFileFilter(config.filter)
+        elif config.filter_type == FilterType.glob:
+            if match_path:
+                pipeline.file_filter = GlobPathFileFilter(config.filter)
+            else:
+                pipeline.file_filter = GlobFilenameFileFilter(config.filter)
+        elif config.filter_type == FilterType.template:
+            bound_filter_pattern = _compile_template(config.filter)
+            pipeline.file_filter = TemplateFileFilter(bound_filter_pattern)
+        else:
+            raise NotImplementedError("Unknown filter type: " + str(config.filter))
 
     if config.filter_invert and config.filter is not None:
         pipeline.file_filter = FileFilterInverter(pipeline.file_filter)
@@ -362,7 +348,7 @@ def build_pipeline(
         pipeline.sorter = TemplateFileSorter(bound_sorter_pattern, config.sort_invert)
 
     pipeline.conflict_strategy = config.conflict_strategy
-    pipeline.manual_conflict_resolver = manual_conflict_resolver
+    pipeline.frontend = frontend
 
     if config.dry_run:
         pipeline.renamer = DryRunRenamer()
@@ -375,5 +361,4 @@ def build_pipeline(
         else:
             raise NotImplementedError("Unknown operation mode")
 
-    pipeline.renamer = PrintingRenamerWrapper(pipeline.renamer)  # type: ignore
     return pipeline

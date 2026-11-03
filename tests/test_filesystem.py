@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 
+from tempren.exceptions import InvalidDestinationError
 from tempren.filesystem import (
     CombinedFileGatherer,
     DryRunRenamer,
@@ -13,7 +14,6 @@ from tempren.filesystem import (
     FileMover,
     FileRenamer,
     FlatFileGatherer,
-    InvalidDestinationError,
     RecursiveDirectoryGatherer,
     RecursiveFileGatherer,
 )

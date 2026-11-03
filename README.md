@@ -15,29 +15,37 @@ A rich library of built-in tags helps with working with many common file types o
 Whether you need to organize your files, standardize naming conventions, or perform complex renaming tasks, `tempren` can help you get the job done efficiently.
 
 ## Features
-- Template-based filename/path generation
-- Built-in Audio/Video/Images metadata extraction tags
+- Template-based generation of file names, directory names or whole relative paths
+- Built-in tags for Audio/Video/Image metadata, GPS/GPX geolocation data, checksums and text manipulation
 - Ad-hoc tags to leverage external programs for metadata extraction
+- Tag aliases for reusing commonly used (sub)templates
 - Configurable, metadata-based file selection (filtering) and sorting
 
-## Installation and documentation
-For comprehensive documentation, including [installation instructions](MANUAL.md#installation), all features, advanced usage, and troubleshooting, please visit the [Manual](MANUAL.md) page.
+## Installation
+`tempren` is available as:
+- **Snap** (auto-updating): `snap install tempren`
+- **AppImage** (self-contained, no Python needed): download `tempren-<version>-x86_64.AppImage` from the [latest release](https://github.com/idle-code/tempren/releases/latest), then:
+  ```commandline
+  chmod +x tempren-*-x86_64.AppImage
+  sudo mv tempren-*-x86_64.AppImage /usr/local/bin/tempren
+  ```
+- **PyPI** (requires Python 3.11+): `pip install 'tempren[video]'`
 
-<!--
-## [Quickstart](QUICKSTART.md)
-For quick, five-minute introduction to the most of `tempren` features please refer to the [quickstart](QUICKSTART.md) page.
-You can also take a look on the following examples.
--->
+See the [installation instructions](MANUAL.md#installation) for details, updating and optional dependencies.
+
+## Documentation
+For comprehensive documentation of all features, advanced usage, and troubleshooting, please visit the [Manual](MANUAL.md) page.
+`tempren` also has extensive built-in documentation: use `tempren --list-tags` to see available tags and `tempren --help <tag name>` to read about a specific one.
 
 ## Examples
 **Note: When experimenting on your own please use `-dr`/`--dry-run` flag!** \
-**`tempren` will not override your files by default but invalid template can mangle their names.**
+**`tempren` will not overwrite your files by default, but an invalid template can mangle their names.**
 
 <details>
 <summary>Cleaning up names for sensitive (e.g. FAT32) filesystems</summary>
 
 ```commandline
-$ tempren --recursive --name "%Strip(){%Base()|%Unidecode()|%Sanitize()|%Collapse()}%Ext()" ./Some\ OST/
+$ tempren --dry-run --recursive --name "%Strip(){%Base()|%Unidecode()|%Sanitize()|%Collapse()}%Ext()" ./Some\ OST/
 Renamed: Disk 1/14 - 接近.flac
      to: Disk 1/14 - Jie Jin.flac
 Renamed: Disk 1/02 - なつのあお.flac
@@ -58,7 +66,7 @@ Renamed: Disk 1/09 - 阿良句のテーマ(ハイ).flac
 <summary>Adding resolution to the image files</summary>
 
 ```commandline
-$ tempren --name "%Base()_%Image.Width()x%Image.Height()%Ext()" ~/Pictures/Wallpapers
+$ tempren --dry-run --name "%Base()_%Image.Width()x%Image.Height()%Ext()" ~/Pictures/Wallpapers
 Renamed: 0sa5yfiskqr21.jpg
      to: 0sa5yfiskqr21_3728x4660.jpg
 Renamed: rkgjq6883fp81.jpg
@@ -77,7 +85,7 @@ Renamed: 1211740803547.jpg
 <summary>Sorting files into directories based on their MIME type</summary>
 
 ```commandline
-$ tempren -dr --path "%Capitalize(){%Mime(subtype)}/%Name()" ~/Downloads
+$ tempren --dry-run --path "%Capitalize(){%Mime(subtype)}/%Name()" ~/Downloads
 Renamed: dotnet-install.sh
      to: X-shellscript/dotnet-install.sh
 Renamed: openrgb_0.7_amd64_buster_6128731.deb
@@ -100,7 +108,7 @@ Renamed: antlr-4.9.2-complete.jar
 <summary>Adding checksums to the names of the audio files</summary>
 
 ```commandline
-$ tempren --filter-template "%IsMime('audio')" --name "%Base() [%Upper(){%Crc32()}]%Ext()" ./Roger\ Subirana\ Mata\ -\ Point\ of\ no\ return
+$ tempren --dry-run --filter-template "%IsMime('audio')" --name "%Base() [%Upper(){%Crc32()}]%Ext()" ./Roger\ Subirana\ Mata\ -\ Point\ of\ no\ return
 Renamed: 10-169205-Roger Subirana Mata-Island of light.mp3
      to: 10-169205-Roger Subirana Mata-Island of light [08E46C33].mp3
 Renamed: 12-169207-Roger Subirana Mata-Tales of trees.mp3

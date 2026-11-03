@@ -1,6 +1,7 @@
 <!-- TOC -->
 * [Installation](#installation)
   * [Snap](#snap)
+  * [AppImage](#appimage)
   * [PyPI](#pypi)
     * [Additional dependencies](#additional-dependencies)
 * [Builtin documentation](#builtin-documentation)
@@ -11,6 +12,8 @@
   * [Tag configuration arguments](#tag-configuration-arguments)
   * [Context](#context)
     * [Pipe list sugar](#pipe-list-sugar)
+  * [Escaping and whitespace](#escaping-and-whitespace)
+  * [Missing metadata](#missing-metadata)
 * [Filtering](#filtering)
   * [Template-based filtering](#template-based-filtering)
   * [Glob filtering](#glob-filtering)
@@ -26,6 +29,7 @@
   * [Verbosity levels](#verbosity-levels)
   * [Hidden files handling](#hidden-files-handling)
   * [Loading arguments from files](#loading-arguments-from-files)
+* [Exit codes](#exit-codes)
 <!-- TOC -->
 
 * * *
@@ -39,13 +43,13 @@ snap install tempren
 ```
 Snap packages are updated automatically so no additional configuration is necessary.
 
-<!--
 ## AppImage
-On the [releases page](https://github.com/idle-code/tempren/releases), under _Assets_ you can find .AppImage files that can be downloaded and executed as is.
+On the [releases page](https://github.com/idle-code/tempren/releases), under _Assets_, you can find `tempren-<version>-x86_64.AppImage` files.
+They bundle Python and all dependencies (including MediaInfo library used by `Video` tags), so they can be downloaded and executed as is.
 To install `tempren` this way, you will need to:
 ```commandline
-# Download the .AppImage file
-curl -o tempren https://<link to the latest AppImage>
+# Download the .AppImage file (replace 1.4.0 with the latest version)
+curl -L -o tempren https://github.com/idle-code/tempren/releases/download/v1.4.0/tempren-1.4.0-x86_64.AppImage
 
 # Make the file executable
 chmod +x ./tempren
@@ -53,8 +57,9 @@ chmod +x ./tempren
 # Install it in any directory that is in your $PATH
 sudo mv ./tempren /usr/local/bin
 ```
+> Note: AppImages require FUSE 2 (`libfuse2`/`libfuse2t64` package on Debian-based distributions). If it's not available, the AppImage can still be started with `--appimage-extract-and-run` flag.
+
 Currently, AppImage release doesn't support automatic updates so if new version of the `tempren` is released, you will need to repeat this installation procedure.
--->
 
 <!--
 ## Docker
@@ -115,6 +120,8 @@ tempren --list-tags
 ```
 The output of this command will list all available tag names sorted by name and grouped by category they belong to.
 
+The version of installed `tempren` can be checked with `--version` flag.
+
 
 # Modes of operation
 `tempren` have three main modes of operation: **name**, **directory** and **path**.
@@ -144,7 +151,7 @@ The input directory is important for the path mode because all generated paths a
 
 ## Recursive file discovery
 By default, `tempren` will **not** descend into subdirectories of specified input directory.
-To allow recursive file discovery, `--recurse`/`-r` flag have to be used.
+To allow recursive file discovery, `--recursive`/`-r` flag have to be used.
 
 > Note: If `--include-hidden` flag is used, hidden directories will also be scanned.
 
@@ -253,13 +260,37 @@ In the pipe list, there can be no contexts (therefore no curly braces) as the co
 > Note: For pipe list syntax, an empty argument list is required to denote the end of the tag name.
 > This behaviour might change in the future.
 
+## Escaping and whitespace
+Curly braces and pipe symbols have a special meaning in the template.
+To use them as a part of the raw text, they have to be escaped with a backslash: `\{`, `\}` and `\|`.
+
+> Note: Currently there is no way to escape the `%` symbol - it always starts a tag invocation.
+
+Tabulation and newline characters are ignored everywhere in the template (spaces are preserved in the raw text).
+This allows splitting long templates into multiple lines (inside a quoted shell argument):
+```commandline
+tempren '%Base()
+_%Image.Width()x%Image.Height()
+%Ext()' ~/Pictures
+```
+
+> Note: This doesn't apply to [argument files](#loading-arguments-from-files), where each line is treated as a separate argument.
+
+## Missing metadata
+When a tag cannot extract the requested data from the processed file (e.g. the file doesn't contain a given metadata field or an [ad-hoc tag](#ad-hoc-tags) program fails), the tag renders as an empty string instead of stopping the whole operation.
+
+Such files may end up with unexpected (or even empty) names, so it is always a good idea to check the results with the [dry run](#dry-run) first.
+
 # Filtering
 Filtering allows for inclusion/exclusion of specific files from the renaming operation.
 
 There are three types of filtering expressions supported:
-- `template` - tag-template evaluated Python predicate expression, e.g.: `%Size() > 10*1024`
-- `glob` - globbing expression, e.g.: `*.mp3`, `IMG_????.jpg`
-- `regex` - python-flavored regular expressions, e.g.: `.*\.jpe?g`
+- `template` - tag-template evaluated Python predicate expression, e.g.: `%Size() > 10*1024` (`--filter-template`/`-ft` flag)
+- `glob` - globbing expression, e.g.: `*.mp3`, `IMG_????.jpg` (`--filter-glob`/`-fg` flag)
+- `regex` - python-flavored regular expressions, e.g.: `.*\.jpe?g` (`--filter-regex`/`-fr` flag)
+
+> Note: Only one filtering expression can be used at a time.
+> To combine multiple conditions, use template-based filtering with Python boolean operators.
 
 ## Template-based filtering
 Template-based filtering is the most powerful and allows for the inclusion/exclusion of files based on their metadata.
@@ -273,7 +304,8 @@ For example, the following filtering template will exclude files larger than 102
 %Size() <= 1024
 ```
 
-Standard Python boolean operators (`and`, `or`, `not`) and built-in functions can be used to chain multiple conditions.\
+Standard Python boolean operators (`and`, `or`, `not`) and [built-in functions](https://docs.python.org/3/library/functions.html) can be used to chain multiple conditions
+(other modules are not available in the expression).\
 For example, to include only image files that are not PNGs, the following filter expression can be used:
 ```
 %IsMime("image") and not %Ext().endswith("png")
@@ -286,17 +318,19 @@ For example, to include only image files that are not PNGs, the following filter
 ## Glob filtering
 Glob filtering allows to include/exclude files based on the [glob expression](https://en.wikipedia.org/wiki/Glob_(programming)) matching their filenames. People used to the terminal should be familiar with this kind of filtering as it's the same one used by most *nix shells.
 
+A glob expression can be passed with `--filter-glob`/`-fg` flag.
 For example, to rename only files with an `Image_` as a prefix, the following pattern can be used:
-```
-Image_*
+```commandline
+tempren --filter-glob 'Image_*' ...
 ```
 
 ## Regex filtering
 Regular expression filtering allows to include/exclude files based on regex expression matching their filenames.
 
+A regular expression can be passed with `--filter-regex`/`-fr` flag.
 For example, to rename only files that start with a digit, following pattern can be used:
-```
-^\d.*
+```commandline
+tempren --filter-regex '^\d.*' ...
 ```
 This feature uses [Python-flavored](https://docs.python.org/3/howto/regex.html) regular expressions.
 
@@ -339,7 +373,10 @@ File conflict arises when a template generates the same path for two different f
 - `stop` - Reports an error and stops program execution (default, indicated by `--conflict-stop`/`-cs` flag)
 - `ignore` - Reports problem as a warning and continues renaming leaving source file name intact (enabled with `--conflict-ignore`/`-ci` flag)
 - `override` - Replaces destination file with the one being processed (enabled with `--conflict-override`/`-co` flag)
-- `manual` - Interactively prompts the user to select one of the above conflict resolutions (enabled with `--conflict-manual`/`-cm` flag)
+- `manual` - Interactively prompts the user for each conflict (enabled with `--conflict-manual`/`-cm` flag)
+
+In the `manual` mode, the user can select one of the above strategies (`stop`, `override`, `ignore`) or provide a custom destination path for the conflicting file.
+Each option can be selected by typing its name or just its first letter - empty answer selects `ignore`.
 
 # Ad-hoc tags
 If the built-in tag library doesn't contain the tag appropriate for the user problem, `tempren` allows importing external executables as new, ad-hoc tags.
@@ -372,11 +409,18 @@ tempren --ad-hoc Tr=tr '%Tr(" _\\-.@~", "-"){%Base()}%Ext()' --help Tr
 ```
 
 Regardless of how the underlying ad-hoc executable will be invoked, any data sent to the `stdout` by it will be used as a tag output
-and any data sent to the `stderr` channel will be ignored.
+(with leading and trailing whitespace removed) and any data sent to the `stderr` channel will be ignored.
+The executable is run from the input directory of the processed file.
 
-<!-- CHECK: -->
-If the invoked command returns a non-zero error code, `tempren` will report this as an error.
+If the invoked command returns a non-zero error code, its output is discarded and the tag renders as an empty string (see [missing metadata](#missing-metadata)).
 
+Each ad-hoc tag accepts an optional `timeout_ms` argument (3000 milliseconds by default) limiting the execution time of the command.
+If the command doesn't finish in time, it is treated the same way as a failed one:
+```
+%SlowProgram(timeout_ms=10000)
+```
+
+`--ad-hoc`/`-ah` flag can be repeated to define multiple ad-hoc tags.
 
 Program arguments can be passed in the ad-hoc tag arguments but care should be taken to
 separate them correctly as spaces do not delimit the arguments like in the shell environment.
@@ -392,6 +436,8 @@ To create a new alias, `--alias`/`-a` flag can be used:
 tempren --alias 'Normalized=%Lower{%Name()}' --help Normalized
 ```
 Tags created from the aliases cannot receive any arguments or context - they are simply placeholders where the underlying template will be inserted.
+
+`--alias`/`-a` flag can be repeated to define multiple aliases.
 
 
 # Various options
@@ -423,3 +469,15 @@ TODO: How will tempren behave when encountering the symbolic link to the directo
 ## Loading arguments from files
 If the command line argument starts with a `@` symbol, `tempren` will assume that it is a file containing the desired program arguments, and it will load it (treating each line as a separate argument).
 This is especially useful in the case of reusing the same pattern (or program arguments in general) over and over.
+
+# Exit codes
+`tempren` reports the result of its operation with the following exit codes:
+
+| Code  | Meaning                                                                        |
+|-------|--------------------------------------------------------------------------------|
+| `0`   | Success                                                                        |
+| `1`   | Invalid destination path generated (e.g. conflict or invalid name)             |
+| `2`   | Usage error (e.g. invalid command line arguments)                              |
+| `3`   | Error in one of the provided templates (e.g. syntax error or unknown tag)      |
+| `4`   | Evaluation of the filtering/sorting expression failed                          |
+| `126` | Unknown error                                                                  |

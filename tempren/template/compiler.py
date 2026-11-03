@@ -61,9 +61,9 @@ class TemplateCompiler:
         except TemplateError as template_error:
             raise template_error.with_location(tag_placeholder.location)
         except Exception as exc:
-            raise ConfigurationError(tag_placeholder.tag_name, str(exc)).with_location(
-                tag_placeholder.location
-            ) from exc
+            raise TagConfigurationError(
+                tag_placeholder.tag_name, str(exc)
+            ).with_location(tag_placeholder.location) from exc
 
         if tag.require_context is not None:
             if tag_placeholder.context and not tag.require_context:
@@ -92,6 +92,6 @@ class ContextForbiddenError(TagError):
         super().__init__(tag_name, f"This tag cannot be used with context")
 
 
-class ConfigurationError(TagError):
+class TagConfigurationError(TagError):
     def __init__(self, tag_name: QualifiedTagName, message: str):
         super().__init__(tag_name, f"Configuration not valid: {message}")

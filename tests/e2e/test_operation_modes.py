@@ -99,7 +99,7 @@ class TestNameMode(CommonModeTestsBase):
         )
 
         assert error_code == ErrorCode.INVALID_DESTINATION_ERROR
-        assert "Invalid name generated for" in stderr
+        assert "Error: Invalid name generated for" in stderr
         assert "subdir/hello.txt" in stderr
 
 
@@ -140,6 +140,23 @@ class TestPathMode(CommonModeTestsBase):
         assert error_code == ErrorCode.SUCCESS
         assert (nested_data_dir / "subdir" / "level-1.file").exists()
         assert (nested_data_dir / "first" / "subdir" / "level-2.file").exists()
+
+    def test_recursive_path_mode_from_unrelated_working_directory(
+        self, nested_data_dir: Path, mode_flag: str, tmp_path: Path, monkeypatch
+    ):
+        monkeypatch.chdir(tmp_path)
+
+        stdout, stderr, error_code = run_tempren(
+            mode_flag, "--recursive", "moved/%Dir()/%Name()", nested_data_dir
+        )
+
+        assert error_code == ErrorCode.SUCCESS
+        assert (nested_data_dir / "moved" / "level-1.file").is_file()
+        assert (nested_data_dir / "moved" / "first" / "level-2.file").is_file()
+        assert (
+            nested_data_dir / "moved" / "second" / "third" / "level-3.file"
+        ).is_file()
+        assert not (tmp_path / "moved").exists()
 
     def test_preserves_modification_time(self, text_data_dir: Path, mode_flag: str):
         src = text_data_dir / "hello.txt"

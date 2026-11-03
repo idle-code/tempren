@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable
 from pathlib import Path
 
+from tempren.exceptions import DestinationAlreadyExistsError, InvalidDestinationError
 from tempren.primitives import File
 
 FileRenamerType = Callable[[Path, Path, bool], None]
@@ -28,17 +29,6 @@ def _restore_times(destination_path: Path, source_stat: os.stat_result) -> None:
             "Could not preserve modification time for '%s': %s",
             destination_path,
             error,
-        )
-
-
-class InvalidDestinationError(Exception):
-    pass
-
-
-class DestinationAlreadyExistsError(FileExistsError):
-    def __init__(self, src: Path, dst: Path):
-        super().__init__(
-            f"Could not rename '{src}' as destination path '{dst}' already exists"
         )
 
 
@@ -117,7 +107,7 @@ class RecursiveDirectoryGatherer(FilesystemGatherer):
         yield from self._gather_in(self._start_directory)
 
     def _gather_in(self, directory: Path) -> Iterable[File]:
-        print(f"Gathering in {directory}")
+        log.debug("Gathering in %s", directory)
         for dir_entry in directory.iterdir():
             if not self._include_path_in_result(dir_entry):
                 continue
@@ -220,33 +210,3 @@ class DryRunRenamer:
         self.created_paths.add(destination_path)
         self.removed_paths.discard(destination_path)
         self.created_paths.discard(source_path)
-
-
-class PrintingRenamerWrapper:
-    log: logging.Logger
-
-    def __init__(self, renamer_to_wrap: FileRenamerType):
-        assert renamer_to_wrap is not None
-        self.log = logging.getLogger(self.__class__.__name__)
-        self.renamer = renamer_to_wrap
-
-    def __call__(
-        self,
-        source_path: Path,
-        destination_path: Path,
-        override: bool = False,
-    ) -> None:
-        if override:
-            self.log.debug(
-                "Trying to override: %s to %s", source_path, destination_path
-            )
-        else:
-            self.log.debug("Trying to rename: %s to %s", source_path, destination_path)
-        self.renamer(source_path, destination_path, override)
-
-        self.log.info(f"Renamed: {source_path}")
-        if override:
-            self.log.info(f"         to: {destination_path} (override)")
-            # self.log.info(f"to existing: {destination_path} (override)")
-        else:
-            self.log.info(f"     to: {destination_path}")

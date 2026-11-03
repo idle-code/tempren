@@ -1,7 +1,8 @@
+from tempren.exceptions import DestinationError, TemprenError
 from tempren.primitives import Location, QualifiedTagName
 
 
-class TemplateError(Exception):
+class TemplateError(TemprenError):
     """Represents an error in the template itself"""
 
     message: str
@@ -9,6 +10,7 @@ class TemplateError(Exception):
     template: str
 
     def __init__(self, message: str):
+        super().__init__(message)
         self.message = message
         self.location = Location(0, 0, 0)
 
@@ -40,7 +42,7 @@ class TagError(TemplateSemanticError):
         super().__init__(f"Error in tag '{self.tag_name}': {message}")
 
 
-class InvalidFilenameError(Exception):
+class InvalidFilenameError(DestinationError):
     generated_name: str
 
     def __init__(self, invalid_name: str):
