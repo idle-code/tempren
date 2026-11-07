@@ -3,13 +3,16 @@ from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
+from typing import Any
 
 from tempren.alias import AliasTagFactory, AliasTagFactoryFromClass
 from tempren.discovery import discover_aliases_in_package, discover_tags_in_package
 from tempren.exceptions import (
     ConfigurationError,
     DestinationAlreadyExistsError,
+    FileMetadataError,
     InvalidDestinationError,
+    MetadataUnavailableError,
 )
 from tempren.file_filters import (
     FileFilterInverter,
@@ -33,9 +36,16 @@ from tempren.filesystem import (
     RecursiveFileGatherer,
 )
 from tempren.frontend import Frontend, NullFrontend, SkipReason
-from tempren.primitives import CategoryName, File, PathGenerator, Pattern, TagName
+from tempren.primitives import (
+    CategoryName,
+    File,
+    PathGenerator,
+    Pattern,
+    QualifiedTagName,
+    TagName,
+)
 from tempren.template.compiler import TemplateCompiler
-from tempren.template.evaluation_context import IgnoreMissingMetadata
+from tempren.template.evaluation_context import EvaluationContext, SkipFile
 from tempren.template.exceptions import InvalidFilenameError, TemplateError
 from tempren.template.generators import TemplateNameGenerator, TemplatePathGenerator
 from tempren.template.registry import TagRegistry
@@ -70,6 +80,20 @@ class ConflictResolutionStrategy(Enum):
     """Prompt user to resolve conflict manually (choose an option or provide new filename)"""
 
 
+class MissingMetadataStrategy(Enum):
+    stop = "stop"
+    """Stop renaming and show an error"""
+
+    ignore = "ignore"
+    """Render the tag as an empty string and continue"""
+
+    skip = "skip"
+    """Leave the file intact and continue with the next one"""
+
+    manual = "manual"
+    """Prompt user to choose an option or provide the tag value"""
+
+
 @dataclass
 class RuntimeConfiguration:
     template: str
@@ -81,11 +105,53 @@ class RuntimeConfiguration:
     filter_invert: bool = False
     filter: str | None = None
     conflict_strategy: ConflictResolutionStrategy = ConflictResolutionStrategy.stop
+    missing_metadata_strategy: MissingMetadataStrategy = MissingMetadataStrategy.stop
     sort_invert: bool = False
     sort: str | None = None
     mode: OperationMode = OperationMode.name
     adhoc_tags: dict[TagName, Path] = field(default_factory=dict)
     aliases: dict[TagName, str] = field(default_factory=dict)
+
+
+class MissingMetadataHandler(EvaluationContext):
+    """Applies missing metadata strategy to the tags which cannot produce a value
+
+    Used in every pipeline stage evaluating templates (filtering, sorting, renaming).
+    """
+
+    def __init__(self, strategy: MissingMetadataStrategy, frontend: Frontend):
+        self.strategy = strategy
+        self.frontend = frontend
+
+    def handle_metadata_error(
+        self, file: File, tag_name: QualifiedTagName | None, error: FileMetadataError
+    ) -> Any:
+        unavailable_error = MetadataUnavailableError(file, tag_name, error)
+        unavailable_error.__cause__ = error
+        return self._apply(unavailable_error, self.strategy)
+
+    def _apply(
+        self, error: MetadataUnavailableError, strategy: MissingMetadataStrategy
+    ) -> Any:
+        if strategy == MissingMetadataStrategy.stop:
+            raise error
+        elif strategy == MissingMetadataStrategy.ignore:
+            log.debug("Ignoring: %s", error)
+            return ""
+        elif strategy == MissingMetadataStrategy.skip:
+            self.frontend.file_skipped(
+                error.file, None, SkipReason.missing_metadata, error
+            )
+            raise SkipFile()
+        elif strategy == MissingMetadataStrategy.manual:
+            decision = self.frontend.resolve_missing_metadata(error)
+            if isinstance(decision, str):
+                return decision
+            if decision == MissingMetadataStrategy.manual:
+                raise ValueError("Manual resolution cannot select manual strategy")
+            return self._apply(error, decision)
+        else:
+            raise NotImplementedError(f"Unknown missing metadata strategy: {strategy}")
 
 
 class Pipeline:
@@ -107,8 +173,11 @@ class Pipeline:
         self.log.info(f"Gathering paths...")
         for file in self.file_gatherer.gather_files():
             self.log.debug("Checking %s", file)
-            if not self.file_filter(file):
-                self.log.debug("%s filtered out", file)
+            try:
+                if not self.file_filter(file):
+                    self.log.debug("%s filtered out", file)
+                    continue
+            except SkipFile:
                 continue
             self.log.debug("%s considered for renaming", file)
             all_files.append(file)
@@ -128,6 +197,10 @@ class Pipeline:
                 self.log.debug("Generating new name for %r", file)
                 new_relative_path = self.path_generator.generate(file)
                 self.log.debug("Generated path: '%s'", new_relative_path)
+            except SkipFile:
+                continue
+            except MetadataUnavailableError:
+                raise
             except InvalidFilenameError as error:
                 # TODO: Introduce flag similar to conflict resolver to take appropriate action
                 raise InvalidDestinationError(
@@ -308,7 +381,7 @@ def build_pipeline(
             raise template_error
 
     bound_pattern = _compile_template(config.template)
-    evaluation = IgnoreMissingMetadata()
+    evaluation = MissingMetadataHandler(config.missing_metadata_strategy, frontend)
 
     if config.mode == OperationMode.name or config.mode == OperationMode.directory:
         pipeline.path_generator = TemplateNameGenerator(bound_pattern, evaluation)

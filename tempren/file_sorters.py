@@ -5,7 +5,11 @@ from collections.abc import Iterable
 from tempren.evaluation import evaluate_expression
 from tempren.exceptions import ExpressionEvaluationError, TemplateEvaluationError
 from tempren.primitives import File, Pattern
-from tempren.template.evaluation_context import EvaluationContext, propagate_errors
+from tempren.template.evaluation_context import (
+    EvaluationContext,
+    SkipFile,
+    propagate_errors,
+)
 
 
 class FileSorter(ABC):
@@ -33,7 +37,14 @@ class TemplateFileSorter(FileSorter):
         self.evaluation = evaluation
 
     def __call__(self, files: Iterable[File]) -> Iterable[File]:
-        return sorted(files, key=self._generate_sort_key, reverse=self.invert)
+        keyed_files: list[tuple[tuple, File]] = []
+        for file in files:
+            try:
+                keyed_files.append((self._generate_sort_key(file), file))
+            except SkipFile:
+                continue
+        keyed_files.sort(key=lambda keyed_file: keyed_file[0], reverse=self.invert)
+        return [file for _, file in keyed_files]
 
     def _generate_sort_key(self, file: File) -> tuple:
         self.log.debug("Rendering sorting value template for '%s'", file)

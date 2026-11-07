@@ -4,6 +4,13 @@ from tempren.exceptions import FileMetadataError, MissingMetadataError
 from tempren.primitives import File, QualifiedTagName
 
 
+class SkipFile(Exception):
+    """Raised by the evaluation context to exclude currently processed file from the run
+
+    Control flow signal (not an error): catching side drops the file and moves on.
+    """
+
+
 class EvaluationContext:
     """Decides how template rendering reacts when a tag cannot produce a value
 

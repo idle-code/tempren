@@ -9,6 +9,7 @@ TemprenError
 │   ├── FileNotSupportedError
 │   └── MissingMetadataError
 │       └── ExecutionTimeoutError
+├── MetadataUnavailableError      - tag in the template had no value for a file
 └── DestinationError              - generated destination path cannot be used
     ├── InvalidDestinationError
     ├── InvalidFilenameError      (see tempren.template.exceptions)
@@ -17,7 +18,7 @@ TemprenError
 
 from pathlib import Path
 
-from tempren.primitives import File
+from tempren.primitives import File, QualifiedTagName
 
 
 class TemprenError(Exception):
@@ -74,6 +75,27 @@ class MissingMetadataError(FileMetadataError):
 
 class ExecutionTimeoutError(MissingMetadataError):
     """Tag execution time exceeded"""
+
+
+class MetadataUnavailableError(TemprenError):
+    """Tag used in the template could not produce a value for the processed file
+
+    Wraps FileMetadataError raised by the tag (available as `__cause__`) with
+    the information where it happened.
+    """
+
+    file: File
+    tag_name: QualifiedTagName | None
+    reason: str
+
+    def __init__(
+        self, file: File, tag_name: QualifiedTagName | None, reason: FileMetadataError
+    ):
+        self.file = file
+        self.tag_name = tag_name
+        self.reason = str(reason)
+        tag = f"%{tag_name}()" if tag_name else "tag"
+        super().__init__(f"{tag} has no value for '{file}': {self.reason}")
 
 
 class DestinationError(TemprenError):

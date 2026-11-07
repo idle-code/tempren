@@ -16,7 +16,8 @@ from typing import Any, NoReturn
 from tempren.exceptions import (
     ConfigurationError,
     DestinationError,
-    FileNotSupportedError,
+    FileMetadataError,
+    MetadataUnavailableError,
     TemplateEvaluationError,
     TemprenError,
 )
@@ -27,6 +28,7 @@ from tempren.template.exceptions import TagError, TemplateError
 from .pipeline import (
     ConflictResolutionStrategy,
     FilterType,
+    MissingMetadataStrategy,
     OperationMode,
     RuntimeConfiguration,
     build_pipeline,
@@ -493,6 +495,42 @@ def process_cli_configuration(argv: list[str]) -> RuntimeConfiguration:
         help="Prompt user to resolve conflict manually (choose an option or provide new filename)",
     )
 
+    missing_metadata_group = parser.add_argument_group("missing metadata")
+    missing_metadata = missing_metadata_group.add_mutually_exclusive_group()
+    missing_metadata.add_argument(
+        "-ms",
+        "--missing-stop",
+        dest="missing_metadata",
+        action="store_const",
+        const=MissingMetadataStrategy.stop,
+        default=MissingMetadataStrategy.stop,
+        help="Stop renaming when a tag cannot produce a value for a file (default)",
+    )
+    missing_metadata.add_argument(
+        "-mi",
+        "--missing-ignore",
+        dest="missing_metadata",
+        action="store_const",
+        const=MissingMetadataStrategy.ignore,
+        help="Render such tag as an empty string and continue",
+    )
+    missing_metadata.add_argument(
+        "-mk",
+        "--missing-skip",
+        dest="missing_metadata",
+        action="store_const",
+        const=MissingMetadataStrategy.skip,
+        help="Leave such file intact and continue with the next one",
+    )
+    missing_metadata.add_argument(
+        "-mm",
+        "--missing-manual",
+        dest="missing_metadata",
+        action="store_const",
+        const=MissingMetadataStrategy.manual,
+        help="Prompt user to choose an option or provide the tag value",
+    )
+
     parser.add_argument(
         "template",
         type=nonempty_string,
@@ -573,6 +611,7 @@ def process_cli_configuration(argv: list[str]) -> RuntimeConfiguration:
         filter_invert=args.filter_invert,
         filter=filter_expression,
         conflict_strategy=conflict_strategy,
+        missing_metadata_strategy=args.missing_metadata,
         sort_invert=args.sort_invert,
         sort=args.sort,
         mode=args.mode,
@@ -638,6 +677,28 @@ class CliFrontend:
 
             log.error(f"Invalid choice '{selected_option_name}")
 
+    def resolve_missing_metadata(
+        self, error: MetadataUnavailableError
+    ) -> MissingMetadataStrategy | str:
+        log.warning("While processing:")
+        log.warning(f"  {error.file.relative_path}")
+        log.warning("following tag could not produce a value:")
+        log.warning(f"  %{error.tag_name}(): {error.reason}")
+        while True:
+            selected_option_name = input(
+                "[s]top, s[k]ip, [c]ustom value, [I]gnore: "
+            ).lower()
+            if not selected_option_name or "ignore".startswith(selected_option_name):
+                return MissingMetadataStrategy.ignore
+            if "stop".startswith(selected_option_name):
+                return MissingMetadataStrategy.stop
+            if selected_option_name == "k" or "skip".startswith(selected_option_name):
+                return MissingMetadataStrategy.skip
+            if "custom value".startswith(selected_option_name):
+                return input("Custom value: ")
+
+            log.error(f"Invalid choice '{selected_option_name}")
+
     def files_gathered(self, count: int) -> None:
         log.info("%d files considered for renaming", count)
 
@@ -648,8 +709,16 @@ class CliFrontend:
         else:
             log.info(f"     to: {destination}")
 
-    def file_skipped(self, source: File, destination: Path, reason: SkipReason) -> None:
-        if reason == SkipReason.same_path:
+    def file_skipped(
+        self,
+        source: File,
+        destination: Path | None,
+        reason: SkipReason,
+        error: MetadataUnavailableError | None = None,
+    ) -> None:
+        if reason == SkipReason.missing_metadata:
+            log.warning(f"Skipping: {error}")
+        elif reason == SkipReason.same_path:
             log.debug(
                 "Skipping renaming of: '%s' (source and destination are the same)",
                 destination,
@@ -679,6 +748,9 @@ class ErrorCode(IntEnum):
 
     TEMPLATE_EVALUATION_ERROR = 4
     """Python evaluation of filtering/sorting template failed"""
+
+    MISSING_METADATA_ERROR = 5
+    """Tag could not produce a value for one of the files"""
 
     UNKNOWN_ERROR = 126
     """This should not happen"""
@@ -710,10 +782,9 @@ def main() -> int:
     except DestinationError as exc:
         log.error(f"Error: {exc}")
         return ErrorCode.INVALID_DESTINATION_ERROR
-    except FileNotSupportedError as exc:
-        # TODO: Use dedicated error code (breaking change - planned for 2.0)
+    except (MetadataUnavailableError, FileMetadataError) as exc:
         log.error(f"Error: {exc}")
-        return ErrorCode.INVALID_DESTINATION_ERROR
+        return ErrorCode.MISSING_METADATA_ERROR
     except (
         TemprenError
     ) as exc:  # NOCOVER: final fallback - all errors should be handled above

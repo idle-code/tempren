@@ -6,10 +6,11 @@ from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol
 
+from tempren.exceptions import MetadataUnavailableError
 from tempren.primitives import File
 
 if TYPE_CHECKING:  # NOCOVER: import cycle - pipeline module depends on this one
-    from tempren.pipeline import ConflictResolutionStrategy
+    from tempren.pipeline import ConflictResolutionStrategy, MissingMetadataStrategy
 
 
 class SkipReason(Enum):
@@ -18,6 +19,9 @@ class SkipReason(Enum):
 
     conflict_ignored = "conflict_ignored"
     """Destination path already exists and the conflict was ignored"""
+
+    missing_metadata = "missing_metadata"
+    """Tag used in one of the templates could not produce a value for the file"""
 
 
 class Frontend(Protocol):
@@ -35,6 +39,15 @@ class Frontend(Protocol):
         """
         ...
 
+    def resolve_missing_metadata(
+        self, error: MetadataUnavailableError
+    ) -> MissingMetadataStrategy | str:
+        """Select how to proceed when a tag cannot produce a value for a file
+
+        Returned string is used as the tag value.
+        """
+        ...
+
     def files_gathered(self, count: int) -> None:
         """Notifies how many files (after filtering) will be processed"""
         ...
@@ -43,18 +56,33 @@ class Frontend(Protocol):
         """Notifies that the file was renamed (or would be, in dry-run mode)"""
         ...
 
-    def file_skipped(self, source: File, destination: Path, reason: SkipReason) -> None:
-        """Notifies that the file was left intact"""
+    def file_skipped(
+        self,
+        source: File,
+        destination: Path | None,
+        reason: SkipReason,
+        error: MetadataUnavailableError | None = None,
+    ) -> None:
+        """Notifies that the file was left intact
+
+        Destination is not known when the file was skipped before its new name was
+        generated (missing metadata) - `error` describes the cause then.
+        """
         ...
 
 
 class NullFrontend:
-    """Frontend ignoring all notifications; manual conflict resolution is not supported"""
+    """Frontend ignoring all notifications; manual resolution is not supported"""
 
     def resolve_conflict(
         self, source: File, destination: Path
     ) -> ConflictResolutionStrategy | Path:
         raise NotImplementedError("Manual conflict resolution is not supported")
+
+    def resolve_missing_metadata(
+        self, error: MetadataUnavailableError
+    ) -> MissingMetadataStrategy | str:
+        raise NotImplementedError("Manual missing metadata resolution is not supported")
 
     def files_gathered(self, count: int) -> None:
         pass
@@ -62,5 +90,11 @@ class NullFrontend:
     def file_renamed(self, source: File, destination: Path, overridden: bool) -> None:
         pass
 
-    def file_skipped(self, source: File, destination: Path, reason: SkipReason) -> None:
+    def file_skipped(
+        self,
+        source: File,
+        destination: Path | None,
+        reason: SkipReason,
+        error: MetadataUnavailableError | None = None,
+    ) -> None:
         pass

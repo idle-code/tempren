@@ -20,6 +20,7 @@ Whether you need to organize your files, standardize naming conventions, or perf
 - Ad-hoc tags to leverage external programs for metadata extraction
 - Tag aliases for reusing commonly used (sub)templates
 - Configurable, metadata-based file selection (filtering) and sorting
+- Configurable handling of name conflicts and files with missing metadata
 
 ## Installation
 `tempren` is available as:
