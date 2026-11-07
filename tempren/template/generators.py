@@ -3,21 +3,26 @@ from abc import ABC
 from pathlib import Path
 
 from tempren.primitives import File, PathGenerator, Pattern
+from tempren.template.evaluation_context import EvaluationContext, propagate_errors
 from tempren.template.exceptions import InvalidFilenameError
 
 
 class TemplateGenerator(PathGenerator, ABC):
     log: logging.Logger
     pattern: Pattern
+    evaluation: EvaluationContext
 
-    def __init__(self, pattern: Pattern):
+    def __init__(
+        self, pattern: Pattern, evaluation: EvaluationContext = propagate_errors
+    ):
         self.log = logging.getLogger(__name__)
         self.log.debug("Creating template generator with template: %s", pattern)
         self.pattern = pattern
+        self.evaluation = evaluation
 
     def generate_replacement(self, file: File) -> str:
         self.log.debug("Rendering template for '%s'", file.relative_path)
-        rendered_template = self.pattern.process(file)
+        rendered_template = self.pattern.process(file, self.evaluation)
         self.log.debug("Rendered template: '%s'", rendered_template)
         return rendered_template
 

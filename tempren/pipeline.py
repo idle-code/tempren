@@ -35,6 +35,7 @@ from tempren.filesystem import (
 from tempren.frontend import Frontend, NullFrontend, SkipReason
 from tempren.primitives import CategoryName, File, PathGenerator, Pattern, TagName
 from tempren.template.compiler import TemplateCompiler
+from tempren.template.evaluation_context import IgnoreMissingMetadata
 from tempren.template.exceptions import InvalidFilenameError, TemplateError
 from tempren.template.generators import TemplateNameGenerator, TemplatePathGenerator
 from tempren.template.registry import TagRegistry
@@ -307,11 +308,12 @@ def build_pipeline(
             raise template_error
 
     bound_pattern = _compile_template(config.template)
+    evaluation = IgnoreMissingMetadata()
 
     if config.mode == OperationMode.name or config.mode == OperationMode.directory:
-        pipeline.path_generator = TemplateNameGenerator(bound_pattern)
+        pipeline.path_generator = TemplateNameGenerator(bound_pattern, evaluation)
     elif config.mode == OperationMode.path:
-        pipeline.path_generator = TemplatePathGenerator(bound_pattern)
+        pipeline.path_generator = TemplatePathGenerator(bound_pattern, evaluation)
     else:
         raise NotImplementedError("Unknown operation mode: " + str(config.mode))
 
@@ -330,7 +332,7 @@ def build_pipeline(
                 pipeline.file_filter = GlobFilenameFileFilter(config.filter)
         elif config.filter_type == FilterType.template:
             bound_filter_pattern = _compile_template(config.filter)
-            pipeline.file_filter = TemplateFileFilter(bound_filter_pattern)
+            pipeline.file_filter = TemplateFileFilter(bound_filter_pattern, evaluation)
         else:
             raise NotImplementedError("Unknown filter type: " + str(config.filter))
 
@@ -345,7 +347,9 @@ def build_pipeline(
         pipeline.sorter = PathDepthSorter()
     elif config.sort:
         bound_sorter_pattern = _compile_template(config.sort)
-        pipeline.sorter = TemplateFileSorter(bound_sorter_pattern, config.sort_invert)
+        pipeline.sorter = TemplateFileSorter(
+            bound_sorter_pattern, config.sort_invert, evaluation
+        )
 
     pipeline.conflict_strategy = config.conflict_strategy
     pipeline.frontend = frontend

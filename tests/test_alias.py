@@ -1,11 +1,13 @@
 import pytest
 
 from tempren.alias import AliasTag, AliasTagFactoryFromClass, TagAlias
+from tempren.exceptions import MissingMetadataError
 from tempren.primitives import File, Pattern
-from tempren.template.ast import RawText
+from tempren.template.ast import RawText, TagInstance
 from tempren.template.compiler import TemplateCompiler
 
 from .conftest import pattern_from
+from .template.mocks import GeneratorTag
 
 
 class DummyCompiler:
@@ -66,3 +68,15 @@ class TestAliasTag:
         result = alias_tag.process(nonexistent_file, None)
 
         assert result == "Spam"
+
+    def test_errors_of_aliased_tags_are_propagated(self, nonexistent_file: File):
+        def _tag_implementation(file, context):
+            raise MissingMetadataError()
+
+        pattern = pattern_from(
+            RawText("Spam"), TagInstance(tag=GeneratorTag(_tag_implementation))
+        )
+        alias_tag = AliasTag(pattern)
+
+        with pytest.raises(MissingMetadataError):
+            alias_tag.process(nonexistent_file, None)

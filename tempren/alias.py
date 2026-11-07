@@ -3,6 +3,7 @@ from typing import Any
 from tempren.factories import TagFactoryFromClass
 from tempren.primitives import File, Pattern, Tag, TagName
 from tempren.template.compiler import TemplateCompiler
+from tempren.template.evaluation_context import propagate_errors
 
 
 class TagAlias:
@@ -32,7 +33,8 @@ class AliasTag(Tag):
         self.pattern = pattern
 
     def process(self, file: File, context: str | None) -> Any:
-        return self.pattern.process(file)
+        # Errors of the aliased tags are handled as an error of the alias tag itself
+        return self.pattern.process(file, propagate_errors)
 
 
 class AliasTagFactory(TagFactoryFromClass):

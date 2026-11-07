@@ -2,7 +2,10 @@ import re
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:  # NOCOVER: import cycle - evaluation context depends on this module
+    from tempren.template.evaluation_context import EvaluationContext
 
 tag_name_regex = re.compile(r"^[_a-z][0-9_a-z]*$", re.IGNORECASE)
 
@@ -138,11 +141,11 @@ class Pattern(ABC):
     source_representation: str | None
     """Raw representation of this template pattern tree"""
 
-    def process(self, file: File) -> str:
+    def process(self, file: File, evaluation: "EvaluationContext") -> str:
         """Recursively renders pattern as a string"""
         raise NotImplementedError()
 
-    def process_as_expression(self, file: File) -> str:
+    def process_as_expression(self, file: File, evaluation: "EvaluationContext") -> str:
         """Recursively renders pattern as an expression string
 
         In expression string, values returned by the tags are converted using `repr`

@@ -48,6 +48,11 @@ class CountTag(Tag):
         self._per_directory_counters = defaultdict(lambda: start)
 
     def process(self, file: File, context: str | None) -> str | int:
+        # TODO: Counter is advanced even if the file is skipped later on (e.g. when
+        #       missing metadata of a tag evaluated after this one makes the file
+        #       skipped, or when conflict is ignored), which leaves gaps in numbering.
+        #       Consider committing the increment only once the whole template was
+        #       rendered successfully (e.g. via on-success hook in EvaluationContext).
         value = self._get_counter_value_for(file)
         if self.width != 0:
             return str(value).zfill(self.width)

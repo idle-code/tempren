@@ -79,7 +79,9 @@ class TemplateCompiler:
         if tag_placeholder.context:
             context_pattern = self._rewrite_pattern(tag_placeholder.context)
 
-        return TagInstance(tag, context=context_pattern)
+        return TagInstance(
+            tag, context=context_pattern, tag_name=tag_placeholder.tag_name
+        )
 
 
 class ContextMissingError(TagError):
