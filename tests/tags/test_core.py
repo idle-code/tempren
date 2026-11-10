@@ -330,6 +330,19 @@ class TestMimeExtTag:
 
         assert extension == ".mp3"
 
+    def test_unknown_mime_type_extension(self, tmp_path: Path):
+        from unittest.mock import patch
+
+        tag = MimeExtTag()
+        probe = tmp_path / "probe"
+        probe.write_bytes(b"")
+        file = File(tmp_path, Path("probe"))
+
+        with patch("tempren.tags.core.magic.from_file", return_value="inode/x-empty"):
+            extension = tag.process(file, None)
+
+        assert extension == ""
+
 
 class TestIsMimeTag:
     def test_text_type(self, text_data_dir: Path):
