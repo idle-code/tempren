@@ -164,7 +164,7 @@ class MimeExtTag(Tag):
 
     def process(self, file: File, context: str | None) -> str:
         mime_type = magic.from_file(file.absolute_path, mime=True)
-        return str(mimetypes.guess_extension(mime_type, False))
+        return str(mimetypes.guess_extension(mime_type, False) or "")
 
 
 class IsMimeTag(Tag):
