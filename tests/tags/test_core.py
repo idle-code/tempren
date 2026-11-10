@@ -338,9 +338,7 @@ class TestMimeExtTag:
         probe.write_bytes(b"")
         file = File(tmp_path, Path("probe"))
 
-        with patch(
-            "tempren.tags.core.magic.from_file", return_value="inode/x-empty"
-        ):
+        with patch("tempren.tags.core.magic.from_file", return_value="inode/x-empty"):
             extension = tag.process(file, None)
 
         assert extension == ""
